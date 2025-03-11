@@ -7,6 +7,7 @@ import PortfolioTemplate from './templates/portfolio/page';
 import TemplatesPage from './pages/Template';
 import ProfilePage from './pages/Profile';
 import SettingsPage from './pages/Setting';
+import DashboardPage from './dashboard/page';
 
 
 const App = () => {
@@ -19,6 +20,7 @@ const App = () => {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/setting" element={<SettingsPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/templates" element={<TemplatesPage />} />
           <Route path="/templates/ecommerce" element={<EcommerceTemplate />} />
           <Route path="/templates/portfolio" element={<PortfolioTemplate />} />

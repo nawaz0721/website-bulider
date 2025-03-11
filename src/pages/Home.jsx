@@ -66,7 +66,7 @@ export default function Home() {
             <div className="flex items-center justify-center">
               <div className="relative h-[350px] w-full md:h-[450px] rounded-lg bg-muted/30 border shadow-lg overflow-hidden">
                 <img
-                  src="/placeholder.svg?height=450&width=600"
+                  src="https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.geeksforgeeks.org%2Fbest-free-website-builders%2F&psig=AOvVaw1hcSuXcVNEriLeB-2rfViF&ust=1741811549608000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCIDWs-_vgowDFQAAAAAdAAAAABAR"
                   alt="Website builder interface preview"
                   className="object-cover"
                 />
