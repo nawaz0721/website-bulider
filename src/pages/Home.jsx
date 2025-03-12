@@ -3,6 +3,10 @@ import { ArrowRight, Check, Layers, Paintbrush, Code } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Link } from "react-router-dom"
+import banner from "../assets/website-builder.jpeg"
+import portfolio from "../assets/portfolio.jpg"
+import commerce from "../assets/E-Commerce.jpg"
+import business from "../assets/Business Website.jpeg"
 
 export default function Home() {
   return (
@@ -64,9 +68,9 @@ export default function Home() {
               </div>
             </div>
             <div className="flex items-center justify-center">
-              <div className="relative h-[350px] w-full md:h-[450px] rounded-lg bg-muted/30 border shadow-lg overflow-hidden">
+              <div className="relative h-[350px] w-full md:h-[440px] rounded-lg bg-muted/30 border shadow-lg overflow-hidden">
                 <img
-                  src="https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.geeksforgeeks.org%2Fbest-free-website-builders%2F&psig=AOvVaw1hcSuXcVNEriLeB-2rfViF&ust=1741811549608000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCIDWs-_vgowDFQAAAAAdAAAAABAR"
+                  src={banner}
                   alt="Website builder interface preview"
                   className="object-cover"
                 />
@@ -141,7 +145,7 @@ export default function Home() {
             <Card className="overflow-hidden">
               <div className="h-[200px] overflow-hidden">
                 <img
-                  src="/placeholder.svg?height=200&width=400"
+                  src={portfolio}
                   alt="Portfolio template"
                   className="w-full h-full object-cover transition-transform hover:scale-105"
                 />
@@ -161,7 +165,7 @@ export default function Home() {
             <Card className="overflow-hidden">
               <div className="h-[200px] overflow-hidden">
                 <img
-                  src="/placeholder.svg?height=200&width=400"
+                  src={commerce}
                   alt="E-commerce template"
                   className="w-full h-full object-cover transition-transform hover:scale-105"
                 />
@@ -181,7 +185,7 @@ export default function Home() {
             <Card className="overflow-hidden">
               <div className="h-[200px] overflow-hidden">
                 <img
-                  src="/placeholder.svg?height=200&width=400"
+                  src={business}
                   alt="Business template"
                   className="w-full h-full object-cover transition-transform hover:scale-105"
                 />

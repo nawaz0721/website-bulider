@@ -1,5 +1,10 @@
 import { ArrowLeft } from "lucide-react"
-
+import portfolio from "../assets/portfolio.jpg"
+import commerce from "../assets/E-Commerce.jpg"
+import business from "../assets/Business Website.jpeg"
+import blog from "../assets/Blog.jpg"
+import landingPage from "../assets/landingpage.jpg"
+import restaurant from "../assets/restaurant.jpg"
 import { Button } from "@/components/ui/button"
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Link } from "react-router-dom"
@@ -10,42 +15,42 @@ export default function TemplatesPage() {
       id: "portfolio",
       name: "Personal Portfolio",
       description: "Showcase your work and skills with this modern portfolio template.",
-      image: "/placeholder.svg?height=200&width=400&text=Portfolio",
+      image: portfolio,
       category: "Personal",
     },
     {
       id: "ecommerce",
       name: "E-commerce Store",
       description: "Sell products online with this complete e-commerce template.",
-      image: "/placeholder.svg?height=200&width=400&text=E-commerce",
+      image: commerce,
       category: "Business",
     },
     {
       id: "business",
       name: "Business Website",
       description: "Present your business professionally with this corporate template.",
-      image: "/placeholder.svg?height=200&width=400&text=Business",
+      image: business,
       category: "Business",
     },
     {
       id: "blog",
       name: "Blog",
       description: "Share your thoughts and ideas with this clean blog template.",
-      image: "/placeholder.svg?height=200&width=400&text=Blog",
+      image: blog,
       category: "Content",
     },
     {
       id: "landing",
       name: "Landing Page",
       description: "Promote your product or service with this conversion-focused landing page.",
-      image: "/placeholder.svg?height=200&width=400&text=Landing",
+      image: landingPage,
       category: "Marketing",
     },
     {
       id: "restaurant",
       name: "Restaurant",
       description: "Showcase your menu and location with this restaurant template.",
-      image: "/placeholder.svg?height=200&width=400&text=Restaurant",
+      image: restaurant,
       category: "Business",
     },
   ]

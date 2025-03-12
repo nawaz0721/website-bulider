@@ -1,6 +1,8 @@
 import { ArrowLeft, Github, Twitter, Linkedin, Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Link } from "react-router-dom"
+import profile from "../../assets/profile.png"
+import business from "../../assets/Business Website.jpeg"
 
 export default function PortfolioTemplate() {
   return (
@@ -56,7 +58,7 @@ export default function PortfolioTemplate() {
               </div>
               <div className="flex items-center justify-center">
                 <div className="relative h-[350px] w-[350px] rounded-full bg-muted/30 border overflow-hidden">
-                  <img src="/placeholder.svg?height=350&width=350" alt="John Doe" className="object-cover" />
+                  <img src={profile} alt="John Doe" className="object-cover" />
                 </div>
               </div>
             </div>
@@ -116,7 +118,7 @@ export default function PortfolioTemplate() {
                 >
                   <div className="aspect-video overflow-hidden">
                     <img
-                      src={`/placeholder.svg?height=200&width=400&text=Project+${i}`}
+                      src={business}
                       alt={`Project ${i}`}
                       className="h-full w-full object-cover transition-transform group-hover:scale-105"
                     />
