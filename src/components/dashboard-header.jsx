@@ -21,7 +21,7 @@ export default function DashboardHeader() {
   return (
     <header className="border-b bg-background">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link to="/dashboard" className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-2">
           <Layout className="h-6 w-6 text-primary" />
           <span className="text-xl font-bold">WebCraft</span>
         </Link>

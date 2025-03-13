@@ -1,8 +1,8 @@
-import { ArrowLeft, Github, Twitter, Linkedin, Mail } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Link } from "react-router-dom"
-import profile from "../../assets/profile.png"
-import business from "../../assets/Business Website.jpeg"
+import { ArrowLeft, Github, Twitter, Linkedin, Mail } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import profile from "../../assets/profile.png";
+import business from "../../assets/Business Website.jpeg";
 
 export default function PortfolioTemplate() {
   return (
@@ -15,7 +15,7 @@ export default function PortfolioTemplate() {
             <span className="font-medium">Back to Templates</span>
           </Link>
           <div className="flex items-center gap-4">
-            <Link to="/editor/new?template=portfolio">
+            <Link to={`/editor`}>
               <Button>Use This Template</Button>
             </Link>
           </div>
@@ -30,13 +30,22 @@ export default function PortfolioTemplate() {
             <div className="p-5 flex h-16 items-center justify-between py-4">
               <div className="font-bold text-xl">John Doe</div>
               <nav className="flex items-center gap-6">
-                <Link to="#about" className="text-sm font-medium hover:text-primary">
+                <Link
+                  to="#about"
+                  className="text-sm font-medium hover:text-primary"
+                >
                   About
                 </Link>
-                <Link to="#projects" className="text-sm font-medium hover:text-primary">
+                <Link
+                  to="#projects"
+                  className="text-sm font-medium hover:text-primary"
+                >
                   Projects
                 </Link>
-                <Link to="#contact" className="text-sm font-medium hover:text-primary">
+                <Link
+                  to="#contact"
+                  className="text-sm font-medium hover:text-primary"
+                >
                   Contact
                 </Link>
               </nav>
@@ -47,9 +56,12 @@ export default function PortfolioTemplate() {
           <section className="p-5 py-24 md:py-32">
             <div className="grid gap-10 md:grid-cols-2 md:gap-16">
               <div className="flex flex-col justify-center space-y-4">
-                <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl">Hi, I'm John Doe</h1>
+                <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl">
+                  Hi, I'm John Doe
+                </h1>
                 <p className="max-w-[600px] text-muted-foreground md:text-xl">
-                  A passionate frontend developer specializing in creating beautiful and functional web experiences.
+                  A passionate frontend developer specializing in creating
+                  beautiful and functional web experiences.
                 </p>
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
                   <Button>View My Work</Button>
@@ -68,21 +80,30 @@ export default function PortfolioTemplate() {
           <section id="about" className="p-5 py-16 md:py-24 bg-muted/30">
             <div className="grid gap-10 md:grid-cols-2 md:gap-16">
               <div>
-                <h2 className="text-3xl font-bold tracking-tighter mb-6">About Me</h2>
+                <h2 className="text-3xl font-bold tracking-tighter mb-6">
+                  About Me
+                </h2>
                 <div className="space-y-4 text-muted-foreground">
                   <p>
-                    I'm a frontend developer with 5 years of experience building modern web applications. I specialize
-                    in React, Next.js, and TypeScript.
+                    I'm a frontend developer with 5 years of experience building
+                    modern web applications. I specialize in React, Next.js, and
+                    TypeScript.
                   </p>
                   <p>
-                    My journey in web development started when I built my first website at the age of 16. Since then,
-                    I've been passionate about creating intuitive and performant user interfaces.
+                    My journey in web development started when I built my first
+                    website at the age of 16. Since then, I've been passionate
+                    about creating intuitive and performant user interfaces.
                   </p>
-                  <p>When I'm not coding, you can find me hiking, reading, or experimenting with new technologies.</p>
+                  <p>
+                    When I'm not coding, you can find me hiking, reading, or
+                    experimenting with new technologies.
+                  </p>
                 </div>
               </div>
               <div>
-                <h2 className="text-3xl font-bold tracking-tighter mb-6">Skills</h2>
+                <h2 className="text-3xl font-bold tracking-tighter mb-6">
+                  Skills
+                </h2>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <h3 className="font-medium">Frontend</h3>
@@ -109,7 +130,9 @@ export default function PortfolioTemplate() {
 
           {/* Projects Section */}
           <section id="projects" className="p-5 py-16 md:py-24">
-            <h2 className="text-3xl font-bold tracking-tighter mb-10 text-center">My Projects</h2>
+            <h2 className="text-3xl font-bold tracking-tighter mb-10 text-center">
+              My Projects
+            </h2>
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
               {[1, 2, 3].map((i) => (
                 <div
@@ -126,7 +149,8 @@ export default function PortfolioTemplate() {
                   <div className="p-6">
                     <h3 className="text-xl font-bold">Project {i}</h3>
                     <p className="mt-2 text-muted-foreground">
-                      A brief description of project {i} and the technologies used to build it.
+                      A brief description of project {i} and the technologies
+                      used to build it.
                     </p>
                     <div className="mt-4 flex gap-2">
                       <Button size="sm" variant="outline">
@@ -145,10 +169,13 @@ export default function PortfolioTemplate() {
           {/* Contact Section */}
           <section id="contact" className="p-5 py-16 md:py-24 bg-muted/30">
             <div className="mx-auto max-w-2xl text-center">
-              <h2 className="text-3xl font-bold tracking-tighter mb-6">Get In Touch</h2>
+              <h2 className="text-3xl font-bold tracking-tighter mb-6">
+                Get In Touch
+              </h2>
               <p className="mb-8 text-muted-foreground">
-                I'm currently open to new opportunities. Whether you have a question or just want to say hi, I'll try my
-                best to get back to you!
+                I'm currently open to new opportunities. Whether you have a
+                question or just want to say hi, I'll try my best to get back to
+                you!
               </p>
               <div className="flex justify-center gap-4 mb-8">
                 <Button size="icon" variant="outline">
@@ -175,10 +202,16 @@ export default function PortfolioTemplate() {
                 © {new Date().getFullYear()} John Doe. All rights reserved.
               </p>
               <div className="flex gap-4">
-                <Link to="#" className="text-sm text-muted-foreground hover:text-foreground">
+                <Link
+                  to="#"
+                  className="text-sm text-muted-foreground hover:text-foreground"
+                >
                   Privacy Policy
                 </Link>
-                <Link to="#" className="text-sm text-muted-foreground hover:text-foreground">
+                <Link
+                  to="#"
+                  className="text-sm text-muted-foreground hover:text-foreground"
+                >
                   Terms of Service
                 </Link>
               </div>
@@ -187,6 +220,5 @@ export default function PortfolioTemplate() {
         </div>
       </div>
     </div>
-  )
+  );
 }
-
