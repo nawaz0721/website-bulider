@@ -37,7 +37,7 @@ export default function LoginPage() {
         // Save the token to cookies or state management
         Cookies.set("authToken", JSON.stringify(data.data.token), { expires: 7 });
       Cookies.set("user", JSON.stringify(data.data.user), { expires: 7 });
-        navigate("/dashboard");
+        navigate("/");
       } else {
         setError(data.message || "Login failed");
       }

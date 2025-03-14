@@ -26,7 +26,7 @@ export default function DashboardHeader() {
           <span className="text-xl font-bold">WebCraft</span>
         </Link>
         
-        <nav className="hidden md:flex items-center gap-6">
+        {/* <nav className="hidden md:flex items-center gap-6">
           <Link to="/dashboard" className="text-sm font-medium hover:text-primary">
             Dashboard
           </Link>
@@ -36,7 +36,7 @@ export default function DashboardHeader() {
           <Link to="/settings" className="text-sm font-medium hover:text-primary">
             Settings
           </Link>
-        </nav>
+        </nav> */}
         
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon">

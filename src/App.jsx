@@ -11,22 +11,43 @@ import DashboardPage from './dashboard/page';
 import OtpVerification from './components/OtpVerification';
 import ResetPassword from './components/ResetPassword';
 import Editor from './pages/Editor';
+import ConvertSite from './pages/ConvertSite';
+import Dashboard from './pages/Dashboard';
+import CreateWordPressModal from './components/CreateWordPressModal';
+import { useState } from 'react';
+import MainDashboard from './pages/MainDashboard';
+import CreateWebsiteFlow from './components/CreateWebsite/CreateWebsiteFlow';
 // import Editor from './pages/Editor'; 
 
 
 const App = () => {
- 
+  const [isModalOpen, setIsModalOpen] = useState(false)
   return (
     <Router>
         <Routes>
-          <Route path="/" element={<Home />} />
+          {/* <Route path="/" element={<Home />} /> */}
+          {/* <Route
+          path="/"
+          element={
+            <>
+              <Dashboard />
+              <CreateWordPressModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+            </>
+          }
+        /> */}
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/main-dashboard" element={<MainDashboard />} />
+        <Route path="/create-website" element={<CreateWebsiteFlow />} />
+        <Route path="/convert-site" element={<ConvertSite />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgotPassword" element={<OtpVerification />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+
+
+          <Route path="/home" element={<Home />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/setting" element={<SettingsPage />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/templates" element={<TemplatesPage />} />
           <Route path="/editor/:template?" element={<Editor />} />
           <Route path="/templates/ecommerce" element={<EcommerceTemplate />} />
