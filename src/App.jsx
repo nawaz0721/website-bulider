@@ -2,15 +2,12 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import Home from './pages/Home';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-import EcommerceTemplate from './templates/ecommerce/page';
-import PortfolioTemplate from './templates/portfolio/page';
 import TemplatesPage from './pages/Template';
 import ProfilePage from './pages/Profile';
 import SettingsPage from './pages/Setting';
 import DashboardPage from './dashboard/page';
 import OtpVerification from './components/OtpVerification';
 import ResetPassword from './components/ResetPassword';
-import Editor from './pages/Editor';
 import ConvertSite from './pages/ConvertSite';
 import Dashboard from './pages/Dashboard';
 import CreateWordPressModal from './components/CreateWordPressModal';
@@ -35,7 +32,8 @@ const App = () => {
             </>
           }
         /> */}
-        <Route path="/" element={<Dashboard />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/" element={<Home />} />
         <Route path="/main-dashboard" element={<MainDashboard />} />
         <Route path="/create-website" element={<CreateWebsiteFlow />} />
         <Route path="/convert-site" element={<ConvertSite />} />
@@ -45,13 +43,9 @@ const App = () => {
           <Route path="/reset-password" element={<ResetPassword />} />
 
 
-          <Route path="/home" element={<Home />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/setting" element={<SettingsPage />} />
           <Route path="/templates" element={<TemplatesPage />} />
-          <Route path="/editor/:template?" element={<Editor />} />
-          <Route path="/templates/ecommerce" element={<EcommerceTemplate />} />
-          <Route path="/templates/portfolio" element={<PortfolioTemplate />} />
         </Routes>
     </Router>
   );

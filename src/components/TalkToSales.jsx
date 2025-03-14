@@ -17,10 +17,10 @@ export default function TalkToSales() {
     <>
       {/* Button to Open Modal */}
       <Button
-      variant="outline"
         onClick={() => setIsOpen(true)}
-        className="h-8 hover:border-white
-         border-black hover:text-white hover:bg-black text-sm font-medium px-12 "
+        // className="text-black bg-white hover:text-white hover:bg-black w-full transition-colors text-sm font-medium px-12 "
+        variant="outline"
+        className="h-8 border-white hover:text-white hover:bg-black bg-white text-black text-sm font-medium px-12 "
       >
         Talk to Sales
       </Button>

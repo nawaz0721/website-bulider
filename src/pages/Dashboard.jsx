@@ -6,7 +6,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Divider } from "antd";
 import { FaCloudflare } from "react-icons/fa";
 import WebsiteCard from "@/components/WebsiteCard";
 import Navbar from "@/components/Navbar";
@@ -14,6 +13,7 @@ import Sidebar from "@/components/Sidebar";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import CreateWordPressModal from "@/components/CreateWordPressModal";
+import { Button } from "@/components/ui/button";
 
 // Dummy data for websites (replace with actual API data)
 const websites = []; // Empty array means no websites exist
@@ -92,12 +92,12 @@ export default function Dashboard() {
                   <p className="text-gray-600 text-sm mb-6">
                     Let AI generate content and images for you.
                   </p>
-                  <button
+                  <Button
                     onClick={handleAIWebsiteClick}
-                    className="w-full bg-black text-white py-2 px-4 rounded hover:bg-black/90 transition-colors"
+                    className="text-black bg-white hover:text-white hover:bg-black w-full transition-colors border-black"  variant="outline"
                   >
                     Start with AI
-                  </button>
+                  </Button>
                 </div>
 
                 {/* Custom Website Builder */}
@@ -106,12 +106,12 @@ export default function Dashboard() {
                   <p className="text-gray-600 text-sm mb-6">
                     Manually design and customize your website.
                   </p>
-                  <button
+                  <Button
                     onClick={handleCustomWebsiteClick}
-                    className="w-full bg-black text-white py-2 px-4 rounded hover:bg-black/90 transition-colors"
+                    className="text-black bg-white hover:text-white hover:bg-black w-full transition-colors border-black" variant="outline"
                   >
                     Start Custom
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>

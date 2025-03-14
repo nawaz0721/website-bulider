@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import InstallationProgressModal from "./InstallationProgressModal";
 import SiteInfoStep from "./CreateWebsite/steps/SiteInfoStep";
+import { Button } from "./ui/button";
 
 function CreateWordPressModal({ isOpen, onClose }) {
   const [isInstalling, setIsInstalling] = useState(false);
@@ -76,9 +77,10 @@ function CreateWordPressModal({ isOpen, onClose }) {
                   required
                 />
               </div>
-              <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700">
+              <Button type="submit" variant="outline"
+        className="h-8 border-black hover:text-white hover:bg-black bg-white text-black w-full ">
                 Next
-              </button>
+              </Button>
             </form>
           </>
         ) : (

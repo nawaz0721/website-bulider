@@ -24,8 +24,7 @@ import WorkspaceDropdown from "./WorkspaceDropdown";
           {/* Center Section */}
           <div className="mt-8 left-[26%] absolute -translate-x-1/2 -translate-y-1/2">
             <Button
-              variant="outline"
-              className="h-8 hover:border-black hover:text-white hover:bg-black px-6"
+              className="text-black bg-white hover:text-white hover:bg-black w-full transition-colors border-white"  variant="outline"
             >
               Get Free Custom Domain
             </Button>

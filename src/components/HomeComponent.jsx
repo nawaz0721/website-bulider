@@ -40,13 +40,13 @@ export default function HomeComponent() {
               <div className="flex flex-col gap-2 min-[400px]:flex-row">
                 {!authToken && ( // Show Get Started button only if user is NOT logged in
                   <Link to="/register">
-                    <Button size="lg" className="gap-1.5">
+              <Button size="lg" className="gap-1.5 text-black bg-white hover:text-white hover:bg-black w-full transition-colors border-black"  variant="outline" >
                       Get Started <ArrowRight className="h-4 w-4" />
                     </Button>
                   </Link>
                 )}
                 <Link to="templates">
-                  <Button size="lg" variant="outline">
+                  <Button size="lg" className="gap-1.5 text-black bg-white hover:text-white hover:bg-black w-full transition-colors border-black"  variant="outline">
                     View Templates
                   </Button>
                 </Link>
@@ -158,7 +158,7 @@ export default function HomeComponent() {
               </CardHeader>
               <CardFooter>
                 <Link to="/templates/portfolio" className="w-full">
-                  <Button variant="outline" className="w-full">
+                  <Button className="gap-1.5 text-black bg-white hover:text-white hover:bg-black w-full transition-colors border-black"  variant="outline">
                     Preview Template
                   </Button>
                 </Link>
@@ -180,7 +180,7 @@ export default function HomeComponent() {
               </CardHeader>
               <CardFooter>
                 <Link to="/templates/ecommerce" className="w-full">
-                  <Button variant="outline" className="w-full">
+                  <Button className="gap-1.5 text-black bg-white hover:text-white hover:bg-black w-full transition-colors border-black"  variant="outline">
                     Preview Template
                   </Button>
                 </Link>
@@ -203,7 +203,7 @@ export default function HomeComponent() {
               </CardHeader>
               <CardFooter>
                 <Link to="/templates/business" className="w-full">
-                  <Button variant="outline" className="w-full">
+                  <Button className="gap-1.5 text-black bg-white hover:text-white hover:bg-black w-full transition-colors border-black"  variant="outline">
                     Preview Template
                   </Button>
                 </Link>
@@ -251,7 +251,7 @@ export default function HomeComponent() {
               </CardContent>
               <CardFooter>
                 <Link to="/register" className="w-full">
-                  <Button variant="outline" className="w-full">
+                  <Button className="gap-1.5 text-black bg-white hover:text-white hover:bg-black w-full transition-colors border-black"  variant="outline">
                     Get Started
                   </Button>
                 </Link>
@@ -292,7 +292,7 @@ export default function HomeComponent() {
               </CardContent>
               <CardFooter>
                 <Link to="/register?plan=pro" className="w-full">
-                  <Button className="w-full">Subscribe Now</Button>
+                  <Button className="gap-1.5 text-black bg-white hover:text-white hover:bg-black w-full transition-colors border-black"  variant="outline">Subscribe Now</Button>
                 </Link>
               </CardFooter>
             </Card>
@@ -328,7 +328,7 @@ export default function HomeComponent() {
               </CardContent>
               <CardFooter>
                 <Link to="/register?plan=premium" className="w-full">
-                  <Button variant="outline" className="w-full">
+                  <Button className="gap-1.5 text-black bg-white hover:text-white hover:bg-black w-full transition-colors border-black"  variant="outline">
                     Subscribe Now
                   </Button>
                 </Link>

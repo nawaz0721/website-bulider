@@ -90,10 +90,10 @@ export default function TemplatesPage() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline">All Categories</Button>
-            <Button variant="outline">Personal</Button>
-            <Button variant="outline">Business</Button>
-            <Button variant="outline">Marketing</Button>
+            <Button className="text-black bg-white hover:text-white hover:bg-black"  variant="outline">All Categories</Button>
+            <Button className="text-black bg-white hover:text-white hover:bg-black"  variant="outline">Personal</Button>
+            <Button className="text-black bg-white hover:text-white hover:bg-black"  variant="outline">Business</Button>
+            <Button className="text-black bg-white hover:text-white hover:bg-black"  variant="outline">Marketing</Button>
           </div>
         </div>
 
@@ -117,11 +117,11 @@ export default function TemplatesPage() {
                 <CardDescription>{template.description}</CardDescription>
               </CardHeader>
               <CardFooter className="flex justify-between">
-                <Link to={`/templates/${template.id}`}>
-                  <Button variant="outline">Preview</Button>
+                <Link>
+                  <Button className="text-black bg-white hover:text-white hover:bg-black"  variant="outline">Preview</Button>
                 </Link>
-                <Link to={`/editor/${template.id}`}>
-                  <Button>Use Template</Button>
+                <Link>
+                  <Button className="text-black bg-white hover:text-white hover:bg-black"  variant="outline">Use Template</Button>
                 </Link>
               </CardFooter>
             </Card>
