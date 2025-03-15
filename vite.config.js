@@ -9,4 +9,7 @@ export default defineConfig({
       "@": path.resolve(__dirname, "src"), // ✅ Add this line
     },
   },
+  optimizeDeps: {
+    include: ['grapesjs', '@grapesjs/react'],
+  },
 });

@@ -14,6 +14,8 @@ import CreateWordPressModal from './components/CreateWordPressModal';
 import { useState } from 'react';
 import MainDashboard from './pages/MainDashboard';
 import CreateWebsiteFlow from './components/CreateWebsite/CreateWebsiteFlow';
+import Editor from './pages/Editor';
+import PortfolioTemplate from './templates/portfolio/page';
 // import Editor from './pages/Editor'; 
 
 
@@ -43,9 +45,11 @@ const App = () => {
           <Route path="/reset-password" element={<ResetPassword />} />
 
 
+          <Route path="/editor" element={<Editor />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/setting" element={<SettingsPage />} />
           <Route path="/templates" element={<TemplatesPage />} />
+          <Route path="/portfolioTemplate" element={<PortfolioTemplate />} />
         </Routes>
     </Router>
   );
