@@ -16,6 +16,7 @@ import MainDashboard from './pages/MainDashboard';
 import CreateWebsiteFlow from './components/CreateWebsite/CreateWebsiteFlow';
 import Editor from './pages/Editor';
 import PortfolioTemplate from './templates/portfolio/page';
+import { Toaster } from 'react-hot-toast';
 // import Editor from './pages/Editor'; 
 
 
@@ -23,6 +24,7 @@ const App = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   return (
     <Router>
+        <Toaster position="top-right" reverseOrder={false} />
         <Routes>
           {/* <Route path="/" element={<Home />} /> */}
           {/* <Route

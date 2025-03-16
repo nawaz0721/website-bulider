@@ -6,6 +6,7 @@ import grapesjsTailwind from "grapesjs-tailwind";
 import axios from "axios";
 import { AppRoutes } from "@/constant/constant";
 import html2canvas from "html2canvas";
+import toast from "react-hot-toast";
 
 const Editor = () => {
   // If there's an "id" param, we are editing an existing template
@@ -159,7 +160,7 @@ const Editor = () => {
   const handleSaveOrUpdateTemplate = async () => {
     // Validate form
     if (!templateName) {
-      alert("Please enter a template name");
+      toast.success("Please enter a template name");
       return;
     }
 
@@ -231,12 +232,12 @@ const Editor = () => {
         // Update existing template
         const response = await axios.put(`${AppRoutes.template}/${id}`, payload);
         console.log("Template updated:", response.data);
-        alert("Template updated successfully!");
+        toast.success("Template updated successfully!");
       } else {
         // Create new template
         const response = await axios.post(AppRoutes.template, payload);
         console.log("Template created:", response.data);
-        alert("Template saved successfully!");
+        toast.success("Template saved successfully!");
       }
 
       // Close modal, reset
@@ -248,7 +249,7 @@ const Editor = () => {
       navigate("/templates");
     } catch (error) {
       console.error("Error saving/updating template:", error);
-      alert("Failed to save/update template. Check console for details.");
+      toast.error("Failed to save/update template. Check console for details.");
     }
   };
 
