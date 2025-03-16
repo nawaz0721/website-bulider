@@ -231,6 +231,7 @@ const Editor = () => {
       if (isEditMode && id) {
         // Update existing template
         const response = await axios.put(`${AppRoutes.template}/${id}`, payload);
+        console.log("respone", response)
         console.log("Template updated:", response.data);
         toast.success("Template updated successfully!");
       } else {
