@@ -46,6 +46,7 @@ const App = () => {
 
 
           <Route path="/editor" element={<Editor />} />
+          <Route path="/editor/:id" element={<Editor />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/setting" element={<SettingsPage />} />
           <Route path="/templates" element={<TemplatesPage />} />

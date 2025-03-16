@@ -1,165 +1,187 @@
-import React, { useEffect, useRef, useState } from 'react';
-import grapesjs from 'grapesjs';
-import 'grapesjs/dist/css/grapes.min.css';
-import grapesjsTailwind from 'grapesjs-tailwind';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useRef, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import grapesjs from "grapesjs";
+import "grapesjs/dist/css/grapes.min.css";
+import grapesjsTailwind from "grapesjs-tailwind";
+import axios from "axios";
+import { AppRoutes } from "@/constant/constant";
+import html2canvas from "html2canvas";
 
 const Editor = () => {
-  const editorRef = useRef(null);
-  const [editorKey, setEditorKey] = useState(Date.now());
-  const [showCodeModal, setShowCodeModal] = useState(false);
-  const [showSaveModal, setShowSaveModal] = useState(false);
-  const [generatedCode, setGeneratedCode] = useState('');
-  const [templateName, setTemplateName] = useState('');
-  const [templateDescription, setTemplateDescription] = useState('');
-  const [templateCategory, setTemplateCategory] = useState('Personal');
+  // If there's an "id" param, we are editing an existing template
+  const { id } = useParams();
   const navigate = useNavigate();
 
+  // GrapesJS instance reference
+  const editorRef = useRef(null);
+
+  // Determines if we are editing an existing template
+  const [isEditMode, setIsEditMode] = useState(false);
+
+  // Template data from DB (if editing)
+  const [templateData, setTemplateData] = useState(null);
+
+  // State for showing/hiding modals
+  const [showCodeModal, setShowCodeModal] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+
+  // Form fields for saving/updating template
+  const [templateName, setTemplateName] = useState("");
+  const [templateDescription, setTemplateDescription] = useState("");
+  const [templateCategory, setTemplateCategory] = useState("Personal");
+
+  // Code modal content
+  const [generatedCode, setGeneratedCode] = useState("");
+
+  // 1) Check if we have an ID => set isEditMode
   useEffect(() => {
-    // Initialize the editor with your existing configuration
+    setIsEditMode(!!id);
+  }, [id]);
 
+  // 2) If editing, fetch the template from the DB
+  useEffect(() => {
+    const fetchTemplate = async () => {
+      if (!id) return; // No ID => skip fetching
 
-      const editor = grapesjs.init({
-        container: '#gjs',
-        plugins: [grapesjsTailwind],
-        pluginsOpts: {
-          [grapesjsTailwind]: { /* plugin options */ },
-        },
-        fromElement: true,
-        storageManager: {
-          type: 'local',
-          autosave: true,
-          autoload: true,
-          stepsBeforeSave: 1,
-          options: {
-            local: { key: 'gjsProject' },
-          }
-        },
-      });
-  
-      // Store the editor instance in the ref
-      editorRef.current = editor;
-  
-      // Function to get complete HTML with CSS
-      const getCompleteHtml = () => {
-        const html = editor.getHtml();
-        const css = editor.getCss();
-        
-        return `<!DOCTYPE html>
-  <html>
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Generated Page</title>
-      <!-- Include Tailwind CSS from CDN -->
-      <script src="https://cdn.tailwindcss.com"></script>
-      <style>
-        /* Custom CSS from editor */
-        ${css}
-      </style>
-    </head>
-    <body>
-      ${html}
-    </body>
-  </html>`;
-      };
-  
-      // Add preview command with proper CSS
-      editor.Commands.add('preview', {
-        run: function(editor) {
-          editor.store();
-          const completeHtml = getCompleteHtml();
-          
-          // Create a new window with the content
-          const previewWindow = window.open('', '_blank');
-          previewWindow.document.write(completeHtml);
-          previewWindow.document.close();
-        }
-      });
-  
-      // Add show code command
-      editor.Commands.add('show-code', {
-        run: function(editor) {
-          editor.store();
-          const completeHtml = getCompleteHtml();
-          setGeneratedCode(completeHtml);
-          setShowCodeModal(true);
-        }
-      });
-  
-      // Add save template command
-      editor.Commands.add('save-template', {
-        run: function(editor) {
-          setShowSaveModal(true);
-        }
-      });
+      try {
+        // GET /api/templates/:id
+        const res = await axios.get(`${AppRoutes.template}/${id}`);
+        const data = res.data;
+        setTemplateData(data);
 
-       // Load stored template
-       const storedTemplate = localStorage.getItem("gjsProject");
-       
-       if (storedTemplate) {
-         const { html, css, components, styles } = JSON.parse(storedTemplate);
-         console.log(html);
-         console.log(css);
-         console.log(styles);
-         
-         editor.setComponents(components || html); // Load components if available, otherwise HTML
-         editor.setStyle(styles || css); // Load styles if available
- 
-         console.log("Loaded template:", { components, styles });
-       }
-  
-      return () => {
-        editor.destroy();
-      };
-    }, []);
+        // Populate form fields
+        setTemplateName(data.name || "");
+        setTemplateDescription(data.description || "");
+        setTemplateCategory(data.category || "Personal");
+      } catch (error) {
+        console.error("Error fetching template:", error);
+        // Optionally navigate away or show an error
+      }
+    };
 
-  
+    fetchTemplate();
+  }, [id]);
 
-  // Functions to handle preview and show code
-  const handlePreview = () => {
-    if (editorRef.current) {
-      editorRef.current.runCommand('preview');
+  // 3) Initialize GrapesJS once we have templateData (if any)
+  useEffect(() => {
+    const editor = grapesjs.init({
+      container: "#gjs",
+      plugins: [grapesjsTailwind],
+      pluginsOpts: { [grapesjsTailwind]: {} },
+      fromElement: true,
+      storageManager: {
+        type: "local",
+        autosave: true,
+        autoload: false, // Don’t automatically load local storage
+        stepsBeforeSave: 1,
+        options: { local: { key: "gjsProject" } },
+      },
+    });
+
+    editorRef.current = editor;
+
+    // Helper: Get combined HTML + CSS
+    const getCompleteHtml = () => {
+      const html = editor.getHtml();
+      const css = editor.getCss();
+      return `<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Generated Page</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      ${css}
+    </style>
+  </head>
+  <body>
+    ${html}
+  </body>
+</html>`;
+    };
+
+    // Commands: Preview
+    editor.Commands.add("preview", {
+      run: () => {
+        const previewHtml = getCompleteHtml();
+        const previewWindow = window.open("", "_blank");
+        previewWindow.document.write(previewHtml);
+        previewWindow.document.close();
+      },
+    });
+
+    // Commands: Show Code
+    editor.Commands.add("show-code", {
+      run: () => {
+        setGeneratedCode(getCompleteHtml());
+        setShowCodeModal(true);
+      },
+    });
+
+    // Commands: Save/Update => open modal
+    editor.Commands.add("save-template", {
+      run: () => {
+        setShowSaveModal(true);
+      },
+    });
+
+    // If editing, and we have templateData with full HTML, load it
+    if (templateData) {
+      // If DB stores entire HTML
+      editor.setComponents(templateData.html);
+
+      // If DB stores separate CSS or GrapesJS JSON data, handle here:
+      // e.g. editor.setStyle(templateData.css);
+      // e.g. editor.setComponents(JSON.parse(templateData.components));
+      // e.g. editor.setStyle(JSON.parse(templateData.styles));
     }
+
+    return () => {
+      editor.destroy();
+    };
+  }, [templateData]);
+
+  // 4) UI Button Handlers
+  const handlePreview = () => {
+    editorRef.current?.runCommand("preview");
   };
 
   const handleShowCode = () => {
-    if (editorRef.current) {
-      editorRef.current.runCommand('show-code');
-    }
+    editorRef.current?.runCommand("show-code");
   };
 
   const handleSaveTemplate = () => {
-    if (editorRef.current) {
-      editorRef.current.runCommand('save-template');
-    }
+    editorRef.current?.runCommand("save-template");
   };
 
-  const saveTemplate = () => {
+  // 5) Actually save or update in the modal’s final step
+  const handleSaveOrUpdateTemplate = async () => {
+    // Validate form
     if (!templateName) {
-      alert('Please enter a template name');
+      alert("Please enter a template name");
       return;
     }
 
-    if (editorRef.current) {
-      const editor = editorRef.current;
-      editor.store();
-      
-      // Get HTML and CSS
-      const html = editor.getHtml();
-      const css = editor.getCss();
-      
-      // Create a complete HTML document
-      const completeHtml = `<!DOCTYPE html>
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    // Force GrapesJS to store final memory
+    editor.store();
+
+    // Get HTML / CSS from GrapesJS
+    const html = editor.getHtml();
+    const css = editor.getCss();
+
+    // Build combined HTML
+    const completeHtml = `<!DOCTYPE html>
 <html>
   <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>${templateName}</title>
-    <!-- Include Tailwind CSS from CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-      /* Custom CSS from editor */
       ${css}
     </style>
   </head>
@@ -168,124 +190,105 @@ const Editor = () => {
   </body>
 </html>`;
 
-      // Generate a thumbnail by capturing the canvas
-      // For simplicity, we'll use a data URL of the canvas
-      let thumbnail = '';
-      try {
-        // Try to get a screenshot of the canvas
-        const canvas = document.createElement('canvas');
-        const wrapper = document.querySelector('#gjs');
-        if (wrapper) {
-          const rect = wrapper.getBoundingClientRect();
-          canvas.width = rect.width;
-          canvas.height = rect.height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(wrapper, 0, 0, rect.width, rect.height);
-          thumbnail = canvas.toDataURL('image/jpeg');
+    // Attempt automatic screenshot via html2canvas
+    let thumbnail = "/placeholder.svg";
+    try {
+      // Get the GrapesJS editor instance
+      const editor = editorRef.current;
+      // Get the canvas iframe element
+      const iframeEl = editor.Canvas.getFrameEl();
+      if (iframeEl) {
+        // Get the iframe's document/body
+        const iframeDoc = iframeEl.contentDocument;
+        const iframeBody = iframeDoc?.body;
+        if (iframeBody) {
+          // Use html2canvas on the iframe body
+          const canvas = await html2canvas(iframeBody, {
+            useCORS: true, // handle cross-origin images if properly configured
+          });
+          thumbnail = canvas.toDataURL("image/jpeg");
         }
-      } catch (e) {
-        console.error('Error generating thumbnail:', e);
-        // Use a placeholder if thumbnail generation fails
-        thumbnail = '/placeholder.svg';
+      }
+    } catch (err) {
+      console.error("Screenshot capture failed:", err);
+      // fallback to a placeholder if needed
+    }
+
+    // Build payload
+    const payload = {
+      name: templateName,
+      description:
+        templateDescription ||
+        `A custom template created on ${new Date().toLocaleDateString()}`,
+      category: templateCategory,
+      html: completeHtml,
+      image: thumbnail,
+    };
+    console.log("Payload:", payload);
+    
+    try {
+      if (isEditMode && id) {
+        // Update existing template
+        const response = await axios.put(`${AppRoutes.template}/${id}`, payload);
+        console.log("Template updated:", response.data);
+        alert("Template updated successfully!");
+      } else {
+        // Create new template
+        const response = await axios.post(AppRoutes.template, payload);
+        console.log("Template created:", response.data);
+        alert("Template saved successfully!");
       }
 
-      // Create a template object
-      const template = {
-        id: `user-template-${Date.now()}`,
-        name: templateName,
-        description: templateDescription || `A custom template created on ${new Date().toLocaleDateString()}`,
-        category: templateCategory,
-        image: thumbnail,
-        html: completeHtml,
-        createdAt: new Date().toISOString(),
-      };
-
-      // Get existing templates from localStorage
-      const existingTemplatesJSON = localStorage.getItem('userTemplates');
-      const existingTemplates = existingTemplatesJSON ? JSON.parse(existingTemplatesJSON) : [];
-      
-      // Add the new template
-      existingTemplates.push(template);
-      
-      // Save back to localStorage
-      localStorage.setItem('userTemplates', JSON.stringify(existingTemplates));
-      
-      // Close the modal
+      // Close modal, reset
       setShowSaveModal(false);
-      
-      // Reset form fields
-      setTemplateName('');
-      setTemplateDescription('');
-      
-      // Show success message
-      alert('Template saved successfully!');
-      
-      // Navigate to templates page
-      navigate('/templates');
-    }
-  };
+      setTemplateName("");
+      setTemplateDescription("");
 
-  const handleDownload = () => {
-    // Create download link
-    const blob = new Blob([generatedCode], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'webpage.html';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+      // Navigate or do something else
+      navigate("/templates");
+    } catch (error) {
+      console.error("Error saving/updating template:", error);
+      alert("Failed to save/update template. Check console for details.");
+    }
   };
 
   return (
     <div>
-      <div id="gjs" className="h-screen w-full" key={editorKey}></div>
-      
-      {/* Control buttons */}
+      {/* GrapesJS Editor Container */}
+      <div id="gjs" className="h-screen w-full"></div>
+
+      {/* Floating Buttons */}
       <div className="fixed z-10 bottom-4 right-4 flex gap-2">
-        {/* Preview button */}
-        <button 
+        <button
           onClick={handlePreview}
           className="p-3 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition-colors"
           title="Preview"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-          </svg>
+          Preview
         </button>
-        
-        {/* Show Code button */}
-        <button 
+        <button
           onClick={handleShowCode}
           className="p-3 bg-green-500 text-white rounded-full shadow-lg hover:bg-green-600 transition-colors"
           title="Show Code"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-          </svg>
+          Show Code
         </button>
-        
-        {/* Save Template button */}
-        <button 
+        <button
           onClick={handleSaveTemplate}
           className="p-3 bg-purple-500 text-white rounded-full shadow-lg hover:bg-purple-600 transition-colors"
-          title="Save as Template"
+          title={isEditMode ? "Update Template" : "Save Template"}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-          </svg>
+          {isEditMode ? "Update Template" : "Save Template"}
         </button>
       </div>
-      
+
       {/* Code Modal */}
       {showCodeModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] flex flex-col">
             <div className="p-4 border-b flex justify-between items-center">
               <h3 className="text-lg font-medium">Generated Code</h3>
-              <button 
+              <button
                 onClick={() => setShowCodeModal(false)}
                 className="text-gray-500 hover:text-gray-700"
               >
@@ -304,31 +307,29 @@ const Editor = () => {
               >
                 Close
               </button>
-              {/* <button
-                onClick={handleDownload}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-              >
-                Download HTML
-              </button> */}
             </div>
           </div>
         </div>
       )}
 
-      {/* Save Template Modal */}
+      {/* Save / Update Modal */}
       {showSaveModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg w-full max-w-md flex flex-col">
             <div className="p-4 border-b flex justify-between items-center">
-              <h3 className="text-lg font-medium">Save as Template</h3>
-              <button 
+              <h3 className="text-lg font-medium">
+                {isEditMode ? "Update Template" : "Save as Template"}
+              </h3>
+              <button
                 onClick={() => setShowSaveModal(false)}
                 className="text-gray-500 hover:text-gray-700"
               >
                 ✕
               </button>
             </div>
+
             <div className="p-4">
+              {/* Template Name */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Template Name*
@@ -342,6 +343,8 @@ const Editor = () => {
                   required
                 />
               </div>
+
+              {/* Description */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Description
@@ -354,6 +357,8 @@ const Editor = () => {
                   rows={3}
                 />
               </div>
+
+              {/* Category */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Category
@@ -371,6 +376,8 @@ const Editor = () => {
                 </select>
               </div>
             </div>
+
+            {/* Modal Actions */}
             <div className="p-4 border-t flex justify-end gap-2">
               <button
                 onClick={() => setShowSaveModal(false)}
@@ -379,10 +386,10 @@ const Editor = () => {
                 Cancel
               </button>
               <button
-                onClick={saveTemplate}
+                onClick={handleSaveOrUpdateTemplate}
                 className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
               >
-                Save Template
+                {isEditMode ? "Update Template" : "Save Template"}
               </button>
             </div>
           </div>
