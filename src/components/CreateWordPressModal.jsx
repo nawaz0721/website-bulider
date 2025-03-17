@@ -1,19 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import InstallationProgressModal from "./InstallationProgressModal";
-import SiteInfoStep from "./CreateWebsite/steps/SiteInfoStep";
 import { Button } from "./ui/button";
+import { Link, useNavigate } from "react-router-dom";
 
 function CreateWordPressModal({ isOpen, onClose }) {
-  const [isInstalling, setIsInstalling] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({
     location: "council-bluffs",
     siteTitle: "",
-    companyName: "",
-    companyDescription: "",
-    hasDomain: null,
   });
   const [darkMode, setDarkMode] = useState(false);
 
@@ -25,7 +20,6 @@ function CreateWordPressModal({ isOpen, onClose }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsInstalling(true);
     setCurrentStep(1);
     await new Promise((resolve) => setTimeout(resolve, 3000));
     setCurrentStep(2);
@@ -37,11 +31,7 @@ function CreateWordPressModal({ isOpen, onClose }) {
   const updateFormData = (newData) => {
     setFormData((prev) => ({ ...prev, ...newData }));
   };
-
-  if (!isOpen) return null;
-  if (isInstalling) {
-    return <InstallationProgressModal isOpen={true} currentStep={currentStep} />;
-  }
+  const navigate = useNavigate()
 
   return (
     <div className={`fixed inset-0 w-full bg-opacity-50 flex items-center justify-center z-50 ${darkMode ? "bg-black" : "bg-gray-200"}`}>
@@ -49,11 +39,10 @@ function CreateWordPressModal({ isOpen, onClose }) {
         <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
           ✖
         </button>
-        {currentStep === 0 ? (
           <>
             <h2 className="text-2xl font-bold mb-2">Create a New WordPress Website</h2>
             <p className="text-gray-600 dark:text-gray-400">Build your website with AI or custom setup.</p>
-            <form onSubmit={(e) => { e.preventDefault(); setCurrentStep(1); }} className="space-y-4 mt-4">
+            <form onSubmit={()=>{navigate("/templates")}} className="space-y-4 mt-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Choose Location</label>
                 <select
@@ -83,9 +72,6 @@ function CreateWordPressModal({ isOpen, onClose }) {
               </Button>
             </form>
           </>
-        ) : (
-          <SiteInfoStep formData={formData} updateFormData={updateFormData} onNext={handleSubmit} onBack={() => setCurrentStep(0)} />
-        )}
       </div>
     </div>
   );

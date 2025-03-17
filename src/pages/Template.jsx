@@ -1,78 +1,90 @@
-"use client"
+"use client";
 
-import { ArrowLeft, Plus, Search } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import {Link} from "react-router-dom"
-import { useEffect, useState } from "react"
-import axios from "axios"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { motion } from "framer-motion"
-import { AppRoutes } from "@/constant/constant"
-
-
+import { ArrowLeft, Plus, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Link, Navigate, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { motion } from "framer-motion";
+import { AppRoutes } from "@/constant/constant";
+import Cookies from "js-cookie";
+import toast from "react-hot-toast";
 
 export default function TemplatesPage() {
-  const [selectedCategory, setSelectedCategory] = useState("All")
-  const [searchQuery, setSearchQuery] = useState("")
-  const [allTemplates, setAllTemplates] = useState([])
-  const [displayedTemplates, setDisplayedTemplates] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [allTemplates, setAllTemplates] = useState([]);
+  const [displayedTemplates, setDisplayedTemplates] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
   // Fetch all templates from your backend on mount
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
-        setIsLoading(true)
-        const response = await axios.get(AppRoutes.template)
-        setAllTemplates(response.data)
-        setIsLoading(false)
+        setIsLoading(true);
+        const response = await axios.get(AppRoutes.template);
+        setAllTemplates(response.data);
+        setIsLoading(false);
       } catch (error) {
-        console.error("Error fetching templates:", error)
-        setIsLoading(false)
+        console.error("Error fetching templates:", error);
+        setIsLoading(false);
       }
-    }
-    fetchTemplates()
-  }, [])
+    };
+    fetchTemplates();
+  }, []);
 
   // Filter templates by category and search query
   useEffect(() => {
-    let filtered = [...allTemplates]
+    let filtered = [...allTemplates];
 
     // Filter by category
     if (selectedCategory !== "All") {
-      filtered = filtered.filter((t) => t.category === selectedCategory)
+      filtered = filtered.filter((t) => t.category === selectedCategory);
     }
 
     // Filter by search query
     if (searchQuery) {
-      const query = searchQuery.toLowerCase()
+      const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
-        (t) => t.name.toLowerCase().includes(query) || t.description?.toLowerCase().includes(query),
-      )
+        (t) =>
+          t.name.toLowerCase().includes(query) ||
+          t.description?.toLowerCase().includes(query)
+      );
     }
 
-    setDisplayedTemplates(filtered)
-  }, [allTemplates, selectedCategory, searchQuery])
+    setDisplayedTemplates(filtered);
+  }, [allTemplates, selectedCategory, searchQuery]);
 
   // Get unique categories (including "All")
   const getUniqueCategories = () => {
-    const categories = new Set(allTemplates.map((t) => t.category))
-    return ["All", ...Array.from(categories)]
-  }
+    const categories = new Set(allTemplates.map((t) => t.category));
+    return ["All", ...Array.from(categories)];
+  };
 
   // Preview template => open its HTML in a new tab
   const handlePreview = (template) => {
-    const previewWindow = window.open("", "_blank")
-    previewWindow.document.write(template.html)
-    previewWindow.document.close()
-  }
+    const previewWindow = window.open("", "_blank");
+    previewWindow.document.write(template.html);
+    previewWindow.document.close();
+  };
 
   // Use template => navigate to Editor with template ID (/editor/:id)
   const handleUseTemplate = (template) => {
-    window.location.to = `/editor/${template._id}`
-  }
+    console.log("template", template);
+
+    navigate(`/editor/${template._id}`);
+    // window.location.to = `/editor/${template._id}`
+  };
 
   const container = {
     hidden: { opacity: 0 },
@@ -82,12 +94,14 @@ export default function TemplatesPage() {
         staggerChildren: 0.1,
       },
     },
-  }
+  };
 
   const item = {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0 },
-  }
+  };
+
+  const authToken = Cookies.get("authToken"); // Check if user is authenticated
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-b from-background to-background/80">
@@ -105,15 +119,26 @@ export default function TemplatesPage() {
               </Link>
             </div>
             <div className="flex items-center gap-4">
-              <Link to="/editor">
-                <Button variant="outline" className="gap-2 text-white">
-                  <Plus className="h-4 w-4" />
-                  New Template
-                </Button>
-              </Link>
-              {/* <Link to="/editor">
-                <Button className="gap-2">Go to Editor</Button>
-              </Link> */}
+              {authToken ? (
+                <Link to="/editor">
+                  <Button variant="outline" className="gap-2 text-white">
+                    <Plus className="h-4 w-4" />
+                    New Template
+                  </Button>
+                </Link>
+              ) : (
+                  <Button variant="outline" className="gap-2 text-white" onClick={() => {
+                                toast.error(
+                                  "You need to be logged in to use this template."
+                                );
+                                setTimeout(() => {
+                                  navigate("/login");
+                                }, 2000); // Adjust the delay as needed
+                              }}>
+                    <Plus className="h-4 w-4" />
+                    New Template
+                  </Button>
+              )}
             </div>
           </div>
         </div>
@@ -124,9 +149,12 @@ export default function TemplatesPage() {
         <div className="space-y-8">
           {/* Hero section */}
           <div className="space-y-2">
-            <h1 className="text-4xl font-bold tracking-tight">Templates Gallery</h1>
+            <h1 className="text-4xl font-bold tracking-tight">
+              Templates Gallery
+            </h1>
             <p className="text-muted-foreground text-lg max-w-2xl">
-              Browse our collection of professionally designed templates to kickstart your next project
+              Browse our collection of professionally designed templates to
+              kickstart your next project
             </p>
           </div>
 
@@ -145,10 +173,16 @@ export default function TemplatesPage() {
               {getUniqueCategories().map((category) => (
                 <Button
                   key={category}
-                  variant={selectedCategory === category ? "default" : "outline"}
+                  variant={
+                    selectedCategory === category ? "default" : "outline"
+                  }
                   size="sm"
                   onClick={() => setSelectedCategory(category)}
-                  className={selectedCategory === category ? "text-black whitespace-nowrap" : "text-white whitespace-nowrap"}
+                  className={
+                    selectedCategory === category
+                      ? "text-black whitespace-nowrap"
+                      : "text-white whitespace-nowrap"
+                  }
                 >
                   {category}
                 </Button>
@@ -186,14 +220,19 @@ export default function TemplatesPage() {
                     <Card className="overflow-hidden h-full flex flex-col group hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/20">
                       <div className="aspect-video overflow-hidden bg-muted/30">
                         <img
-                          src={template.image || "/placeholder.svg?height=200&width=400"}
+                          src={
+                            template.image ||
+                            "/placeholder.svg?height=200&width=400"
+                          }
                           alt={template.name}
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                         />
                       </div>
                       <CardHeader className="flex-1">
                         <div className="flex items-center justify-between">
-                          <CardTitle className="text-xl">{template.name}</CardTitle>
+                          <CardTitle className="text-xl">
+                            {template.name}
+                          </CardTitle>
                           <Badge variant="secondary" className="ml-2">
                             {template.category}
                           </Badge>
@@ -210,9 +249,32 @@ export default function TemplatesPage() {
                         >
                           Preview
                         </Button>
-                        <Button variant="outline" className="flex-1 text-white hover:bg-white hover:text-black" onClick={() => handleUseTemplate(template)}>
-                          Use Template
-                        </Button>
+                        {authToken ? (
+                          <Button
+                            variant="outline"
+                            className="flex-1 text-white hover:bg-white hover:text-black"
+                            onClick={() => handleUseTemplate(template)}
+                          >
+                            Use Template
+                          </Button>
+                        ) : (
+                          <Link to="/login">
+                            <Button
+                              variant="outline"
+                              className="flex-1 text-white hover:bg-white hover:text-black"
+                              onClick={() => {
+                                toast.error(
+                                  "You need to be logged in to use this template."
+                                );
+                                setTimeout(() => {
+                                  navigate("/login");
+                                }, 2000); // Adjust the delay as needed
+                              }}
+                            >
+                              Use Template
+                            </Button>
+                          </Link>
+                        )}
                       </CardFooter>
                     </Card>
                   </motion.div>
@@ -223,7 +285,9 @@ export default function TemplatesPage() {
                     <div className="rounded-full bg-primary/10 p-3 mb-4">
                       <Search className="h-6 w-6 text-primary" />
                     </div>
-                    <h3 className="text-xl font-semibold mb-1">No templates found</h3>
+                    <h3 className="text-xl font-semibold mb-1">
+                      No templates found
+                    </h3>
                     <p className="text-muted-foreground mb-4">
                       {searchQuery
                         ? "Try adjusting your search or filter criteria"
@@ -250,19 +314,27 @@ export default function TemplatesPage() {
             © {new Date().getFullYear()} Your Company. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
-            <Link to="/help" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <Link
+              to="/help"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
               Help
             </Link>
-            <Link to="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <Link
+              to="/privacy"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
               Privacy
             </Link>
-            <Link to="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <Link
+              to="/terms"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
               Terms
             </Link>
           </div>
         </div>
       </footer>
     </div>
-  )
+  );
 }
-

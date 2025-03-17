@@ -2,9 +2,7 @@
 
 import { useState } from "react"
 import WebsiteTypeStep from "./steps/WebsiteTypeStep"
-import BusinessTypeStep from "./steps/BusinessTypeStep"
-import SiteInfoStep from "./steps/SiteInfoStep"
-import StyleCustomizationStep from "./steps/StyleCustomizationStep"
+
 
 function CreateWebsiteFlow() {
   const [currentStep, setCurrentStep] = useState(1)
@@ -33,19 +31,6 @@ function CreateWebsiteFlow() {
     switch (currentStep) {
       case 1:
         return <WebsiteTypeStep formData={formData} updateFormData={updateFormData} onNext={handleNext} />
-      case 2:
-        return (
-          <BusinessTypeStep
-            formData={formData}
-            updateFormData={updateFormData}
-            onNext={handleNext}
-            onBack={handleBack}
-          />
-        )
-      case 3:
-        return (
-          <SiteInfoStep formData={formData} updateFormData={updateFormData} onNext={handleNext} onBack={handleBack} />
-        )
       default:
         return null
     }

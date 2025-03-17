@@ -1,19 +1,16 @@
 "use client";
 
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { Search, ChevronDown, Brain, Cloud, ChevronRight } from "lucide-react";
+import { Search} from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { FaCloudflare } from "react-icons/fa";
 import WebsiteCard from "@/components/WebsiteCard";
-import Navbar from "@/components/Navbar";
-import Sidebar from "@/components/Sidebar";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import CreateWordPressModal from "@/components/CreateWordPressModal";
 import { Button } from "@/components/ui/button";
+import Header from "@/components/Header";
+import Cookies from "js-cookie";
 
 // Dummy data for websites (replace with actual API data)
 const websites = []; // Empty array means no websites exist
@@ -30,11 +27,13 @@ export default function Dashboard() {
     setIsModalOpen(true);
   };
 
+    const user = Cookies.get("user"); // Check if user is authenticated
+    const userdetails = JSON.parse(user)
+    
   return (
-    <SidebarProvider>
-      <Navbar />
-      <Sidebar />
-      <div className="mx-auto w-full mt-12 ml-16 p-6 space-y-6">
+      <>
+            <Header />
+      <div className="mx-auto w-full space-y-6">
         {/* Show Website Cards if there are any */}
         {websites.length > 0 ? (
           <>
@@ -74,7 +73,7 @@ export default function Dashboard() {
               <div className="mb-12 max-w-3xl">
                 <h2 className="text-lg font-medium mb-2">
                   <span className="mr-2">👋</span>
-                  Hey Ahmed Nawaz!
+                  Hey {userdetails.firstname + ' ' + userdetails.lastname}
                 </h2>
                 <h1 className="text-3xl font-bold mb-2">
                   How do you want to build your website?
@@ -121,6 +120,6 @@ export default function Dashboard() {
 
       {/* Create WordPress Modal */}
       {isModalOpen && <CreateWordPressModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />}
-    </SidebarProvider>
+      </>
   );
 }

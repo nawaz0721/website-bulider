@@ -36,8 +36,8 @@ const App = () => {
             </>
           }
         /> */}
-        <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/" element={<Home />} />
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/main-dashboard" element={<MainDashboard />} />
         <Route path="/create-website" element={<CreateWebsiteFlow />} />
         <Route path="/convert-site" element={<ConvertSite />} />
@@ -52,7 +52,6 @@ const App = () => {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/setting" element={<SettingsPage />} />
           <Route path="/templates" element={<TemplatesPage />} />
-          <Route path="/portfolioTemplate" element={<PortfolioTemplate />} />
         </Routes>
     </Router>
   );

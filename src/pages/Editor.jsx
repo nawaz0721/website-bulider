@@ -7,6 +7,7 @@ import axios from "axios";
 import { AppRoutes } from "@/constant/constant";
 import html2canvas from "html2canvas";
 import toast from "react-hot-toast";
+import Cookies from "js-cookie";
 
 const Editor = () => {
   // If there's an "id" param, we are editing an existing template
@@ -254,6 +255,10 @@ const Editor = () => {
     }
   };
 
+  const user = Cookies.get("user"); // Check if user is authenticated
+  const userdetails = JSON.parse(user)
+  console.log("userdetails", userdetails.role);
+  
   return (
     <div>
       {/* GrapesJS Editor Container */}
@@ -261,58 +266,25 @@ const Editor = () => {
 
       {/* Floating Buttons */}
       <div className="fixed z-10 bottom-4 right-4 flex gap-2">
-        <button
-          onClick={handlePreview}
-          className="p-3 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition-colors"
-          title="Preview"
+      {
+        userdetails.role === "admin" ? (<button
+          onClick={handleAdminSaveTemplate}
+          className="p-3 bg-purple-500 text-white rounded-full shadow-lg hover:bg-purple-600 transition-colors"
+          title={isEditMode ? "Update Template" : "Save Template"}
         >
-          Preview
-        </button>
-        <button
-          onClick={handleShowCode}
-          className="p-3 bg-green-500 text-white rounded-full shadow-lg hover:bg-green-600 transition-colors"
-          title="Show Code"
-        >
-          Show Code
-        </button>
-        <button
+          {isEditMode ? "Update Template" : "Save Template"}
+        </button>) : (
+          <button
           onClick={handleSaveTemplate}
           className="p-3 bg-purple-500 text-white rounded-full shadow-lg hover:bg-purple-600 transition-colors"
           title={isEditMode ? "Update Template" : "Save Template"}
         >
           {isEditMode ? "Update Template" : "Save Template"}
         </button>
+        )
+      }  
+        
       </div>
-
-      {/* Code Modal */}
-      {showCodeModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] flex flex-col">
-            <div className="p-4 border-b flex justify-between items-center">
-              <h3 className="text-lg font-medium">Generated Code</h3>
-              <button
-                onClick={() => setShowCodeModal(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="p-4 overflow-auto flex-grow">
-              <pre className="bg-gray-100 p-4 rounded text-sm overflow-x-auto whitespace-pre-wrap">
-                {generatedCode}
-              </pre>
-            </div>
-            <div className="p-4 border-t flex justify-end gap-2">
-              <button
-                onClick={() => setShowCodeModal(false)}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Save / Update Modal */}
       {showSaveModal && (

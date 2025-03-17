@@ -45,11 +45,13 @@ export default function HomeComponent() {
                     </Button>
                   </Link>
                 )}
-                <Link to="templates">
+                {authToken && ( // Show Get Started button only if user is NOT logged in
+                  <Link to="dashboard">
                   <Button size="lg" className="gap-1.5 text-black bg-white hover:text-white hover:bg-black w-full transition-colors border-black"  variant="outline">
-                    View Templates
+                  Get Started
                   </Button>
                 </Link>
+                )}
               </div>
             </div>
             <div className="flex items-center justify-center">
