@@ -18,7 +18,6 @@ import SelectWebsite from './pages/SelectWebsite';
 
 
 const App = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false)
   return (
     <Router>
         <Toaster position="top-right" reverseOrder={false} />
