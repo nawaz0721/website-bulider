@@ -46,7 +46,7 @@ export default function HomeComponent() {
                   </Link>
                 )}
                 {authToken && ( // Show Get Started button only if user is NOT logged in
-                  <Link to="dashboard">
+                  <Link to="select-website">
                   <Button size="lg" className="gap-1.5 text-black bg-white hover:text-white hover:bg-black w-full transition-colors border-black"  variant="outline">
                   Get Started
                   </Button>
