@@ -12,4 +12,8 @@ export const AppRoutes = {
     verifyotp: devUrl + "auth/verify-otp",
     resetPassword: devUrl + "auth/reset-password",
     template: devUrl + "template/templates",
+    alltemplate: devUrl + "template/template",
+    user: devUrl + "user/users",
+    profile: devUrl + "profile/profile",
+    profileAvatar: devUrl + "profile/upload-avatar",
 }

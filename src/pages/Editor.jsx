@@ -32,6 +32,9 @@ const Editor = () => {
   const [templateDescription, setTemplateDescription] = useState("");
   const [templateCategory, setTemplateCategory] = useState("Personal");
 
+  const user = Cookies.get("user");
+  const userdetails = JSON.parse(user)
+
   // Code modal content
   const [generatedCode, setGeneratedCode] = useState("");
 
@@ -215,9 +218,11 @@ const Editor = () => {
       console.error("Screenshot capture failed:", err);
       // fallback to a placeholder if needed
     }
+  console.log("userdetails", userdetails.role);
 
     // Build payload
     const payload = {
+      userID: userdetails._id,
       name: templateName,
       description:
         templateDescription ||
@@ -255,9 +260,7 @@ const Editor = () => {
     }
   };
 
-  const user = Cookies.get("user"); // Check if user is authenticated
-  const userdetails = JSON.parse(user)
-  console.log("userdetails", userdetails.role);
+ 
   
   return (
     <div>
@@ -268,7 +271,7 @@ const Editor = () => {
       <div className="fixed z-10 bottom-4 right-4 flex gap-2">
       {
         userdetails.role === "admin" ? (<button
-          onClick={handleAdminSaveTemplate}
+          onClick={handleSaveTemplate}
           className="p-3 bg-purple-500 text-white rounded-full shadow-lg hover:bg-purple-600 transition-colors"
           title={isEditMode ? "Update Template" : "Save Template"}
         >

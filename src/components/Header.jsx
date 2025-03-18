@@ -55,7 +55,7 @@ export default function Header() {
                 <span className="text-sm font-medium">{user?.firstname || "User"}</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-40 bg-white">
-                <DropdownMenuItem className="bg-white hover:bg-slate-200" onClick={() => navigate("/dashboard")}>
+                <DropdownMenuItem className="bg-white hover:bg-slate-200" onClick={() => navigate("/main-dashboard")}>
                   <LayoutDashboard className="h-4 w-4 mr-2 " />
                   Dashboard
                 </DropdownMenuItem>

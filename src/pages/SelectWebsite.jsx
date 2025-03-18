@@ -15,7 +15,7 @@ import Cookies from "js-cookie";
 // Dummy data for websites (replace with actual API data)
 const websites = []; // Empty array means no websites exist
 
-export default function Dashboard() {
+export default function SelectWebsite() {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
 

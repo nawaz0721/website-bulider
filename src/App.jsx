@@ -5,18 +5,15 @@ import RegisterPage from './pages/RegisterPage';
 import TemplatesPage from './pages/Template';
 import ProfilePage from './pages/Profile';
 import SettingsPage from './pages/Setting';
-import DashboardPage from './dashboard/page';
 import OtpVerification from './components/OtpVerification';
 import ResetPassword from './components/ResetPassword';
 import ConvertSite from './pages/ConvertSite';
-import Dashboard from './pages/Dashboard';
-import CreateWordPressModal from './components/CreateWordPressModal';
 import { useState } from 'react';
 import MainDashboard from './pages/MainDashboard';
 import CreateWebsiteFlow from './components/CreateWebsite/CreateWebsiteFlow';
 import Editor from './pages/Editor';
-import PortfolioTemplate from './templates/portfolio/page';
 import { Toaster } from 'react-hot-toast';
+import SelectWebsite from './pages/SelectWebsite';
 // import Editor from './pages/Editor'; 
 
 
@@ -37,7 +34,7 @@ const App = () => {
           }
         /> */}
           <Route path="/" element={<Home />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/select-website" element={<SelectWebsite />} />
         <Route path="/main-dashboard" element={<MainDashboard />} />
         <Route path="/create-website" element={<CreateWebsiteFlow />} />
         <Route path="/convert-site" element={<ConvertSite />} />

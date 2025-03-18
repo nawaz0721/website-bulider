@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { Input } from "@/components/ui/input";
@@ -27,19 +27,75 @@ export default function TemplatesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Fetch all templates from your backend on mount
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
         setIsLoading(true);
-        const response = await axios.get(AppRoutes.template);
-        setAllTemplates(response.data);
+
+        // Step 1: Fetch all templates
+        const templatesResponse = await axios.get(AppRoutes.alltemplate);
+        console.log("Templates Response:", templatesResponse.data);
+
+        // Step 2: Fetch user details for each template
+        const templatesWithUserDetails = await Promise.all(
+          templatesResponse.data.map(async (template) => {
+            try {
+              // Fetch user details for the template's userID
+              const userResponse = await axios.get(
+                `${AppRoutes.user}/${template.userID}`,
+                {
+                  headers: {
+                    Accept: "application/json", // Ensure the response is JSON
+                  },
+                }
+              );
+
+              // Check if the response is JSON
+              const contentType = userResponse.headers["content-type"];
+              if (!contentType || !contentType.includes("application/json")) {
+                console.error("Invalid response format:", userResponse.data);
+                return {
+                  ...template,
+                  userDetails: null, // Fallback for invalid responses
+                };
+              }
+
+              // Parse userDetails if it's a string
+              const userDetails =
+                typeof userResponse.data === "string"
+                  ? JSON.parse(userResponse.data)
+                  : userResponse.data;
+
+              return {
+                ...template,
+                userDetails, // Add parsed user details to the template
+              };
+            } catch (error) {
+              console.error("Error fetching user details:", error);
+              return {
+                ...template,
+                userDetails: null, // Fallback for errors
+              };
+            }
+          })
+        );
+
+        console.log("Templates with User Details:", templatesWithUserDetails);
+
+        // Step 3: Filter templates to show only those created by admins
+        const adminTemplates = templatesWithUserDetails.filter(
+          (template) => template.userDetails?.role === "admin"
+        );
+
+        console.log("Admin Templates:", adminTemplates);
+        setAllTemplates(adminTemplates); // Set filtered templates
         setIsLoading(false);
       } catch (error) {
         console.error("Error fetching templates:", error);
         setIsLoading(false);
       }
     };
+
     fetchTemplates();
   }, []);
 
@@ -62,6 +118,7 @@ export default function TemplatesPage() {
       );
     }
 
+    console.log(filtered);
     setDisplayedTemplates(filtered);
   }, [allTemplates, selectedCategory, searchQuery]);
 
@@ -81,9 +138,7 @@ export default function TemplatesPage() {
   // Use template => navigate to Editor with template ID (/editor/:id)
   const handleUseTemplate = (template) => {
     console.log("template", template);
-
     navigate(`/editor/${template._id}`);
-    // window.location.to = `/editor/${template._id}`
   };
 
   const container = {
@@ -103,6 +158,14 @@ export default function TemplatesPage() {
 
   const authToken = Cookies.get("authToken"); // Check if user is authenticated
 
+  // Get logged-in user details
+  const user = Cookies.get("user");
+  const userdetails = JSON.parse(user);
+  console.log("Logged-in user details:", userdetails);
+
+  // Check if the logged-in user is an admin
+  const isAdmin = userdetails?.role === "admin";
+
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-b from-background to-background/80">
       {/* Header */}
@@ -111,7 +174,7 @@ export default function TemplatesPage() {
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-2">
               <Link
-                to="/dashboard"
+                to="/main-dashboard"
                 className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors"
               >
                 <ArrowLeft className="h-4 w-4" />
@@ -127,17 +190,21 @@ export default function TemplatesPage() {
                   </Button>
                 </Link>
               ) : (
-                  <Button variant="outline" className="gap-2 text-white" onClick={() => {
-                                toast.error(
-                                  "You need to be logged in to use this template."
-                                );
-                                setTimeout(() => {
-                                  navigate("/login");
-                                }, 2000); // Adjust the delay as needed
-                              }}>
-                    <Plus className="h-4 w-4" />
-                    New Template
-                  </Button>
+                <Button
+                  variant="outline"
+                  className="gap-2 text-white"
+                  onClick={() => {
+                    toast.error(
+                      "You need to be logged in to create a new template."
+                    );
+                    setTimeout(() => {
+                      navigate("/login");
+                    }, 2000); // Adjust the delay as needed
+                  }}
+                >
+                  <Plus className="h-4 w-4" />
+                  New Template
+                </Button>
               )}
             </div>
           </div>
@@ -193,18 +260,12 @@ export default function TemplatesPage() {
           {/* Templates grid */}
           {isLoading ? (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <Card key={i} className="overflow-hidden">
-                  <div className="aspect-video bg-muted animate-pulse" />
-                  <CardHeader>
-                    <div className="h-6 bg-muted animate-pulse rounded w-3/4 mb-2" />
-                    <div className="h-4 bg-muted animate-pulse rounded w-full" />
-                  </CardHeader>
-                  <CardFooter className="flex justify-between">
-                    <div className="h-10 bg-muted animate-pulse rounded w-28" />
-                    <div className="h-10 bg-muted animate-pulse rounded w-28" />
-                  </CardFooter>
-                </Card>
+              {[1, 2].map((i) => (
+                <div key={i} className="rounded-lg border p-4 animate-pulse">
+                  <div className="h-40 bg-gray-200 rounded-lg"></div>
+                  <div className="mt-4 h-6 bg-gray-200 rounded w-3/4"></div>
+                  <div className="mt-2 h-4 bg-gray-200 rounded w-full"></div>
+                </div>
               ))}
             </div>
           ) : (
@@ -258,22 +319,20 @@ export default function TemplatesPage() {
                             Use Template
                           </Button>
                         ) : (
-                          <Link to="/login">
-                            <Button
-                              variant="outline"
-                              className="flex-1 text-white hover:bg-white hover:text-black"
-                              onClick={() => {
-                                toast.error(
-                                  "You need to be logged in to use this template."
-                                );
-                                setTimeout(() => {
-                                  navigate("/login");
-                                }, 2000); // Adjust the delay as needed
-                              }}
-                            >
-                              Use Template
-                            </Button>
-                          </Link>
+                          <Button
+                            variant="outline"
+                            className="flex-1 text-white hover:bg-white hover:text-black"
+                            onClick={() => {
+                              toast.error(
+                                "You need to be logged in to use this template."
+                              );
+                              setTimeout(() => {
+                                navigate("/login");
+                              }, 2000); // Adjust the delay as needed
+                            }}
+                          >
+                            Use Template
+                          </Button>
                         )}
                       </CardFooter>
                     </Card>
