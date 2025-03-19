@@ -1,212 +1,281 @@
-import { useEffect, useState } from "react";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { Search, ChevronDown, Brain, Cloud, ChevronRight, Badge } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Card, Divider } from "antd";
-import { FaCloudflare } from "react-icons/fa";
-import Navbar from "@/components/Navbar";
-import Sidebar from "@/components/Sidebar";
-import axios from "axios";
-import Cookies from "js-cookie";
-import { AppRoutes } from "@/constant/constant";
-import { CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+"use client"
+
+import { useEffect, useState } from "react"
+import { SidebarProvider } from "@/components/ui/sidebar"
+import { Search, Brain, Eye, MoreVertical, Plus } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Popover, PopoverTrigger } from "@/components/ui/popover"
+import { Card, Divider } from "antd"
+import { FaCloudflare } from "react-icons/fa"
+import Navbar from "@/components/Navbar"
+import Sidebar from "@/components/Sidebar"
+import axios from "axios"
+import Cookies from "js-cookie"
+import { AppRoutes } from "@/constant/constant"
+import { CardDescription, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu"
+import { useNavigate, Link } from "react-router-dom"
+import PreviewPage from "./preview-modal"
+import toast from "react-hot-toast"
 
 export default function Dashboard() {
-  const [templates, setTemplates] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [templates, setTemplates] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [showPreview, setShowPreview] = useState(false)
+  const [selectedTemplate, setSelectedTemplate] = useState(null)
+  const [searchQuery, setSearchQuery] = useState("")
+  const navigate = useNavigate()
 
   // Fetch templates added by the logged-in user
-  useEffect(() => {
-    const fetchTemplates = async () => {
-      try {
-        setIsLoading(true);
+  const fetchTemplates = async () => {
+    try {
+      setIsLoading(true)
 
-        // Get the logged-in user's ID
-        const user = Cookies.get("user");
-        const userdetails = JSON.parse(user);
-        const userId = userdetails?._id;
+      // Get the logged-in user's ID
+      const user = Cookies.get("user")
+      const userdetails = JSON.parse(user)
+      const userId = userdetails?._id
 
-        if (!userId) {
-          console.error("User ID not found");
-          setIsLoading(false);
-          return;
-        }
-
-        // Fetch templates created by the logged-in user
-        const response = await axios.get(
-          `${AppRoutes.template}?userID=${userId}`
-        );
-        console.log("Templates Response:", response.data);
-
-        setTemplates(response.data); // Set the fetched templates
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error fetching templates:", error);
-        setIsLoading(false);
+      if (!userId) {
+        console.error("User ID not found")
+        setIsLoading(false)
+        return
       }
-    };
 
-    fetchTemplates();
-  }, []);
+      // Fetch templates created by the logged-in user
+      const response = await axios.get(`${AppRoutes.template}?userID=${userId}`)
+      console.log("Templates Response:", response.data)
 
-    const authToken = Cookies.get("authToken"); // Check if user is authenticated
-  
+      setTemplates(response.data) // Set the fetched templates
+      setIsLoading(false)
+    } catch (error) {
+      console.error("Error fetching templates:", error)
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchTemplates()
+  }, [])
+
+  // Filter templates by search query
+  const filteredTemplates = templates.filter((template) => {
+    if (!searchQuery) return true
+
+    const query = searchQuery.toLowerCase()
+    return template.name?.toLowerCase().includes(query) || template.description?.toLowerCase().includes(query)
+  })
+
+  // Preview template => open its HTML in a new tab
+  const handlePreview = (template) => {
+    const previewWindow = window.open("", "_blank")
+    previewWindow.document.write(template.html)
+    previewWindow.document.close()
+  }
+
+  // Use template => navigate to Editor with template ID (/editor/:id)
+  const handleUseTemplate = (template) => {
+    setSelectedTemplate(template) // set template data
+    setShowPreview(true) // open modal
+  }
+
+  const handleClosePreview = () => {
+    setShowPreview(false)
+    setSelectedTemplate(null)
+  }
+
+  const handleDeleteTemplate = async (templateId) => {
+    try {
+      const authToken = Cookies.get("authToken")
+      if (!authToken) {
+        toast.error("You need to be logged in to delete templates.")
+        return
+      }
+
+      // Show loading toast
+      const loadingToast = toast.loading("Deleting template...")
+
+      // Delete the template
+      await axios.delete(`${AppRoutes.template}/${templateId}`, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      })
+
+      // Dismiss loading toast and show success
+      toast.dismiss(loadingToast)
+      toast.success("Template deleted successfully!")
+
+      // Refresh the templates list
+      fetchTemplates()
+    } catch (error) {
+      console.error("Error deleting template:", error)
+      toast.error("Failed to delete template. Please try again.")
+    }
+  }
+
+  const authToken = Cookies.get("authToken") // Check if user is authenticated
 
   return (
     <SidebarProvider>
       <Navbar />
       <Sidebar />
-      <div className="mx-auto w-full mt-12 ml-16 p-6 space-y-6">
-        {/* Action Cards */}
-        <div className="grid gap-4 md:grid-cols-4">
-          <button className="flex items-center gap-4 rounded-lg border p-4 text-left hover:border-gray-400 transition-colors">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#B5132C] text-white">
-              <Brain className="h-6 w-6" />
-            </div>
-            <div>
-              <h2 className="font-semibold">Create a website</h2>
-              <p className="text-sm text-gray-500">
-                Use AI, templates or themes
-              </p>
-            </div>
-          </button>
-          <Popover>
-            <PopoverTrigger asChild>
-              <button className="flex items-center gap-4 rounded-lg border p-4 text-left hover:border-gray-400 transition-colors">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#B5132C] text-white">
-                  <FaCloudflare className="h-6 w-6" />
-                </div>
-                <div>
-                  <h2 className="font-semibold">Create a custom website</h2>
-                  <p className="text-sm text-gray-500">
-                    Manually design and customize your website.
-                  </p>
-                </div>
-              </button>
-            </PopoverTrigger>
-          </Popover>
-        </div>
-        <Divider className="w-full" orientation="right">
-          Websites: 1 of 1
-        </Divider>
-        {/* Filter Bar */}
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-4">
-            <Checkbox id="select-all" />
-            <Select>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by tag" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All tags</SelectItem>
-                {/* Add more filter options as needed */}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex flex-1 items-center justify-end gap-4">
-            <div className="relative max-w-sm flex-1">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-              <Input placeholder="Search..." className="pl-9" />
-            </div>
-          </div>
-        </div>
-        {/* Template Cards */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {isLoading ? (
-            // Show loading skeleton
-            [1, 2, 3].map((i) => (
-              <div key={i} className="rounded-lg border p-4 animate-pulse">
-                <div className="h-40 bg-gray-200 rounded-lg"></div>
-                <div className="mt-4 h-6 bg-gray-200 rounded w-3/4"></div>
-                <div className="mt-2 h-4 bg-gray-200 rounded w-full"></div>
+
+      {/* Conditional rendering */}
+      {showPreview && selectedTemplate ? (
+        <PreviewPage template={selectedTemplate} isOpen={showPreview} onClose={handleClosePreview} />
+      ) : (
+        <div className="mx-auto w-full mt-12 ml-16 p-6 space-y-6">
+          {/* Action Cards */}
+          <div className="grid gap-4 md:grid-cols-4">
+            <button className="flex items-center gap-4 rounded-lg border p-4 text-left hover:border-gray-400 transition-colors">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#B5132C] text-white">
+                <Brain className="h-6 w-6" />
               </div>
-            ))
-          ) : templates.length > 0 ? (
-            // Show templates
-            templates.map((template) => (
-              <Card className="overflow-hidden h-full flex flex-col group hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/20">
-                      <div className="aspect-video overflow-hidden bg-muted/30">
-                        <img
-                          src={
-                            template.image ||
-                            "/placeholder.svg?height=200&width=400"
-                          }
-                          alt={template.name}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                      </div>
-                      <CardHeader className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-xl">
-                            {template.name}
-                          </CardTitle>
-                          <Badge variant="secondary" className="ml-2">
-                            {template.category}
-                          </Badge>
-                        </div>
-                        <CardDescription className="mt-2 line-clamp-2">
-                          {template.description || "No description available"}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardFooter className="flex justify-between gap-4 pt-2 pb-4 ">
-                        <Button
-                          variant="outline"
-                          className="flex-1 transition-colors text-white hover:bg-white hover:text-black"
-                          onClick={() => handlePreview(template)}
-                        >
-                          Preview
-                        </Button>
-                        {authToken ? (
-                          <Button
-                            variant="outline"
-                            className="flex-1 text-white hover:bg-white hover:text-black"
-                            onClick={() => handleUseTemplate(template)}
-                          >
-                            Use Template
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="outline"
-                            className="flex-1 text-white hover:bg-white hover:text-black"
-                            onClick={() => {
-                              toast.error(
-                                "You need to be logged in to use this template."
-                              );
-                              setTimeout(() => {
-                                navigate("/login");
-                              }, 2000); // Adjust the delay as needed
-                            }}
-                          >
-                            Use Template
-                          </Button>
-                        )}
-                      </CardFooter>
-                    </Card>
-            ))
-          ) : (
-            // Show message if no templates are found
-            <div className="col-span-full text-center py-12">
-              <p className="text-gray-500">
-                No templates found. Create one to get started.
-              </p>
+              <div>
+                <h2 className="font-semibold">Create a website</h2>
+                <p className="text-sm text-gray-500">Use AI, templates or themes</p>
+              </div>
+            </button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="flex items-center gap-4 rounded-lg border p-4 text-left hover:border-gray-400 transition-colors">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#B5132C] text-white">
+                    <FaCloudflare className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h2 className="font-semibold">Create a custom website</h2>
+                    <p className="text-sm text-gray-500">Manually design and customize your website.</p>
+                  </div>
+                </button>
+              </PopoverTrigger>
+            </Popover>
+            <Link
+              to="/templates"
+              className="flex items-center gap-4 rounded-lg border p-4 text-left hover:border-gray-400 transition-colors"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#B5132C] text-white">
+                <Plus className="h-6 w-6" />
+              </div>
+              <div>
+                <h2 className="font-semibold">Browse templates</h2>
+                <p className="text-sm text-gray-500">Find and use pre-designed templates</p>
+              </div>
+            </Link>
+          </div>
+          <Divider className="w-full" orientation="right">
+            Websites: {templates.length} of {templates.length}
+          </Divider>
+          {/* Filter Bar */}
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-4">
+              <Checkbox id="select-all" />
+              <Select>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by tag" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All tags</SelectItem>
+                  {/* Add more filter options as needed */}
+                </SelectContent>
+              </Select>
             </div>
-          )}
+            <div className="flex flex-1 items-center justify-end gap-4">
+              <div className="relative max-w-sm flex-1">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                <Input
+                  placeholder="Search..."
+                  className="pl-9"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+          {/* Template Cards */}
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {isLoading ? (
+              // Show loading skeleton
+              [1, 2, 3].map((i) => (
+                <div key={i} className="rounded-lg border p-4 animate-pulse">
+                  <div className="h-40 bg-gray-200 rounded-lg"></div>
+                  <div className="mt-4 h-6 bg-gray-200 rounded w-3/4"></div>
+                  <div className="mt-2 h-4 bg-gray-200 rounded w-full"></div>
+                </div>
+              ))
+            ) : filteredTemplates.length > 0 ? (
+              // Show templates
+              filteredTemplates.map((template) => (
+                <Card key={template._id} className="overflow-hidden border-0 shadow-md">
+                  {/* Preview section */}
+                  <div className="aspect-video overflow-hidden bg-muted/30 relative group">
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="rounded-full bg-slate-400 h-8 w-8 p-0 mr-2"
+                        onClick={() => handlePreview(template)}
+                      >
+                        <Eye className="h-4 w-4 text-black" />
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="rounded-full bg-slate-400 h-8 w-8 p-0">
+                            <MoreVertical className="h-4 w-4 text-black" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem onSelect={() => navigate(`/editor/${template._id}`)}>Edit</DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => handleDeleteTemplate(template._id)}>
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                    <img
+                      src={template.image || "/placeholder.svg?height=200&width=400"}
+                      alt={template.name}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  </div>
+
+                  {/* Footer section */}
+                  <div className="bg-white p-3 flex justify-between">
+                    <div>
+                      <CardTitle className="text-xl">{template.name}</CardTitle>
+                      <CardDescription className="mt-2 line-clamp-2">
+                        {template.description || "No description available"}
+                      </CardDescription>
+                    </div>
+                    <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => handleUseTemplate(template)}>
+                      Manage
+                    </Button>
+                  </div>
+                </Card>
+              ))
+            ) : (
+              // Show message if no templates are found
+              <div className="col-span-full text-center py-12">
+                <p className="text-gray-500">
+                  No templates found. Create one to get started or browse the template gallery.
+                </p>
+                <div className="mt-4 flex justify-center gap-4">
+                  <Link to="/editor">
+                    <Button variant="outline">Create Template</Button>
+                  </Link>
+                  <Link to="/templates">
+                    <Button>Browse Templates</Button>
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </SidebarProvider>
-  );
+  )
 }
+

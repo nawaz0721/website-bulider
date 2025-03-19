@@ -14,6 +14,7 @@ import CreateWebsiteFlow from './components/CreateWebsite/CreateWebsiteFlow';
 import Editor from './pages/Editor';
 import { Toaster } from 'react-hot-toast';
 import SelectWebsite from './pages/SelectWebsite';
+import PreviewPage from './pages/preview-modal';
 // import Editor from './pages/Editor'; 
 
 
@@ -45,6 +46,7 @@ const App = () => {
 
           <Route path="/editor" element={<Editor />} />
           <Route path="/editor/:id" element={<Editor />} />
+          <Route path="/preview/:id" element={<PreviewPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/setting" element={<SettingsPage />} />
           <Route path="/templates" element={<TemplatesPage />} />

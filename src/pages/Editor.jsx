@@ -10,64 +10,46 @@ import toast from "react-hot-toast";
 import Cookies from "js-cookie";
 
 const Editor = () => {
-  // If there's an "id" param, we are editing an existing template
   const { id } = useParams();
   const navigate = useNavigate();
-
-  // GrapesJS instance reference
   const editorRef = useRef(null);
-
-  // Determines if we are editing an existing template
   const [isEditMode, setIsEditMode] = useState(false);
-
-  // Template data from DB (if editing)
   const [templateData, setTemplateData] = useState(null);
-
-  // State for showing/hiding modals
-  const [showCodeModal, setShowCodeModal] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
-
-  // Form fields for saving/updating template
   const [templateName, setTemplateName] = useState("");
   const [templateDescription, setTemplateDescription] = useState("");
   const [templateCategory, setTemplateCategory] = useState("Personal");
 
   const user = Cookies.get("user");
-  const userdetails = JSON.parse(user)
+  const userdetails = JSON.parse(user);
 
-  // Code modal content
-  const [generatedCode, setGeneratedCode] = useState("");
+  // Pages state
+  const [pages, setPages] = useState([
+    { id: "home", name: "Home", components: null, styles: null },
+  ]);
+  const [currentPage, setCurrentPage] = useState("home");
 
-  // 1) Check if we have an ID => set isEditMode
   useEffect(() => {
     setIsEditMode(!!id);
   }, [id]);
 
-  // 2) If editing, fetch the template from the DB
   useEffect(() => {
     const fetchTemplate = async () => {
-      if (!id) return; // No ID => skip fetching
-
+      if (!id) return;
       try {
-        // GET /api/templates/:id
         const res = await axios.get(`${AppRoutes.template}/${id}`);
         const data = res.data;
         setTemplateData(data);
-
-        // Populate form fields
         setTemplateName(data.name || "");
         setTemplateDescription(data.description || "");
         setTemplateCategory(data.category || "Personal");
       } catch (error) {
         console.error("Error fetching template:", error);
-        // Optionally navigate away or show an error
       }
     };
-
     fetchTemplate();
   }, [id]);
 
-  // 3) Initialize GrapesJS once we have templateData (if any)
   useEffect(() => {
     const editor = grapesjs.init({
       container: "#gjs",
@@ -85,100 +67,99 @@ const Editor = () => {
 
     editorRef.current = editor;
 
-    // Helper: Get combined HTML + CSS
-    const getCompleteHtml = () => {
-      const html = editor.getHtml();
-      const css = editor.getCss();
-      return `<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Generated Page</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-      ${css}
-    </style>
-  </head>
-  <body>
-    ${html}
-  </body>
-</html>`;
+    // Load components when switching page
+    const loadPageContent = (pageId) => {
+      const page = pages.find((p) => p.id === pageId);
+      if (page) {
+        editor.DomComponents.clear();
+        editor.Css.clear();
+        if (page.components) {
+          editor.setComponents(page.components);
+          editor.setStyle(page.styles);
+        }
+      }
     };
 
-    // Commands: Preview
-    editor.Commands.add("preview", {
-      run: () => {
-        const previewHtml = getCompleteHtml();
-        const previewWindow = window.open("", "_blank");
-        previewWindow.document.write(previewHtml);
-        previewWindow.document.close();
-      },
+    // Add custom panel to the right
+    editor.Panels.addPanel({
+      id: "pages-panel",
+      el: ".pages-panel",
+      buttons: [],
     });
 
-    // Commands: Show Code
-    editor.Commands.add("show-code", {
-      run: () => {
-        setGeneratedCode(getCompleteHtml());
-        setShowCodeModal(true);
-      },
-    });
+    // Load current page components
+    loadPageContent(currentPage);
 
-    // Commands: Save/Update => open modal
-    editor.Commands.add("save-template", {
-      run: () => {
-        setShowSaveModal(true);
-      },
-    });
+    return () => editor.destroy();
+  }, [templateData, pages, currentPage]);
 
-    // If editing, and we have templateData with full HTML, load it
-    if (templateData) {
-      // If DB stores entire HTML
-      editor.setComponents(templateData.html);
-
-      // If DB stores separate CSS or GrapesJS JSON data, handle here:
-      // e.g. editor.setStyle(templateData.css);
-      // e.g. editor.setComponents(JSON.parse(templateData.components));
-      // e.g. editor.setStyle(JSON.parse(templateData.styles));
+  const handleAddPage = () => {
+    const name = prompt("Enter page name (e.g., About, Contact)");
+    if (name) {
+      const id = name.toLowerCase().replace(/\s+/g, "-");
+      if (pages.find((p) => p.id === id)) {
+        toast.error("Page already exists!");
+        return;
+      }
+      setPages([...pages, { id, name, components: null, styles: null }]);
+      setCurrentPage(id);
     }
-
-    return () => {
-      editor.destroy();
-    };
-  }, [templateData]);
-
-  // 4) UI Button Handlers
-  const handlePreview = () => {
-    editorRef.current?.runCommand("preview");
   };
 
-  const handleShowCode = () => {
-    editorRef.current?.runCommand("show-code");
+  const handleSwitchPage = (pageId) => {
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    // Save current page content
+    setPages((prev) =>
+      prev.map((p) =>
+        p.id === currentPage
+          ? {
+              ...p,
+              components: editor.getComponents(),
+              styles: editor.getCss(),
+            }
+          : p
+      )
+    );
+
+    setCurrentPage(pageId);
+    const page = pages.find((p) => p.id === pageId);
+    if (page) {
+      editor.DomComponents.clear();
+      editor.Css.clear();
+      if (page.components) {
+        editor.setComponents(page.components);
+        editor.setStyle(page.styles);
+      }
+    }
   };
 
   const handleSaveTemplate = () => {
     editorRef.current?.runCommand("save-template");
+    setShowSaveModal(true);
   };
 
-  // 5) Actually save or update in the modal’s final step
   const handleSaveOrUpdateTemplate = async () => {
-    // Validate form
     if (!templateName) {
-      toast.success("Please enter a template name");
+      toast.error("Please enter a template name");
       return;
     }
 
     const editor = editorRef.current;
     if (!editor) return;
 
-    // Force GrapesJS to store final memory
     editor.store();
 
-    // Get HTML / CSS from GrapesJS
+    const combinedPages = pages.map((p) => ({
+      ...p,
+      components: p.id === currentPage ? editor.getComponents() : p.components,
+      styles: p.id === currentPage ? editor.getCss() : p.styles,
+    }));
+
     const html = editor.getHtml();
     const css = editor.getCss();
 
-    // Build combined HTML
     const completeHtml = `<!DOCTYPE html>
 <html>
   <head>
@@ -186,41 +167,24 @@ const Editor = () => {
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>${templateName}</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-      ${css}
-    </style>
+    <style>${css}</style>
   </head>
-  <body>
-    ${html}
-  </body>
+  <body>${html}</body>
 </html>`;
 
-    // Attempt automatic screenshot via html2canvas
     let thumbnail = "/placeholder.svg";
     try {
-      // Get the GrapesJS editor instance
-      const editor = editorRef.current;
-      // Get the canvas iframe element
       const iframeEl = editor.Canvas.getFrameEl();
-      if (iframeEl) {
-        // Get the iframe's document/body
-        const iframeDoc = iframeEl.contentDocument;
-        const iframeBody = iframeDoc?.body;
-        if (iframeBody) {
-          // Use html2canvas on the iframe body
-          const canvas = await html2canvas(iframeBody, {
-            useCORS: true, // handle cross-origin images if properly configured
-          });
-          thumbnail = canvas.toDataURL("image/jpeg");
-        }
+      const iframeDoc = iframeEl.contentDocument;
+      const iframeBody = iframeDoc?.body;
+      if (iframeBody) {
+        const canvas = await html2canvas(iframeBody, { useCORS: true });
+        thumbnail = canvas.toDataURL("image/jpeg");
       }
     } catch (err) {
       console.error("Screenshot capture failed:", err);
-      // fallback to a placeholder if needed
     }
-  console.log("userdetails", userdetails.role);
 
-    // Build payload
     const payload = {
       userID: userdetails._id,
       name: templateName,
@@ -230,63 +194,63 @@ const Editor = () => {
       category: templateCategory,
       html: completeHtml,
       image: thumbnail,
+      pages: combinedPages,
     };
-    console.log("Payload:", payload);
-    
+
     try {
       if (isEditMode && id) {
-        // Update existing template
-        const response = await axios.put(`${AppRoutes.template}/${id}`, payload);
-        console.log("respone", response)
-        console.log("Template updated:", response.data);
+        await axios.put(`${AppRoutes.template}/${id}`, payload);
         toast.success("Template updated successfully!");
       } else {
-        // Create new template
-        const response = await axios.post(AppRoutes.template, payload);
-        console.log("Template created:", response.data);
+        await axios.post(AppRoutes.template, payload);
         toast.success("Template saved successfully!");
       }
-
-      // Close modal, reset
       setShowSaveModal(false);
       setTemplateName("");
       setTemplateDescription("");
-
-      // Navigate or do something else
       navigate("/templates");
     } catch (error) {
       console.error("Error saving/updating template:", error);
-      toast.error("Failed to save/update template. Check console for details.");
+      toast.error("Failed to save/update template.");
     }
   };
 
- 
-  
-  return (
-    <div>
+  return (                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+    <div className="flex">
       {/* GrapesJS Editor Container */}
-      <div id="gjs" className="h-screen w-full"></div>
+      <div id="gjs" className="h-screen flex-1"></div>
 
-      {/* Floating Buttons */}
-      <div className="fixed z-10 bottom-4 right-4 flex gap-2">
-      {
-        userdetails.role === "admin" ? (<button
-          onClick={handleSaveTemplate}
-          className="p-3 bg-purple-500 text-white rounded-full shadow-lg hover:bg-purple-600 transition-colors"
-          title={isEditMode ? "Update Template" : "Save Template"}
+      {/* Pages Sidebar */}
+      <div className="pages-panel bg-white shadow-lg border-l w-64 p-4 space-y-4">
+        <h3 className="text-lg font-bold">Pages</h3>
+        <ul className="space-y-2">
+          {pages.map((page) => (
+            <li key={page.id}>
+              <button
+                onClick={() => handleSwitchPage(page.id)}
+                className={`block w-full text-left px-3 py-2 rounded ${
+                  page.id === currentPage
+                    ? "bg-blue-500 text-white"
+                    : "hover:bg-gray-200"
+                }`}
+              >
+                {page.name}
+              </button>
+            </li>
+          ))}
+        </ul>
+        <button
+          onClick={handleAddPage}
+          className="mt-4 w-full bg-green-500 text-white py-2 rounded hover:bg-green-600"
         >
-          {isEditMode ? "Update Template" : "Save Template"}
-        </button>) : (
-          <button
+          + Add Page
+        </button>
+        <button
           onClick={handleSaveTemplate}
-          className="p-3 bg-purple-500 text-white rounded-full shadow-lg hover:bg-purple-600 transition-colors"
-          title={isEditMode ? "Update Template" : "Save Template"}
+          className="mt-2 w-full bg-purple-500 text-white py-2 rounded hover:bg-purple-600"
         >
           {isEditMode ? "Update Template" : "Save Template"}
         </button>
-        )
-      }  
-        
       </div>
 
       {/* Save / Update Modal */}
@@ -306,7 +270,6 @@ const Editor = () => {
             </div>
 
             <div className="p-4">
-              {/* Template Name */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Template Name*
@@ -315,13 +278,11 @@ const Editor = () => {
                   type="text"
                   value={templateName}
                   onChange={(e) => setTemplateName(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="My Awesome Template"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   required
                 />
               </div>
 
-              {/* Description */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Description
@@ -329,13 +290,11 @@ const Editor = () => {
                 <textarea
                   value={templateDescription}
                   onChange={(e) => setTemplateDescription(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="A brief description of your template"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   rows={3}
                 />
               </div>
 
-              {/* Category */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Category
@@ -343,7 +302,7 @@ const Editor = () => {
                 <select
                   value={templateCategory}
                   onChange={(e) => setTemplateCategory(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 >
                   <option value="Personal">Personal</option>
                   <option value="Business">Business</option>
@@ -354,7 +313,6 @@ const Editor = () => {
               </div>
             </div>
 
-            {/* Modal Actions */}
             <div className="p-4 border-t flex justify-end gap-2">
               <button
                 onClick={() => setShowSaveModal(false)}
