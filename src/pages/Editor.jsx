@@ -3,11 +3,13 @@ import { useParams, useNavigate } from "react-router-dom";
 import grapesjs from "grapesjs";
 import "grapesjs/dist/css/grapes.min.css";
 import grapesjsTailwind from "grapesjs-tailwind";
+import gjspresetwebpage from "grapesjs-preset-webpage"; // Optional if you want preset blocks
 import axios from "axios";
 import { AppRoutes } from "@/constant/constant";
 import html2canvas from "html2canvas";
 import toast from "react-hot-toast";
 import Cookies from "js-cookie";
+import { Plus, Trash2 } from "lucide-react"; // For icons
 
 const Editor = () => {
   const { id } = useParams();
@@ -19,14 +21,11 @@ const Editor = () => {
   const [templateName, setTemplateName] = useState("");
   const [templateDescription, setTemplateDescription] = useState("");
   const [templateCategory, setTemplateCategory] = useState("Personal");
+  const [pages, setPages] = useState([]);
+  const [selectedPageId, setSelectedPageId] = useState("");
 
   const user = Cookies.get("user");
   const userdetails = JSON.parse(user);
-
-  // Pages state
-  const [pages, setPages] = useState([
-    { id: "home", name: "Home", components: null, styles: null },
-  ]);
   const [currentPage, setCurrentPage] = useState("home");
 
   useEffect(() => {
@@ -53,8 +52,11 @@ const Editor = () => {
   useEffect(() => {
     const editor = grapesjs.init({
       container: "#gjs",
-      plugins: [grapesjsTailwind],
-      pluginsOpts: { [grapesjsTailwind]: {} },
+      plugins: [grapesjsTailwind, gjspresetwebpage], // both plugins in one array
+      pluginsOpts: {
+        [grapesjsTailwind]: {},
+        [gjspresetwebpage]: {}, // optional: add opts if needed
+      },
       fromElement: true,
       storageManager: {
         type: "local",
@@ -65,74 +67,60 @@ const Editor = () => {
       },
     });
 
+    const pm = editor.Pages;
+
+    // Initialize with default pages
+    const defaultPages = [
+      {
+        id: "page-1",
+        name: "Page 1",
+        component: '<div id="comp1">Page 1</div>',
+        styles: "#comp1 { color: red }",
+      },
+    ];
+
+    defaultPages.forEach((page) => pm.add(page));
+    pm.select("page-1");
+
     editorRef.current = editor;
+    setPages(pm.getAll().map((p) => p.toJSON()));
+    setSelectedPageId(pm.getSelected().id);
 
-    // Load components when switching page
-    const loadPageContent = (pageId) => {
-      const page = pages.find((p) => p.id === pageId);
-      if (page) {
-        editor.DomComponents.clear();
-        editor.Css.clear();
-        if (page.components) {
-          editor.setComponents(page.components);
-          editor.setStyle(page.styles);
-        }
-      }
-    };
-
-    // Add custom panel to the right
-    editor.Panels.addPanel({
-      id: "pages-panel",
-      el: ".pages-panel",
-      buttons: [],
+    // Sync state on page change
+    editor.on("page", () => {
+      setPages(pm.getAll().map((p) => p.toJSON()));
+      setSelectedPageId(pm.getSelected().id);
     });
-
-    // Load current page components
-    loadPageContent(currentPage);
+    
 
     return () => editor.destroy();
-  }, [templateData, pages, currentPage]);
+  }, []);
 
-  const handleAddPage = () => {
-    const name = prompt("Enter page name (e.g., About, Contact)");
-    if (name) {
-      const id = name.toLowerCase().replace(/\s+/g, "-");
-      if (pages.find((p) => p.id === id)) {
-        toast.error("Page already exists!");
-        return;
-      }
-      setPages([...pages, { id, name, components: null, styles: null }]);
-      setCurrentPage(id);
-    }
-  };
-
-  const handleSwitchPage = (pageId) => {
+  const handleSelectPage = (pageId) => {
     const editor = editorRef.current;
     if (!editor) return;
+    editor.Pages.select(pageId);
+  };
 
-    // Save current page content
-    setPages((prev) =>
-      prev.map((p) =>
-        p.id === currentPage
-          ? {
-              ...p,
-              components: editor.getComponents(),
-              styles: editor.getCss(),
-            }
-          : p
-      )
-    );
+  const handleAddPage = () => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    const len = editor.Pages.getAll().length;
+    const newPage = editor.Pages.add({
+      name: `Page ${len + 1}`,
+      component: `<div>New page</div>`,
+    });
+    editor.Pages.select(newPage.id);
+  };
 
-    setCurrentPage(pageId);
-    const page = pages.find((p) => p.id === pageId);
-    if (page) {
-      editor.DomComponents.clear();
-      editor.Css.clear();
-      if (page.components) {
-        editor.setComponents(page.components);
-        editor.setStyle(page.styles);
-      }
+  const handleRemovePage = (pageId) => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    if (editor.Pages.getAll().length <= 1) {
+      alert("You need at least one page");
+      return;
     }
+    editor.Pages.remove(pageId);
   };
 
   const handleSaveTemplate = () => {
@@ -215,35 +203,29 @@ const Editor = () => {
     }
   };
 
-  return (                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+  return (
     <div className="flex">
-      {/* GrapesJS Editor Container */}
-      <div id="gjs" className="h-screen flex-1"></div>
-
       {/* Pages Sidebar */}
-      <div className="pages-panel bg-white shadow-lg border-l w-64 p-4 space-y-4">
-        <h3 className="text-lg font-bold">Pages</h3>
-        <ul className="space-y-2">
-          {pages.map((page) => (
-            <li key={page.id}>
-              <button
-                onClick={() => handleSwitchPage(page.id)}
-                className={`block w-full text-left px-3 py-2 rounded ${
-                  page.id === currentPage
-                    ? "bg-blue-500 text-white"
-                    : "hover:bg-gray-200"
-                }`}
-              >
-                {page.name}
-              </button>
-            </li>
-          ))}
-        </ul>
+      <div className="bg-gray-900 text-white w-56 h-screen p-4 space-y-4">
+        <h3 className="text-lg font-semibold mb-4">Pages</h3>
+        {pages.map((page) => (
+          <div
+            key={page.id}
+            className={`flex items-center justify-between mb-2 p-2 rounded cursor-pointer ${
+              selectedPageId === page.id ? "bg-blue-600" : "hover:bg-gray-700"
+            }`}
+          >
+            <span onClick={() => handleSelectPage(page.id)}>{page.name}</span>
+            <button onClick={() => handleRemovePage(page.id)}>
+              <Trash2 size={16} />
+            </button>
+          </div>
+        ))}
         <button
           onClick={handleAddPage}
-          className="mt-4 w-full bg-green-500 text-white py-2 rounded hover:bg-green-600"
+          className="w-full flex items-center justify-center gap-2 bg-green-600 py-2 rounded hover:bg-green-700"
         >
-          + Add Page
+          <Plus size={16} /> Add Page
         </button>
         <button
           onClick={handleSaveTemplate}
@@ -252,6 +234,8 @@ const Editor = () => {
           {isEditMode ? "Update Template" : "Save Template"}
         </button>
       </div>
+      {/* GrapesJS Editor Container */}
+      <div id="gjs" className="h-screen flex-1"></div>
 
       {/* Save / Update Modal */}
       {showSaveModal && (
