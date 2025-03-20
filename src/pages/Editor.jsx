@@ -23,6 +23,8 @@ const Editor = () => {
   const [templateCategory, setTemplateCategory] = useState("Personal");
   const [pages, setPages] = useState([]);
   const [selectedPageId, setSelectedPageId] = useState("");
+  const [renamePageId, setRenamePageId] = useState(null);
+
 
   const user = Cookies.get("user");
   const userdetails = JSON.parse(user);
@@ -91,7 +93,6 @@ const Editor = () => {
       setPages(pm.getAll().map((p) => p.toJSON()));
       setSelectedPageId(pm.getSelected().id);
     });
-    
 
     return () => editor.destroy();
   }, []);
@@ -108,7 +109,6 @@ const Editor = () => {
     const len = editor.Pages.getAll().length;
     const newPage = editor.Pages.add({
       name: `Page ${len + 1}`,
-      component: `<div>New page</div>`,
     });
     editor.Pages.select(newPage.id);
   };
@@ -122,6 +122,17 @@ const Editor = () => {
     }
     editor.Pages.remove(pageId);
   };
+
+  const handleRenamePageInput = (pageId, newName) => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    const page = editor.Pages.get(pageId);
+    if (page) {
+      page.set("name", newName);
+      setPages(editor.Pages.getAll().map((p) => p.toJSON()));
+    }
+  };
+  
 
   const handleSaveTemplate = () => {
     editorRef.current?.runCommand("save-template");
@@ -215,10 +226,33 @@ const Editor = () => {
               selectedPageId === page.id ? "bg-blue-600" : "hover:bg-gray-700"
             }`}
           >
-            <span onClick={() => handleSelectPage(page.id)}>{page.name}</span>
-            <button onClick={() => handleRemovePage(page.id)}>
-              <Trash2 size={16} />
-            </button>
+            {renamePageId === page.id ? (
+              <input
+                type="text"
+                value={page.name}
+                onChange={(e) => handleRenamePageInput(page.id, e.target.value)}
+                onBlur={() => setRenamePageId(null)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") setRenamePageId(null);
+                }}
+                className="bg-gray-800 text-white px-1 py-0.5 rounded w-24"
+                autoFocus
+              />
+            ) : (
+              <span
+                onDoubleClick={() => setRenamePageId(page.id)}
+                onClick={() => handleSelectPage(page.id)}
+                className="flex-1"
+              >
+                {page.name}
+              </span>
+            )}
+
+            <div className="flex items-center gap-2 ml-2">
+              <button onClick={() => handleRemovePage(page.id)}>
+                <Trash2 size={16} />
+              </button>
+            </div>
           </div>
         ))}
         <button
