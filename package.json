@@ -35,7 +35,7 @@
     "clsx": "^2.1.1",
     "cookies": "^0.9.1",
     "framer-motion": "^12.4.7",
-    "grapesjs": "0.21.9",
+    "grapesjs": "^0.22.6",
     "grapesjs-blocks-basic": "1.0.2",
     "grapesjs-component-code-editor": "^1.0.20",
     "grapesjs-custom-code": "^1.0.2",
