@@ -13,7 +13,7 @@ import Sidebar from "@/components/Sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useNavigate } from "react-router-dom";
 
-export default function PreviewPage({ isOpen, onClose, template }) {
+export default function PreviewModal({ isOpen, onClose, template }) {
   const [activeTab, setActiveTab] = useState("pages");
   const navigate = useNavigate()
 

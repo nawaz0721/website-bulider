@@ -10,6 +10,6 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    include: ['grapesjs', '@grapesjs/react'],
+    include: ['grapesjs', '@grapesjs/react', '@grapesjs/studio-sdk'],
   },
 });
