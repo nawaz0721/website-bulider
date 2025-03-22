@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import grapesjs from "grapesjs";
 import "grapesjs/dist/css/grapes.min.css";
 
@@ -12,7 +12,6 @@ import gjsParserPostcss from "grapesjs-parser-postcss";
 import gjsTooltip from "grapesjs-tooltip";
 import gjsTuiImageEditor from "grapesjs-tui-image-editor";
 
-
 import { Plus, Trash2, Save, Eye, FileText } from "lucide-react";
 import { AppRoutes } from "@/constant/constant";
 import toast from "react-hot-toast";
@@ -20,10 +19,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 
 const user = Cookies.get("user");
-const userDetails = JSON.parse(user)
-
-console.log(userDetails._id);
-
+const userDetails = JSON.parse(user);
 
 const Editor = () => {
   const { id } = useParams();
@@ -31,11 +27,15 @@ const Editor = () => {
   const [pages, setPages] = useState([]);
   const [currentPage, setCurrentPage] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [showAddPageModal, setShowAddPageModal] = useState(false);
+  const [newPageName, setNewPageName] = useState("");
   const [templateDetails, setTemplateDetails] = useState({
     title: "",
     description: "",
     category: "",
   });
+const navigate = useNavigate()
+
 
   useEffect(() => {
     const editor = grapesjs.init({
@@ -44,6 +44,7 @@ const Editor = () => {
       width: "auto",
       storageManager: { type: null },
       plugins: [
+        grapesjsTailwind,
         gjsPresetWebpage,
         gjsBlocksBasic,
         gjsParserPostcss,
@@ -51,7 +52,6 @@ const Editor = () => {
         gjsTuiImageEditor,
         gjsCustomCode,
         gjsComponentCodeEditor,
-        grapesjsTailwind,
       ],
       canvas: {
         styles: [
@@ -59,38 +59,30 @@ const Editor = () => {
         ],
       },
     });
-  
+
     editorRef.current = editor;
     window.editor = editor;
-  
+
     const loadTemplate = async () => {
       if (id) {
         try {
           const res = await axios.get(`${AppRoutes.template}/${id}`);
           const data = res.data;
-          console.log("data 01", data.pages);
-    
+
           const pm = editor.Pages;
-    
-          if (data?.pages && pm) {
-            // Clear existing pages
-            pm.getAll().forEach((p) => pm.remove(p.id));
-    
-            data.pages.forEach((page) => {
-              const newPage = pm.add({
-                id: page.id,
-                name: page.name,
-              });
-              newPage.set("customHtml", page.html);
-              newPage.set("customCss", page.css);
+          pm.getAll().forEach((p) => pm.remove(p.id));
+
+          data.pages.forEach((page) => {
+            const newPage = pm.add({
+              id: page.id,
+              name: page.name,
             });
-    
-            setPages(pm.getAll().map((p) => ({ id: p.id, name: p.get("name") })));
-    
-            // Move this inside editor.on('load')
-            // switchToPage(data.pages[0]?.id || "");
-          }
-    
+            newPage.set("customHtml", page.html);
+            newPage.set("customCss", page.css);
+          });
+
+          setPages(pm.getAll().map((p) => ({ id: p.id, name: p.get("name") })));
+
           if (data?.settings) {
             setTemplateDetails({
               title: data.settings.title || "",
@@ -98,32 +90,28 @@ const Editor = () => {
               category: data.settings.category || "",
             });
           }
-    
+
           toast.success("Template loaded successfully!");
         } catch (err) {
           console.log("Failed to load template", err);
         }
-      } 
+      } else {
+        // Create a default "Home" page if creating a new template
+        const pm = editor.Pages;
+        const homePage = pm.add({
+          id: "home",
+          name: "Home",
+          component: `<div class='p-4'></div>`,
+        });
+        pm.select("home");
+        setPages([{ id: "home", name: "Home" }]);
+        setCurrentPage("home");
+      }
     };
-    
-  
-    // ✅ Only inside load event:
-    editor.on("load", () => {
-      loadTemplate().then(() => {
-        // Only after template load, set first page
-        const firstPage = editor.Pages.getAll()[0];
-        if (firstPage) {
-          editor.Pages.select(firstPage.id);
-          editor.setComponents(firstPage.get("customHtml") || "<div></div>");
-          editor.setStyle(firstPage.get("customCss") || "");
-        }
-      });
-    });
-    
-  
+
+    editor.on("load", loadTemplate);
     return () => editor.destroy();
   }, [id]);
-
 
   const saveCurrentPageState = () => {
     const pm = editorRef.current.Pages;
@@ -133,31 +121,32 @@ const Editor = () => {
       currentPage.set("customCss", editorRef.current.getCss());
     }
   };
-  
-  
+
   const switchToPage = (pageId) => {
     const pm = editorRef.current.Pages;
     const nextPage = pm.get(pageId);
     if (nextPage) {
-      // Save current page before switching
       saveCurrentPageState();
-  
-      // Switch
       pm.select(pageId);
-  
-      // Load content of the next page
       editorRef.current.setComponents(nextPage.get("customHtml") || "");
       editorRef.current.setStyle(nextPage.get("customCss") || "");
       setCurrentPage(pageId);
     }
   };
-  
-  
+
   const handleAddPage = () => {
+    setNewPageName("");
+    setShowAddPageModal(true);
+  };
+
+  const handleAddPageSubmit = () => {
     const editor = editorRef.current;
     const pm = editor.Pages;
-    const pageName = prompt("Enter new page name:");
-    if (!pageName) return;
+    const pageName = newPageName.trim();
+    if (!pageName) {
+      toast.error("Page name cannot be empty");
+      return;
+    }
     const pageId = pageName.toLowerCase().replace(/\s+/g, "-");
     pm.add({
       id: pageId,
@@ -166,48 +155,34 @@ const Editor = () => {
     });
     setPages(pm.getAll().map((p) => ({ id: p.id, name: p.get("name") })));
     switchToPage(pageId);
+    setShowAddPageModal(false);
   };
 
   const handleDeletePage = async (pageId) => {
     const editor = editorRef.current;
     const pm = editor.Pages;
-    if (!pm) {
-      toast.error("Page manager not available");
-      return;
-    }
-  
     if (pm.getAll().length <= 1) {
       toast.error("Cannot delete the last page");
       return;
     }
-  
     try {
-      // Delete page from backend
       if (id) {
-        // If editing existing template, delete from backend too
         await axios.delete(`${AppRoutes.template}/${id}/page/${pageId}`);
-        console.log("Deleting page", { templateId: id, pageId });
         toast.success("Page deleted successfully!");
       } else {
-        // No backend deletion required for new template (local only)
         toast.success("Page deleted locally!");
       }
-  
-      // Remove page locally from GrapesJS
       pm.remove(pageId);
       setPages(pm.getAll().map((p) => ({ id: p.id, name: p.get("name") })));
-  
-      // Switch to another page if the deleted page was active
       if (currentPage === pageId) {
         const firstPage = pm.getAll()[0];
         if (firstPage) switchToPage(firstPage.id);
       }
     } catch (error) {
-      console.error("Error deleting page:", error.response?.data || error.message);
       toast.error("Failed to delete page.");
     }
   };
-  
+
   const handleSavePage = () => {
     const editor = editorRef.current;
     const page = editor.Pages.getSelected();
@@ -226,12 +201,13 @@ const Editor = () => {
     const page = editor.Pages.getSelected();
     const html = editor.getHtml();
     const css = editor.getCss();
-    const pageName = page.get('name') || 'previewpage';
+    const pageName = page.get("name") || "previewpage";
     localStorage.setItem(`preview-${pageName}`, JSON.stringify({ html, css }));
-    window.open(`/previewpage/${pageName}`, '_blank');
+    window.open(`/previewpage/${pageName}`, "_blank");
   };
 
   const handleSaveTemplate = () => {
+    localStorage.clear();
     setShowModal(true);
   };
 
@@ -260,10 +236,10 @@ const Editor = () => {
     const editor = editorRef.current;
 
     const image = await captureHomePageScreenshot();
-    const pm = editor.Pages; // ✅ define pm here
+    const pm = editor.Pages;
 
     const projectPages = pm.getAll().map((page) => {
-      pm.select(page.id); // Switch to each page before getting its html/css
+      pm.select(page.id);
       return {
         id: page.id,
         name: page.get("name"),
@@ -277,16 +253,15 @@ const Editor = () => {
       title: templateDetails.title,
       description: templateDetails.description,
       category: templateDetails.category,
-      image, // captured base64 image
+      image,
       pages: projectPages,
     };
 
-    console.log("projectData",projectData);
-    
     try {
       if (id) {
         await axios.put(`${AppRoutes.template}/${id}`, projectData);
         toast.success("Template updated successfully!");
+        navigate('/templates');
       } else {
         await axios.post(AppRoutes.template, projectData);
         toast.success("Template saved successfully!");
@@ -302,7 +277,7 @@ const Editor = () => {
       {/* Sidebar */}
       <div className="w-64 bg-gray-900 text-white p-4 flex flex-col">
         <h2 className="text-xl font-bold mb-6">Pages</h2>
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 space-y-2 overflow-y-auto">
           {pages.map((page) => (
             <div
               key={page.id}
@@ -313,101 +288,110 @@ const Editor = () => {
               <span className="flex-1" onClick={() => switchToPage(page.id)}>
                 {page?.name || "Home"}
               </span>
-              <button
-                onClick={() => handleDeletePage(page.id)}
-                className="p-1 hover:bg-red-500 rounded"
-              >
-                <Trash2 size={16} />
-              </button>
+              {page.id !== "home" && (
+                <button
+                  onClick={() => handleDeletePage(page.id)}
+                  className="p-1 hover:bg-red-500 rounded"
+                >
+                  <Trash2 size={16} />
+                </button>
+              )}
             </div>
           ))}
         </div>
-        <div className="mt-4 space-y-2">
-          <button
-            onClick={handleAddPage}
-            className="w-full flex items-center justify-center gap-2 bg-green-600 p-2 rounded hover:bg-green-700"
-          >
-            <Plus size={20} />
-            Add Page
-          </button>
-          <button
-            onClick={handleSavePage}
-            className="w-full flex items-center justify-center gap-2 bg-blue-600 p-2 rounded hover:bg-blue-700"
-          >
-            <Save size={20} />
-            Save Page
-          </button>
-          <button
-            onClick={handlePreviewPage}
-            className="w-full flex items-center justify-center gap-2 bg-purple-600 p-2 rounded hover:bg-purple-700"
-          >
-            <Eye size={20} />
-            Preview Page
-          </button>
-          <button
-            onClick={handleSaveTemplate}
-            className="w-full flex items-center justify-center gap-2 bg-purple-600 p-2 rounded hover:bg-purple-700"
-          >
-            <FileText size={20} />
-            {id ? "Update Template" : "Save Template"}
-          </button>
-        </div>
+        <button
+          onClick={handleAddPage}
+          className="flex items-center justify-center mt-4 p-2 bg-green-600 hover:bg-green-700 rounded"
+        >
+          <Plus className="w-4 h-4 mr-2" /> Add Page
+        </button>
+
+        <button
+          onClick={handleSavePage}
+          className="flex items-center justify-center mt-4 p-2 bg-blue-600 hover:bg-blue-700 rounded"
+        >
+          <Save className="w-4 h-4 mr-2" /> Save Page
+        </button>
+
+        <button
+          onClick={handlePreviewPage}
+          className="flex items-center justify-center mt-4 p-2 bg-yellow-600 hover:bg-yellow-700 rounded"
+        >
+          <Eye className="w-4 h-4 mr-2" /> Preview
+        </button>
+
+        <button
+          onClick={handleSaveTemplate}
+          className="flex items-center justify-center mt-4 p-2 bg-purple-600 hover:bg-purple-700 rounded"
+        >
+          <FileText className="w-4 h-4 mr-2" /> Save Template
+        </button>
       </div>
 
-      {/* GrapesJS editor */}
-      <div id="gjs" className="flex-1" />
+      {/* GrapesJS Editor */}
+      <div id="gjs" className="flex-1"></div>
 
-      {/* Modal */}
+      {/* Save Template Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]">
-          <div className="bg-white rounded-lg w-full max-w-md p-6 relative z-[10000]">
-            <h3 className="text-xl font-bold mb-4">
-              {id ? "Update Template" : "Save Template"}
-            </h3>
-            <form onSubmit={handleModalSubmit} className="space-y-4">
-              <input
-                type="text"
-                name="title"
-                placeholder="Title"
-                value={templateDetails.title}
-                onChange={handleModalChange}
-                className="w-full border p-2 rounded"
-                required
-              />
-              <textarea
-                name="description"
-                placeholder="Description"
-                value={templateDetails.description}
-                onChange={handleModalChange}
-                className="w-full border p-2 rounded"
-                rows="3"
-                required
-              />
-              <input
-                type="text"
-                name="category"
-                placeholder="Category"
-                value={templateDetails.category}
-                onChange={handleModalChange}
-                className="w-full border p-2 rounded"
-                required
-              />
-              <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="px-4 py-2 bg-gray-400 rounded"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  {id ? "Update" : "Save"}
-                </button>
-              </div>
-            </form>
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <form
+            onSubmit={handleModalSubmit}
+            className="bg-white p-8 rounded shadow-lg space-y-4 w-96"
+          >
+            <h2 className="text-xl font-bold">Template Details</h2>
+            <input
+              name="title"
+              value={templateDetails.title}
+              onChange={handleModalChange}
+              className="w-full p-2 border rounded"
+              placeholder="Title"
+              required
+            />
+            <input
+              name="description"
+              value={templateDetails.description}
+              onChange={handleModalChange}
+              className="w-full p-2 border rounded"
+              placeholder="Description"
+              required
+            />
+            <input
+              name="category"
+              value={templateDetails.category}
+              onChange={handleModalChange}
+              className="w-full p-2 border rounded"
+              placeholder="Category"
+              required
+            />
+            <button
+              type="submit"
+              className="w-full p-2 bg-blue-600 text-white rounded"
+            >
+              Save Template
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* Add Page Modal */}
+      {showAddPageModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded shadow-lg w-80">
+            <h2 className="text-lg font-bold mb-4">New Page</h2>
+            <input
+              type="text"
+              placeholder="Enter page name"
+              value={newPageName}
+              onChange={(e) => setNewPageName(e.target.value)}
+              className="w-full p-2 border rounded mb-4"
+              required
+            />
+            <button
+              onClick={handleAddPageSubmit}
+              className="w-full p-2 bg-green-600 text-white rounded"
+            >
+              Add Page
+            </button>
           </div>
         </div>
       )}

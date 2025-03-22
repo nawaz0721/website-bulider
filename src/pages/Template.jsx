@@ -80,20 +80,36 @@ export default function TemplatesPage() {
   }
 
   const handlePreview = (template) => {
-    const slugify = (str) => {
-      if (!str) return "previewpage" // fallback if name is missing
-      return str
-        .toLowerCase()
-        .replace(/\s+/g, '-') // spaces to hyphens
-        .replace(/[^a-z0-9\-]/g, '') // remove special chars
-        .replace(/\-+/g, '-') // collapse multiple hyphens
-        .replace(/^-|-$/g, ''); // remove leading/trailing hyphens
-    }
+    console.log(template.pages[0].name);
+    
+    // const slugify = (str) => {
+    //   if (!str) return "home"; // fallback if name is missing
+    //   return str
+    //     .toLowerCase()
+    //     .replace(/\s+/g, '-') // spaces to hyphens
+    //     .replace(/[^a-z0-9\-]/g, '') // remove special chars
+    //     .replace(/\-+/g, '-') // collapse multiple hyphens
+    //     .replace(/^-|-$/g, ''); // remove leading/trailing hyphens
+    // };
   
-    const slug = slugify(template.name)
-    const previewURL = `/previewpage/${slug}`
-    window.open(previewURL, "_blank")
-  }
+    // if (!template?._id) {
+    //   return alert("Template ID not found!");
+    // }
+
+    // console.log(template?._id);
+    
+  
+    // const firstPageId = template.pages && template.pages.length > 0 ? template.pages[0].id : null;
+    
+    // if (!firstPageId) {
+    //   return alert("No pages found in template!");
+    // }
+    const slug = template.pages[0].name
+    console.log(slug);
+    
+    const previewURL = `/previewpage/${slug}`;
+    window.open(previewURL, "_blank");
+  };
   
   
  // When click Use Template, go to /editor/:id
