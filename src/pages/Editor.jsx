@@ -37,81 +37,115 @@ const Editor = () => {
 const navigate = useNavigate()
 
 
-  useEffect(() => {
-    const editor = grapesjs.init({
-      container: "#gjs",
-      height: "100vh",
-      width: "auto",
-      storageManager: { type: null },
-      plugins: [
-        grapesjsTailwind,
-        gjsPresetWebpage,
-        gjsBlocksBasic,
-        gjsParserPostcss,
-        gjsTooltip,
-        gjsTuiImageEditor,
-        gjsCustomCode,
-        gjsComponentCodeEditor,
+useEffect(() => {
+  const editor = grapesjs.init({
+    container: "#gjs",
+    height: "100vh",
+    width: "auto",
+    storageManager: { type: null },
+    plugins: [
+      grapesjsTailwind,
+      gjsPresetWebpage,
+      gjsBlocksBasic,
+      gjsParserPostcss,
+      gjsTooltip,
+      gjsTuiImageEditor,
+      gjsCustomCode,
+      gjsComponentCodeEditor,
+    ],
+    canvas: {
+      styles: [
+        "https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css",
       ],
-      canvas: {
-        styles: [
-          "https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css",
-        ],
-      },
-    });
+    },
+  });
 
-    editorRef.current = editor;
-    window.editor = editor;
+  editorRef.current = editor;
+  window.editor = editor;
 
-    const loadTemplate = async () => {
-      if (id) {
-        try {
-          const res = await axios.get(`${AppRoutes.template}/${id}`);
-          const data = res.data;
-
-          const pm = editor.Pages;
-          pm.getAll().forEach((p) => pm.remove(p.id));
-
-          data.pages.forEach((page) => {
-            const newPage = pm.add({
-              id: page.id,
-              name: page.name,
-            });
-            newPage.set("customHtml", page.html);
-            newPage.set("customCss", page.css);
-          });
-
-          setPages(pm.getAll().map((p) => ({ id: p.id, name: p.get("name") })));
-
-          if (data?.settings) {
-            setTemplateDetails({
-              title: data.settings.title || "",
-              description: data.settings.description || "",
-              category: data.settings.category || "",
-            });
-          }
-
-          toast.success("Template loaded successfully!");
-        } catch (err) {
-          console.log("Failed to load template", err);
+  // 🚩 Internal Link Command for <a> tag
+  editor.Commands.add("set-internal-link", {
+    run(editor) {
+      const slug = prompt("Enter page slug (e.g. home, about, contact)");
+      if (slug) {
+        const link = `/previewpage/${slug}-${id}`;
+        const selected = editor.getSelected();
+        if (selected && selected.is('a')) {
+          selected.addAttributes({ href: link });
+          toast.success(`Internal link set to: ${link}`);
+        } else {
+          toast.error("Please select an <a> element first!");
         }
-      } else {
-        // Create a default "Home" page if creating a new template
-        const pm = editor.Pages;
-        const homePage = pm.add({
-          id: "home",
-          name: "Home",
-          component: `<div class='p-4'></div>`,
-        });
-        pm.select("home");
-        setPages([{ id: "home", name: "Home" }]);
-        setCurrentPage("home");
       }
-    };
+    },
+  });
 
-    editor.on("load", loadTemplate);
-    return () => editor.destroy();
-  }, [id]);
+  // Trait for <a> tag components only
+  editor.on("component:selected", (model) => {
+    if (model.get("tagName") === "a") {
+      model.addTrait({
+        type: "button",
+        label: "Set Internal Link",
+        text: "Add Link",
+        command: "set-internal-link",
+      });
+    }
+  });
+
+  const loadTemplate = async () => {
+    if (id) {
+      try {
+        const res = await axios.get(`${AppRoutes.template}/${id}`);
+        const data = res.data;
+
+        const pm = editor.Pages;
+        pm.getAll().forEach((p) => pm.remove(p.id));
+
+        data.pages.forEach((page) => {
+          const newPage = pm.add({
+            id: page.id,
+            name: page.name,
+          });
+          newPage.set("customHtml", page.html);
+          newPage.set("customCss", page.css);
+        });
+
+        setPages(pm.getAll().map((p) => ({ id: p.id, name: p.get("name") })));
+        if (data.pages.length > 0) {
+          pm.select(data.pages[0].id);
+          setCurrentPage(data.pages[0].id);
+        }
+
+        if (data?.settings) {
+          setTemplateDetails({
+            title: data.settings.title || "",
+            description: data.settings.description || "",
+            category: data.settings.category || "",
+          });
+        }
+
+        toast.success("Template loaded successfully!");
+      } catch (err) {
+        console.log("Failed to load template", err);
+      }
+    } else {
+      const pm = editor.Pages;
+      const homePage = pm.add({
+        id: "home",
+        name: "Home",
+        component: `<div class='p-4'></div>`,
+      });
+      pm.select("home");
+      setPages([{ id: "home", name: "Home" }]);
+      setCurrentPage("home");
+    }
+  };
+
+  editor.on("load", loadTemplate);
+
+  return () => editor.destroy();
+}, [id]);
+
 
   const saveCurrentPageState = () => {
     const pm = editorRef.current.Pages;

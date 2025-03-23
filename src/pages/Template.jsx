@@ -80,34 +80,35 @@ export default function TemplatesPage() {
   }
 
   const handlePreview = (template) => {
-    console.log(template.pages[0].name);
-    
-    // const slugify = (str) => {
-    //   if (!str) return "home"; // fallback if name is missing
-    //   return str
-    //     .toLowerCase()
-    //     .replace(/\s+/g, '-') // spaces to hyphens
-    //     .replace(/[^a-z0-9\-]/g, '') // remove special chars
-    //     .replace(/\-+/g, '-') // collapse multiple hyphens
-    //     .replace(/^-|-$/g, ''); // remove leading/trailing hyphens
-    // };
+    // Create a slug from the first page's name
+    const slugify = (str) => {
+      if (!str) return "home"; // fallback if name is missing
+      return str
+        .toLowerCase()
+        .replace(/\s+/g, "-") // spaces to hyphens
+        .replace(/[^a-z0-9\-]/g, "") // remove special chars
+        .replace(/\-+/g, "-") // collapse multiple hyphens
+        .replace(/^-|-$/g, ""); // remove leading/trailing hyphens
+    };
   
-    // if (!template?._id) {
-    //   return alert("Template ID not found!");
-    // }
-
-    // console.log(template?._id);
+    // Ensure at least one page exists
+    if (!template.pages || template.pages.length === 0) {
+      toast.error("No pages found in template!");
+      return;
+    }
     
-  
-    // const firstPageId = template.pages && template.pages.length > 0 ? template.pages[0].id : null;
+    const firstPageSlug = slugify(template.pages[0].name);
     
-    // if (!firstPageId) {
-    //   return alert("No pages found in template!");
-    // }
-    const slug = template.pages[0].name
-    console.log(slug);
+    // If the template has an _id, include it in the URL.
+    // For example: /previewpage/home-67dcc50...
+    let previewURL = "";
+    if (template._id) {
+      previewURL = `/previewpage/${firstPageSlug}-${template._id}`;
+    } else {
+      // Unsaved template: use slug only; preview page will load from localStorage
+      previewURL = `/previewpage/${firstPageSlug}`;
+    }
     
-    const previewURL = `/previewpage/${slug}`;
     window.open(previewURL, "_blank");
   };
   
