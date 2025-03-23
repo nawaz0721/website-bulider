@@ -26,7 +26,8 @@ export default function TemplatesPage() {
       try {
         setIsLoading(true)
         const templatesResponse = await axios.get(AppRoutes.template)
-
+        console.log("templatesResponse", templatesResponse.data[0].pages);
+        
         const templatesWithUserDetails = await Promise.all(
           templatesResponse.data.map(async (template) => {
             try {
@@ -103,7 +104,7 @@ export default function TemplatesPage() {
     // For example: /previewpage/home-67dcc50...
     let previewURL = "";
     if (template._id) {
-      previewURL = `/previewpage/${firstPageSlug}-${template._id}`;
+      previewURL = `/previewpage/${firstPageSlug}`;
     } else {
       // Unsaved template: use slug only; preview page will load from localStorage
       previewURL = `/previewpage/${firstPageSlug}`;

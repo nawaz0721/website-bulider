@@ -97,10 +97,10 @@ useEffect(() => {
       try {
         const res = await axios.get(`${AppRoutes.template}/${id}`);
         const data = res.data;
-
+  
         const pm = editor.Pages;
         pm.getAll().forEach((p) => pm.remove(p.id));
-
+  
         data.pages.forEach((page) => {
           const newPage = pm.add({
             id: page.id,
@@ -109,13 +109,18 @@ useEffect(() => {
           newPage.set("customHtml", page.html);
           newPage.set("customCss", page.css);
         });
-
+  
         setPages(pm.getAll().map((p) => ({ id: p.id, name: p.get("name") })));
+        
         if (data.pages.length > 0) {
           pm.select(data.pages[0].id);
           setCurrentPage(data.pages[0].id);
+  
+          // Set canvas content for the first page
+          editor.setComponents(data.pages[0].html || "");
+          editor.setStyle(data.pages[0].css || "");
         }
-
+  
         if (data?.settings) {
           setTemplateDetails({
             title: data.settings.title || "",
@@ -123,7 +128,7 @@ useEffect(() => {
             category: data.settings.category || "",
           });
         }
-
+  
         toast.success("Template loaded successfully!");
       } catch (err) {
         console.log("Failed to load template", err);
@@ -140,11 +145,42 @@ useEffect(() => {
       setCurrentPage("home");
     }
   };
+  
 
   editor.on("load", loadTemplate);
 
   return () => editor.destroy();
 }, [id]);
+
+useEffect(() => {
+  if (!editorRef.current) return;
+
+  const editor = editorRef.current;
+
+  // Listen for all clicks inside the canvas
+  editor.on("canvas:click", (event) => {
+    const el = event.target;
+    if (el.tagName === "A" && el.getAttribute("href")) {
+      event.preventDefault();
+
+      const href = el.getAttribute("href");
+      const pm = editor.Pages;
+
+      // Check if href matches one of your page ids
+      const page = pm.getAll().find((p) => p.id === href);
+      if (page) {
+        switchToPage(href);
+      } else {
+        toast.error("Page not found!");
+      }
+    }
+  });
+
+  return () => {
+    editor.off("canvas:click");
+  };
+}, [pages, currentPage]);
+
 
 
   const saveCurrentPageState = () => {
@@ -241,7 +277,7 @@ useEffect(() => {
   };
 
   const handleSaveTemplate = () => {
-    localStorage.clear();
+    // localStorage.clear();
     setShowModal(true);
   };
 
