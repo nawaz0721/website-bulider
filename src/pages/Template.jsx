@@ -160,7 +160,7 @@ const handleUseTemplate = (template) => {
                 }}
               >
                 <Plus className="h-4 w-4" />
-                New Template
+                Add New Template
               </Button>
             </div>
           </div>
