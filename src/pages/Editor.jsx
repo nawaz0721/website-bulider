@@ -253,32 +253,33 @@ useEffect(() => {
     }
   };
 
-  const handleSavePage = () => {
-    const editor = editorRef.current;
-    const page = editor.Pages.getSelected();
-    const pageData = {
-      id: page.id,
-      name: page.get("name"),
-      html: editor.getHtml(),
-      css: editor.getCss(),
-    };
-    localStorage.setItem(`page-${page.id}`, JSON.stringify(pageData));
-    toast.success("Page saved successfully!");
-  };
+  // const handleSavePage = () => {
+  //   const editor = editorRef.current;
+  //   const page = editor.Pages.getSelected();
+  //   const pageData = {
+  //     id: page.id,
+  //     name: page.get("name"),
+  //     html: editor.getHtml(),
+  //     css: editor.getCss(),
+  //   };
+  //   localStorage.setItem(`page-${page.id}`, JSON.stringify(pageData));
+  //   toast.success("Page saved successfully!");
+  // };
 
-  const handlePreviewPage = () => {
-    const editor = editorRef.current;
-    const page = editor.Pages.getSelected();
-    const html = editor.getHtml();
-    const css = editor.getCss();
-    const pageName = page.get("name") || "previewpage";
-    localStorage.setItem(`preview-${pageName}`, JSON.stringify({ html, css }));
-    window.open(`/previewpage/${pageName}`, "_blank");
-  };
+  // const handlePreviewPage = () => {
+  //   const editor = editorRef.current;
+  //   const page = editor.Pages.getSelected();
+  //   const html = editor.getHtml();
+  //   const css = editor.getCss();
+  //   const pageName = page.get("name") || "previewpage";
+  //   localStorage.setItem(`preview-${pageName}`, JSON.stringify({ html, css }));
+  //   window.open(`/previewpage/${pageName}`, "_blank");
+  // };
 
   const handleSaveTemplate = () => {
     // localStorage.clear();
     setShowModal(true);
+    navigate('/templates')
   };
 
   const handleModalChange = (e) => {
@@ -376,19 +377,19 @@ useEffect(() => {
           <Plus className="w-4 h-4 mr-2" /> Add Page
         </button>
 
-        <button
+        {/* <button
           onClick={handleSavePage}
           className="flex items-center justify-center mt-4 p-2 bg-blue-600 hover:bg-blue-700 rounded"
         >
           <Save className="w-4 h-4 mr-2" /> Save Page
-        </button>
+        </button> */}
 
-        <button
+        {/* <button
           onClick={handlePreviewPage}
           className="flex items-center justify-center mt-4 p-2 bg-yellow-600 hover:bg-yellow-700 rounded"
         >
           <Eye className="w-4 h-4 mr-2" /> Preview
-        </button>
+        </button> */}
 
         <button
           onClick={handleSaveTemplate}

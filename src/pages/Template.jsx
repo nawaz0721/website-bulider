@@ -80,39 +80,37 @@ export default function TemplatesPage() {
     return ["All", ...Array.from(categories)]
   }
 
-  const handlePreview = (template) => {
-    // Create a slug from the first page's name
-    const slugify = (str) => {
-      if (!str) return "home"; // fallback if name is missing
-      return str
-        .toLowerCase()
-        .replace(/\s+/g, "-") // spaces to hyphens
-        .replace(/[^a-z0-9\-]/g, "") // remove special chars
-        .replace(/\-+/g, "-") // collapse multiple hyphens
-        .replace(/^-|-$/g, ""); // remove leading/trailing hyphens
-    };
+  const handlePreview = async (template) => {
+    try {
+      const res = await axios.get(`${AppRoutes.template}/${template._id}`);
+      const templateData = res.data;
   
-    // Ensure at least one page exists
-    if (!template.pages || template.pages.length === 0) {
-      toast.error("No pages found in template!");
-      return;
+      // Ensure pages exist
+      if (!templateData.pages || templateData.pages.length === 0) {
+        toast.error("No pages found in this template!");
+        return;
+      }
+  
+      // Grab first page for preview
+      const firstPage = templateData.pages[0];
+  
+      const slugify = (str) => {
+        if (!str) return "home";
+        return str
+      
+      };
+
+      
+      const firstPageSlug = slugify(firstPage.id);
+  
+      // open preview page with correct slug & template ID
+      const previewURL = `/previewpage/${templateData._id}/${firstPageSlug}`;
+      window.open(previewURL, "_blank");
+    } catch (err) {
+      console.error("Error fetching template details:", err);
+      toast.error("Failed to fetch template details!");
     }
-    
-    const firstPageSlug = slugify(template.pages[0].name);
-    
-    // If the template has an _id, include it in the URL.
-    // For example: /previewpage/home-67dcc50...
-    let previewURL = "";
-    if (template._id) {
-      previewURL = `/previewpage/${firstPageSlug}`;
-    } else {
-      // Unsaved template: use slug only; preview page will load from localStorage
-      previewURL = `/previewpage/${firstPageSlug}`;
-    }
-    
-    window.open(previewURL, "_blank");
   };
-  
   
  // When click Use Template, go to /editor/:id
 const handleUseTemplate = (template) => {

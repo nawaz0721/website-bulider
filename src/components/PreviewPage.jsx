@@ -1,31 +1,67 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import axios from "axios";
+import { AppRoutes } from "@/constant/constant";
 
 const PreviewPage = () => {
-  const { pageName } = useParams();
+  const { templateId, pageId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [content, setContent] = useState({ html: "", css: "" });
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    const pageData = localStorage.getItem(`preview-${pageName}`);
-    if (pageData) {
-      const { html, css } = JSON.parse(pageData);
-      setContent({ html, css });
-      setNotFound(false);
-    } else {
-      setNotFound(true);
-    }
-  }, [pageName]);
+    const fetchTemplateData = async () => {
+      try {
+        const res = await axios.get(`${AppRoutes.template}/${templateId}`);
+        const templateData = res.data;
+        console.log("template ==> ", templateData);
 
+        console.log("Current Page ID: ", pageId);
+        console.log("Available Pages: ", templateData.pages.map(p => p.id));
+
+        if (!pageId) {
+          const defaultPageId = templateData.pages[0]?.id || "home";
+          navigate(`/previewpage/${templateId}/${defaultPageId}`);
+          return;
+        }
+
+        const page = templateData.pages.find(
+          (p) => p.id?.toLowerCase() === pageId.toLowerCase()
+        );
+
+        if (!page) {
+          setNotFound(true);
+          return;
+        }
+
+        const fixedHtml = page.html.replace(/href="(.*?)"/g, (match, href) => {
+          if (href.startsWith("http") || href.startsWith("#")) {
+            return match; // keep external/anchor links unchanged
+          }
+          return `href="/previewpage/${templateId}/${href}"`; // rewrite internal links
+        });
+
+        setContent({ html: fixedHtml, css: page.css });
+        setNotFound(false);
+      } catch (error) {
+        console.error("Error fetching template data:", error);
+        setNotFound(true);
+      }
+    };
+
+    fetchTemplateData();
+  }, [templateId, pageId, navigate]);
+
+  // Handle clicks on internal links inside injected HTML
   useEffect(() => {
     const handleLinkClick = (e) => {
       const target = e.target.closest("a");
       if (target && target.getAttribute("href")) {
-        e.preventDefault();
         const href = target.getAttribute("href");
-        if (href) {
-          navigate(`/previewpage/${href}`);
+        if (href.startsWith("/previewpage")) {
+          e.preventDefault();
+          navigate(href.replace(location.origin, ""));
         }
       }
     };
