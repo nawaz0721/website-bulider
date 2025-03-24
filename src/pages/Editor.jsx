@@ -279,7 +279,6 @@ useEffect(() => {
   const handleSaveTemplate = () => {
     // localStorage.clear();
     setShowModal(true);
-    navigate('/templates')
   };
 
   const handleModalChange = (e) => {
@@ -336,6 +335,7 @@ useEffect(() => {
       } else {
         await axios.post(AppRoutes.template, projectData);
         toast.success("Template saved successfully!");
+        navigate('/templates');
       }
       setShowModal(false);
     } catch (error) {
