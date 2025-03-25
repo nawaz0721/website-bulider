@@ -27,12 +27,10 @@ const PreviewPage = () => {
   useEffect(() => {
     const fetchTemplateData = async () => {
       try {
-        const isUser = userDetails?.role === "user";
-        const apiURL = isUser
-          ? `${AppRoutes.userTemplate}/${templateId}`
-          : `${AppRoutes.template}/${templateId}`;
+        // const isUser = userDetails?.role === "user";
+        // const apiURL = isUser `${AppRoutes.template}/${templateId}`;
 
-        const res = await axios.get(apiURL);
+        const res = await axios.get(`${AppRoutes.template}/${templateId}`);
         const templateData = res.data;
 
         console.log("template ==> ", templateData);

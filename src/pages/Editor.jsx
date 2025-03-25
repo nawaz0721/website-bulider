@@ -102,12 +102,14 @@ useEffect(() => {
   const loadTemplate = async () => {
     if (id) {
       try {
-        const res = await axios.get(`${AppRoutes.template}/${id}`);
+         const  res = await axios.get(`${AppRoutes.template}/${id}`);
         const data = res.data;
+        const pm = editorRef.current.Pages;
   
-        const pm = editor.Pages;
+        // Remove existing pages
         pm.getAll().forEach((p) => pm.remove(p.id));
   
+        // Load pages into editor
         data.pages.forEach((page) => {
           const newPage = pm.add({
             id: page.id,
@@ -118,14 +120,14 @@ useEffect(() => {
         });
   
         setPages(pm.getAll().map((p) => ({ id: p.id, name: p.get("name") })));
-        
+  
         if (data.pages.length > 0) {
           pm.select(data.pages[0].id);
           setCurrentPage(data.pages[0].id);
   
-          // Set canvas content for the first page
-          editor.setComponents(data.pages[0].html || "");
-          editor.setStyle(data.pages[0].css || "");
+          // Set canvas content for first page
+          editorRef.current.setComponents(data.pages[0].html || "");
+          editorRef.current.setStyle(data.pages[0].css || "");
         }
   
         if (data?.settings) {
@@ -141,7 +143,7 @@ useEffect(() => {
         console.log("Failed to load template", err);
       }
     } else {
-      const pm = editor.Pages;
+      const pm = editorRef.current.Pages;
       const homePage = pm.add({
         id: "home",
         name: "Home",
@@ -311,10 +313,12 @@ useEffect(() => {
   const handleModalSubmit = async (e) => {
     e.preventDefault();
     const editor = editorRef.current;
-
+  
+    // Capture screenshot of homepage
     const image = await captureHomePageScreenshot();
     const pm = editor.Pages;
-
+  
+    // Get all pages in the project
     const projectPages = pm.getAll().map((page) => {
       pm.select(page.id);
       return {
@@ -324,7 +328,8 @@ useEffect(() => {
         css: editor.getCss(),
       };
     });
-
+  
+    // Template data
     const projectData = {
       userID: userDetails._id,
       title: templateDetails.title,
@@ -333,66 +338,42 @@ useEffect(() => {
       image,
       pages: projectPages,
     };
-
-    if (userDetails.role === 'user') {
-      try {
-        let templateRes;
-    
-        // First handle POST/PUT into Template collection
-        if (id) {
-          // User updating template
-          templateRes = await axios.put(`${AppRoutes.template}/${id}`, projectData);
-          toast.success("Template updated in main library!");
-        } else {
-          // User creating template
-          templateRes = await axios.post(AppRoutes.template, projectData);
-          toast.success("Template saved to main library!");
-        }
-    
-        const savedTemplate = templateRes.data;
-    
-        console.log(savedTemplate);
-        
-        // Then save into UserTemplate collection (personal library)
-        const ress = await axios.post(`${AppRoutes.userTemplate}`, { 
-          userID: userDetails._id, 
-          templateID: savedTemplate._id, 
-          name: savedTemplate.name, 
-          description: savedTemplate.description,
-          category: savedTemplate.category,
-          title: savedTemplate.title,
-          pages: projectPages,
-        });
-        console.log(ress);
-    
-        toast.success("Also added to your personal dashboard!");
-        navigate('/main-dashboard');
-    
-      } catch (error) {
-        toast.error("Error saving user template.");
-        console.error(error);
-      }
-    } else {
-      // Admin flow stays same
-      try {
+    console.log(userDetails.role);
+  
+    try {
+      if (userDetails.role === "admin") {
+        // 🛠 Admin Flow: Save/Update in "templates" collection
         if (id) {
           await axios.put(`${AppRoutes.template}/${id}`, projectData);
           toast.success("Template updated successfully!");
-          navigate('/main-dashboard');
         } else {
           await axios.post(AppRoutes.template, projectData);
-          toast.success("Template saved successfully!");
-          navigate('/main-dashboard');
+          toast.success("Template added successfully!");
         }
-      } catch (error) {
-        toast.error("Error saving template.");
+        navigate("/main-dashboard");
+      } else {
+        // 👤 User Flow: Save in "usertemplates" collection
+        let userTemplateRes;
+  
+        if (id) {
+          // User is modifying their own template
+          userTemplateRes = await axios.put(`${AppRoutes.userTemplate}/${id}`, projectData);
+          toast.success("Template updated in your personal library!");
+        } else {
+          // User is adding a new template
+          userTemplateRes = await axios.post(AppRoutes.userTemplate, projectData);
+          toast.success("Template saved in your personal library!");
+        }
+  
+        console.log(userTemplateRes);
+        navigate("/main-dashboard");
       }
+    } catch (error) {
+      toast.error("Error saving template.");
+      console.error(error);
     }
-    
-    
   };
-
-  console.log(userDetails.role);
+  
   
 
   return (
