@@ -26,6 +26,8 @@ export default function TemplatesPage() {
       try {
         setIsLoading(true)
         const templatesResponse = await axios.get(AppRoutes.template)
+        console.log(templatesResponse);
+        
         
         const templatesWithUserDetails = await Promise.all(
           templatesResponse.data.map(async (template) => {

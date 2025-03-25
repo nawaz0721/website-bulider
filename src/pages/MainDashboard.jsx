@@ -42,10 +42,7 @@ export default function Dashboard() {
         setIsLoading(false);
         return;
       }
-  
-      // Updated to match your backend route
-      // const response = await axios.get(`${AppRoutes.template}/user/${userId}`);
-      // console.log("Templates Response:", response.data);
+
 
       const fetchUserTemplates = async () => {
         try {
@@ -127,9 +124,8 @@ export default function Dashboard() {
         return;
       }
       
-      const res = await axios.get(`${AppRoutes.userTemplate}/${template._id}`);
+      const res = await axios.get(`${AppRoutes.userTemplatePreview}/${template._id}`);
       const templateData = res.data;
-  
       console.log(templateData);
       
       // Ensure pages exist

@@ -13,6 +13,7 @@ export const AppRoutes = {
     resetPassword: devUrl + "auth/reset-password",
     template: devUrl + "template/templates",
     userTemplate: devUrl + "template/user-templates",
+    userTemplatePreview: devUrl + "template/user-templates-preview",
     alltemplate: devUrl + "template/template",
     user: devUrl + "user/users",
     profile: devUrl + "profile/profile",

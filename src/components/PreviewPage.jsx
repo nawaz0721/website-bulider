@@ -4,16 +4,16 @@ import axios from "axios";
 import { AppRoutes } from "@/constant/constant";
 import Cookies from "js-cookie";
 
- // ✅ Get user role from redux (or however you store user details)
- let userDetails = null;
- try {
-   const user = Cookies?.get("user");
-   if (user) {
-     userDetails = JSON.parse(user);
-   }
- } catch (err) {
-   console.error("Failed to parse user cookie:", err);
- }
+// ✅ Get user role from cookies (or Redux)
+let userDetails = null;
+try {
+  const user = Cookies?.get("user");
+  if (user) {
+    userDetails = JSON.parse(user);
+  }
+} catch (err) {
+  console.error("Failed to parse user cookie:", err);
+}
 
 const PreviewPage = () => {
   const { templateId, pageId } = useParams();
@@ -21,27 +21,47 @@ const PreviewPage = () => {
   const location = useLocation();
   const [content, setContent] = useState({ html: "", css: "" });
   const [notFound, setNotFound] = useState(false);
-
- 
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchTemplateData = async () => {
       try {
-        // const isUser = userDetails?.role === "user";
-        // const apiURL = isUser `${AppRoutes.template}/${templateId}`;
+        setLoading(true);
 
-        const res = await axios.get(`${AppRoutes.template}/${templateId}`);
+        const isUser = userDetails?.role === "user";
+        let res;
+
+        
+        if (isUser) {
+          try {
+            // Try fetching from user templates first
+            res = await axios.get(
+              `${AppRoutes.userTemplatePreview}/${templateId}`
+            );
+            console.log("User template found:", res.data);
+          } catch (error) {
+            console.warn("User template not found, falling back to default.");
+            // res = await axios.get(`${AppRoutes.template}/${templateId}`); // Fallback to admin template
+          }
+        } else {
+          // Admin fetches from main templates collection
+          res = await axios.get(`${AppRoutes.template}/${templateId}`);
+          console.log("admin fetched");
+          
+        }
+
+
         const templateData = res.data;
+        console.log("Template Data:", templateData);
 
-        console.log("template ==> ", templateData);
-
-        // Handle missing pageId
+        // Handle missing pageId (default to first page)
         if (!pageId) {
           const defaultPageId = templateData.pages[0]?.id || "home";
           navigate(`/previewpage/${templateId}/${defaultPageId}`);
           return;
         }
 
+        // Find page in template
         const page = templateData.pages.find(
           (p) => p.id?.toLowerCase() === pageId.toLowerCase()
         );
@@ -51,6 +71,7 @@ const PreviewPage = () => {
           return;
         }
 
+        // Fix links inside HTML content
         const fixedHtml = page.html.replace(/href="(.*?)"/g, (match, href) => {
           if (href.startsWith("http") || href.startsWith("#")) {
             return match;
@@ -63,11 +84,13 @@ const PreviewPage = () => {
       } catch (error) {
         console.error("Error fetching template data:", error);
         setNotFound(true);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchTemplateData();
-  }, [templateId, pageId, navigate, userDetails]);
+  }, [templateId, pageId, navigate]);
 
   // Handle link clicks inside preview
   useEffect(() => {
@@ -85,6 +108,10 @@ const PreviewPage = () => {
     document.body.addEventListener("click", handleLinkClick);
     return () => document.body.removeEventListener("click", handleLinkClick);
   }, [navigate]);
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  }
 
   if (notFound) {
     return (
