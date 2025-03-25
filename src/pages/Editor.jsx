@@ -18,8 +18,15 @@ import toast from "react-hot-toast";
 import axios from "axios";
 import Cookies from "js-cookie";
 
-const user = Cookies.get("user");
-const userDetails = JSON.parse(user);
+let userDetails = null;
+try {
+  const user = Cookies?.get("user");
+  if (user) {
+    userDetails = JSON.parse(user);
+  }
+} catch (err) {
+  console.error("Failed to parse user cookie:", err);
+}
 
 const Editor = () => {
   const { id } = useParams();
@@ -327,21 +334,66 @@ useEffect(() => {
       pages: projectPages,
     };
 
-    try {
-      if (id) {
-        await axios.put(`${AppRoutes.template}/${id}`, projectData);
-        toast.success("Template updated successfully!");
-        navigate('/templates');
-      } else {
-        await axios.post(AppRoutes.template, projectData);
-        toast.success("Template saved successfully!");
-        navigate('/templates');
+    if (userDetails.role === 'user') {
+      try {
+        let templateRes;
+    
+        // First handle POST/PUT into Template collection
+        if (id) {
+          // User updating template
+          templateRes = await axios.put(`${AppRoutes.template}/${id}`, projectData);
+          toast.success("Template updated in main library!");
+        } else {
+          // User creating template
+          templateRes = await axios.post(AppRoutes.template, projectData);
+          toast.success("Template saved to main library!");
+        }
+    
+        const savedTemplate = templateRes.data;
+    
+        console.log(savedTemplate);
+        
+        // Then save into UserTemplate collection (personal library)
+        const ress = await axios.post(`${AppRoutes.userTemplate}`, { 
+          userID: userDetails._id, 
+          templateID: savedTemplate._id, 
+          name: savedTemplate.name, 
+          description: savedTemplate.description,
+          category: savedTemplate.category,
+          title: savedTemplate.title,
+          pages: projectPages,
+        });
+        console.log(ress);
+    
+        toast.success("Also added to your personal dashboard!");
+        navigate('/main-dashboard');
+    
+      } catch (error) {
+        toast.error("Error saving user template.");
+        console.error(error);
       }
-      setShowModal(false);
-    } catch (error) {
-      toast.error("Error saving template.");
+    } else {
+      // Admin flow stays same
+      try {
+        if (id) {
+          await axios.put(`${AppRoutes.template}/${id}`, projectData);
+          toast.success("Template updated successfully!");
+          navigate('/main-dashboard');
+        } else {
+          await axios.post(AppRoutes.template, projectData);
+          toast.success("Template saved successfully!");
+          navigate('/main-dashboard');
+        }
+      } catch (error) {
+        toast.error("Error saving template.");
+      }
     }
+    
+    
   };
+
+  console.log(userDetails.role);
+  
 
   return (
     <div className="flex h-screen">

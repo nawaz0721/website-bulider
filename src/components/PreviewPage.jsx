@@ -2,6 +2,18 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { AppRoutes } from "@/constant/constant";
+import Cookies from "js-cookie";
+
+ // ✅ Get user role from redux (or however you store user details)
+ let userDetails = null;
+ try {
+   const user = Cookies?.get("user");
+   if (user) {
+     userDetails = JSON.parse(user);
+   }
+ } catch (err) {
+   console.error("Failed to parse user cookie:", err);
+ }
 
 const PreviewPage = () => {
   const { templateId, pageId } = useParams();
@@ -10,16 +22,22 @@ const PreviewPage = () => {
   const [content, setContent] = useState({ html: "", css: "" });
   const [notFound, setNotFound] = useState(false);
 
+ 
+
   useEffect(() => {
     const fetchTemplateData = async () => {
       try {
-        const res = await axios.get(`${AppRoutes.template}/${templateId}`);
+        const isUser = userDetails?.role === "user";
+        const apiURL = isUser
+          ? `${AppRoutes.userTemplate}/${templateId}`
+          : `${AppRoutes.template}/${templateId}`;
+
+        const res = await axios.get(apiURL);
         const templateData = res.data;
+
         console.log("template ==> ", templateData);
 
-        console.log("Current Page ID: ", pageId);
-        console.log("Available Pages: ", templateData.pages.map(p => p.id));
-
+        // Handle missing pageId
         if (!pageId) {
           const defaultPageId = templateData.pages[0]?.id || "home";
           navigate(`/previewpage/${templateId}/${defaultPageId}`);
@@ -37,9 +55,9 @@ const PreviewPage = () => {
 
         const fixedHtml = page.html.replace(/href="(.*?)"/g, (match, href) => {
           if (href.startsWith("http") || href.startsWith("#")) {
-            return match; // keep external/anchor links unchanged
+            return match;
           }
-          return `href="/previewpage/${templateId}/${href}"`; // rewrite internal links
+          return `href="/previewpage/${templateId}/${href}"`;
         });
 
         setContent({ html: fixedHtml, css: page.css });
@@ -51,9 +69,9 @@ const PreviewPage = () => {
     };
 
     fetchTemplateData();
-  }, [templateId, pageId, navigate]);
+  }, [templateId, pageId, navigate, userDetails]);
 
-  // Handle clicks on internal links inside injected HTML
+  // Handle link clicks inside preview
   useEffect(() => {
     const handleLinkClick = (e) => {
       const target = e.target.closest("a");

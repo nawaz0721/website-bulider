@@ -114,7 +114,7 @@ export default function TemplatesPage() {
   
  // When click Use Template, go to /editor/:id
 const handleUseTemplate = (template) => {
-  const authToken = Cookies.get("authToken")
+  const authToken = Cookies?.get("authToken")
   if (!authToken) {
     toast.error("You need to be logged in to use this template.")
     setTimeout(() => navigate("/login"), 2000)
@@ -123,9 +123,18 @@ const handleUseTemplate = (template) => {
 
   navigate(`/editor/${template._id}`)
 }
-  const authToken = Cookies.get("authToken")
-  const user = Cookies.get("user")
-  const userdetails = user ? JSON.parse(user) : null
+  const authToken = Cookies?.get("authToken")
+  
+  let userDetails = null;
+  try {
+    const user = Cookies?.get("user");
+    if (user) {
+      userDetails = JSON.parse(user);
+    }
+  } catch (err) {
+    console.error("Failed to parse user cookie:", err);
+  }
+  
 
   const container = {
     hidden: { opacity: 0 },

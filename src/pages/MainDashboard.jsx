@@ -29,34 +29,43 @@ export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("")
   const navigate = useNavigate()
 
-  // Fetch templates added by the logged-in user
   const fetchTemplates = async () => {
     try {
-      setIsLoading(true)
-
-      // Get the logged-in user's ID
-      const user = Cookies.get("user")
-      const userdetails = JSON.parse(user)
-      const userId = userdetails?._id
-
+      setIsLoading(true);
+  
+      const user = Cookies?.get("user");
+      const userDetails = user ? JSON.parse(user) : null;
+  
+      const userId = userDetails?._id;
       if (!userId) {
-        console.error("User ID not found")
-        setIsLoading(false)
-        return
+        console.error("User ID not found");
+        setIsLoading(false);
+        return;
       }
+  
+      // Updated to match your backend route
+      // const response = await axios.get(`${AppRoutes.template}/user/${userId}`);
+      // console.log("Templates Response:", response.data);
 
-      // Fetch templates created by the logged-in user
-      const response = await axios.get(`${AppRoutes.template}?userID=${userId}`)
-      console.log("Templates Response:", response.data)
+      const fetchUserTemplates = async () => {
+        try {
+          const response = await axios.get(`${AppRoutes.userTemplate}/${userId}`);
+          setTemplates(response.data);
+        } catch (error) {
+          console.error("Error fetching user templates:", error);
+        }
+      };
 
-      setTemplates(response.data) // Set the fetched templates
-      setIsLoading(false)
+      fetchUserTemplates();
+  
+      // setTemplates(response.data);
+      setIsLoading(false);
     } catch (error) {
-      console.error("Error fetching templates:", error)
-      setIsLoading(false)
+      console.error("Error fetching templates:", error);
+      setIsLoading(false);
     }
-  }
-
+  };
+  
   useEffect(() => {
     fetchTemplates()
   }, [])
@@ -68,13 +77,6 @@ export default function Dashboard() {
     const query = searchQuery.toLowerCase()
     return template.name?.toLowerCase().includes(query) || template.description?.toLowerCase().includes(query)
   })
-
-  // Preview template => open its HTML in a new tab
-  const handlePreview = (template) => {
-    const previewWindow = window.open("", "_blank")
-    previewWindow.document.write(template.html)
-    previewWindow.document.close()
-  }
 
   // Use template => navigate to Editor with template ID (/editor/:id)
   const handleUseTemplate = (template) => {
@@ -117,7 +119,49 @@ export default function Dashboard() {
     }
   }
 
+  const handlePreview = async (template) => {
+    try {
+      
+      if (!template?._id) {
+        toast.error("Template ID is missing!");
+        return;
+      }
+      
+      const res = await axios.get(`${AppRoutes.userTemplate}/${template._id}`);
+      const templateData = res.data;
+  
+      console.log(templateData);
+      
+      // Ensure pages exist
+      if (!templateData.pages || templateData.pages.length === 0) {
+        toast.error("No pages found in this template!");
+        return;
+      }
+  
+      // Grab first page for preview
+      const firstPage = templateData.pages[0];
+  
+      const slugify = (str) => {
+        if (!str) return "home";
+        return str.toLowerCase().replace(/\s+/g, '-');
+      };
+  
+      const firstPageSlug = slugify(firstPage.id || firstPage.name);
+  
+      // Open preview page with correct slug & template ID
+      const previewURL = `/previewpage/${templateData._id}/${firstPageSlug}`;
+      window.open(previewURL, "_blank");
+    } catch (err) {
+      console.error("Error fetching template details:", err);
+      toast.error("Failed to fetch template details!");
+    }
+  };
+  
+
   const authToken = Cookies.get("authToken") // Check if user is authenticated
+
+  console.log(templates);
+  
 
   return (
     <SidebarProvider>
@@ -213,14 +257,7 @@ export default function Dashboard() {
                   {/* Preview section */}
                   <div className="aspect-video overflow-hidden bg-muted/30 relative group">
                     <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="rounded-full bg-slate-400 h-8 w-8 p-0 mr-2"
-                        onClick={() => handlePreview(template)}
-                      >
-                        <Eye className="h-4 w-4 text-black" />
-                      </Button>
+                     
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon" className="rounded-full bg-slate-400 h-8 w-8 p-0">
@@ -243,16 +280,24 @@ export default function Dashboard() {
                   </div>
 
                   {/* Footer section */}
-                  <div className="bg-white p-3 flex justify-between">
+                  <div className="bg-white p-3 flex flex-col">
                     <div>
                       <CardTitle className="text-xl">{template.name}</CardTitle>
                       <CardDescription className="mt-2 line-clamp-2">
                         {template.description || "No description available"}
                       </CardDescription>
-                    </div>
+                      </div>
+                      <div className="flex justify-end gap-5 ">
+                      <Button
+                        className=" bg-slate-400  "
+                        onClick={() => handlePreview(template)}
+                      >
+                        Preview
+                      </Button>
                     <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => handleUseTemplate(template)}>
                       Manage
                     </Button>
+                    </div>
                   </div>
                 </Card>
               ))
@@ -264,7 +309,7 @@ export default function Dashboard() {
                 </p>
                 <div className="mt-4 flex justify-center gap-4">
                   <Link to="/editor">
-                    <Button variant="outline">Create Template</Button>
+                    <Button variant="outline" className="text-white">Create Template</Button>
                   </Link>
                   <Link to="/templates">
                     <Button>Browse Templates</Button>
