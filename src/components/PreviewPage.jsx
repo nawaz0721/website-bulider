@@ -3,83 +3,61 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { AppRoutes } from "@/constant/constant";
 import Cookies from "js-cookie";
-
-// ✅ Get user role from cookies (or Redux)
-let userDetails = null;
-try {
-  const user = Cookies?.get("user");
-  if (user) {
-    userDetails = JSON.parse(user);
-  }
-} catch (err) {
-  console.error("Failed to parse user cookie:", err);
-}
+import { toast } from "react-toastify";
 
 const PreviewPage = () => {
   const { templateId, pageId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+
   const [content, setContent] = useState({ html: "", css: "" });
   const [notFound, setNotFound] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [cameFromMainDashboard, setCameFromMainDashboard] = useState(false);
+
+  const user = Cookies?.get("user");
+  const userDetails = user ? JSON.parse(user) : null;
+
+  // ✅ Detect where the user came from (Only Once)
+  useEffect(() => {
+    const previousRoute = location.state?.from || document.referrer || "/";
+    setCameFromMainDashboard(previousRoute.includes("/main-dashboard"));
+  }, []);
 
   useEffect(() => {
     const fetchTemplateData = async () => {
       try {
         setLoading(true);
 
-        const isUser = userDetails?.role === "user";
-        let res;
+        let apiURL = cameFromMainDashboard
+          ? `${AppRoutes.userTemplatePreview}/${templateId}`
+          : `${AppRoutes.template}/${templateId}`;
 
-        
-        if (isUser) {
-          try {
-            // Try fetching from user templates first
-            res = await axios.get(
-              `${AppRoutes.userTemplatePreview}/${templateId}`
-            );
-            console.log("User template found:", res.data);
-          } catch (error) {
-            console.warn("User template not found, falling back to default.");
-            // res = await axios.get(`${AppRoutes.template}/${templateId}`); // Fallback to admin template
-          }
-        } else {
-          // Admin fetches from main templates collection
-          res = await axios.get(`${AppRoutes.template}/${templateId}`);
-          console.log("admin fetched");
-          
-        }
-
-
+        console.log("Fetching from:", apiURL);
+        const res = await axios.get(apiURL);
         const templateData = res.data;
-        console.log("Template Data:", templateData);
 
-        // Handle missing pageId (default to first page)
-        if (!pageId) {
-          const defaultPageId = templateData.pages[0]?.id || "home";
-          navigate(`/previewpage/${templateId}/${defaultPageId}`);
+        if (!templateData?.pages || templateData?.pages.length === 0) {
+          setNotFound(true);
+          setLoading(false);
           return;
         }
 
-        // Find page in template
-        const page = templateData.pages.find(
-          (p) => p.id?.toLowerCase() === pageId.toLowerCase()
-        );
+        if (!pageId) {
+          const defaultPageId = templateData.pages[0]?.id || "home";
+          navigate(`/previewpage/${templateId}/${defaultPageId}`, { state: { from: location.pathname } });
+          return;
+        }
+
+        const page = templateData.pages.find(p => p.id?.toLowerCase() === pageId.toLowerCase());
 
         if (!page) {
           setNotFound(true);
+          setLoading(false);
           return;
         }
 
-        // Fix links inside HTML content
-        const fixedHtml = page.html.replace(/href="(.*?)"/g, (match, href) => {
-          if (href.startsWith("http") || href.startsWith("#")) {
-            return match;
-          }
-          return `href="/previewpage/${templateId}/${href}"`;
-        });
-
-        setContent({ html: fixedHtml, css: page.css });
+        setContent({ html: page.html, css: page.css });
         setNotFound(false);
       } catch (error) {
         console.error("Error fetching template data:", error);
@@ -90,24 +68,7 @@ const PreviewPage = () => {
     };
 
     fetchTemplateData();
-  }, [templateId, pageId, navigate]);
-
-  // Handle link clicks inside preview
-  useEffect(() => {
-    const handleLinkClick = (e) => {
-      const target = e.target.closest("a");
-      if (target && target.getAttribute("href")) {
-        const href = target.getAttribute("href");
-        if (href.startsWith("/previewpage")) {
-          e.preventDefault();
-          navigate(href.replace(location.origin, ""));
-        }
-      }
-    };
-
-    document.body.addEventListener("click", handleLinkClick);
-    return () => document.body.removeEventListener("click", handleLinkClick);
-  }, [navigate]);
+  }, [templateId, pageId, cameFromMainDashboard]);
 
   if (loading) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;

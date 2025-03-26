@@ -3,7 +3,7 @@
 import { ArrowLeft, Plus, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useEffect, useState } from "react"
 import axios from "axios"
 import { Input } from "@/components/ui/input"
@@ -20,6 +20,8 @@ export default function TemplatesPage() {
   const [displayedTemplates, setDisplayedTemplates] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const navigate = useNavigate()
+  const location = useLocation(); // ✅ Define location inside function
+
 
   useEffect(() => {
     const fetchTemplates = async () => {
@@ -83,30 +85,51 @@ export default function TemplatesPage() {
 
   const handlePreview = async (template) => {
     try {
-      const res = await axios.get(`${AppRoutes.template}/${template._id}`);
+      if (!template?._id) {
+        toast.error("Template ID is missing!");
+        return;
+      }
+  
+      console.log("Clicked Preview for Template:", template._id);
+      console.log("Current Path:", location.pathname);
+  
+      const isMainDashboard = location.pathname.startsWith("/main-dashboard");
+      const isUser = userDetails?.role === "user";
+      const isAdmin = userDetails?.role === "admin";
+  
+      let apiURL = "";
+  
+      if (isUser && isMainDashboard) {
+        apiURL = `${AppRoutes.userTemplatePreview}/${template._id}`;
+      } else if (isUser && !isMainDashboard) {
+        apiURL = `${AppRoutes.template}/${template._id}`;
+      } else if (isAdmin) {
+        apiURL = `${AppRoutes.template}/${template._id}`;
+      } else {
+        toast.error("Invalid user role or path!");
+        return;
+      }
+  
+      console.log("Fetching from:", apiURL);
+  
+      const res = await axios.get(apiURL);
       const templateData = res.data;
   
-      // Ensure pages exist
       if (!templateData.pages || templateData.pages.length === 0) {
         toast.error("No pages found in this template!");
         return;
       }
   
-      // Grab first page for preview
       const firstPage = templateData.pages[0];
-  
-      const slugify = (str) => {
-        if (!str) return "home";
-        return str
+      const firstPageSlug = firstPage.id?.toLowerCase().replace(/\s+/g, "-") || "home";
       
-      };
-
-      
-      const firstPageSlug = slugify(firstPage.id);
-  
-      // open preview page with correct slug & template ID
       const previewURL = `/previewpage/${templateData._id}/${firstPageSlug}`;
-      window.open(previewURL, "_blank");
+  
+      console.log("Opening Preview URL:", previewURL);
+  
+      // ✅ Navigate with previous route info
+      navigate(previewURL, { state: { from: location.pathname } });
+  
     } catch (err) {
       console.error("Error fetching template details:", err);
       toast.error("Failed to fetch template details!");
