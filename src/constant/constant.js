@@ -1,7 +1,7 @@
 //constants.js
 // http://localhost:4000/
 // https://website-bulider-backend.vercel.app/
-const devUrl = 'https://website-bulider-backend.vercel.app/';
+const devUrl = 'http://localhost:4000/';
 export const BASE_URL = devUrl
 
 export const AppRoutes = {
