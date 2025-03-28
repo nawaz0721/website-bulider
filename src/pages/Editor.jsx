@@ -100,49 +100,8 @@ const Editor = () => {
     });
 
     const loadTemplate = async () => {
-      if (id) {
-        try {
-          const res = await axios.get(`${AppRoutes.template}/${id}`);
-          const data = res.data;
-          const pm = editorRef.current.Pages;
-
-          // Remove existing pages
-          pm.getAll().forEach((p) => pm.remove(p.id));
-
-          // Load pages into editor
-          data.pages.forEach((page) => {
-            const newPage = pm.add({
-              id: page.id,
-              name: page.name,
-            });
-            newPage.set("customHtml", page.html);
-            newPage.set("customCss", page.css);
-          });
-
-          setPages(pm.getAll().map((p) => ({ id: p.id, name: p.get("name") })));
-
-          if (data.pages.length > 0) {
-            pm.select(data.pages[0].id);
-            setCurrentPage(data.pages[0].id);
-
-            // Set canvas content for first page
-            editorRef.current.setComponents(data.pages[0].html || "");
-            editorRef.current.setStyle(data.pages[0].css || "");
-          }
-          
-          if (data) {
-            setTemplateDetails({
-              title: data.title || "",
-              description: data.description || "",
-              category: data.category || "",
-            });
-          }
-
-          toast.success("Template loaded successfully!");
-        } catch (err) {
-          console.log("Failed to load template", err);
-        }
-      } else {
+      if (!id) {
+        // No ID → Load default empty page
         const pm = editorRef.current.Pages;
         const homePage = pm.add({
           id: "home",
@@ -152,8 +111,78 @@ const Editor = () => {
         pm.select("home");
         setPages([{ id: "home", name: "Home" }]);
         setCurrentPage("home");
+        return;
+      }
+    
+      try {
+        let data = null; // Store fetched data
+    
+        if (userDetails?.role === "admin") {
+          const res = await axios.get(`${AppRoutes.template}/${id}`);
+          data = res.data;
+          console.log(data);
+          
+        } else {
+          const res = await axios.get(`${AppRoutes.userTemplate}/${id}`);
+          data = res.data;
+          console.log(data);
+
+        }
+    
+        if (!data) {
+          toast.error("Failed to load template data.");
+          return;
+        }
+    
+        console.log("Template Data:", data);
+    
+        const pm = editorRef.current.Pages;
+    
+        // Remove existing pages
+        pm.getAll().forEach((p) => pm.remove(p.id));
+    
+        // **Check if `pages` exists and is an array before using `forEach`**
+        if (Array.isArray(data.pages) && data.pages.length > 0) {
+          console.log("Pages received:", data.pages);
+    
+          data.pages.forEach((page) => {
+            const newPage = pm.add({
+              id: page.id,
+              name: page.name,
+            });
+            newPage.set("customHtml", page.html || "");
+            newPage.set("customCss", page.css || "");
+          });
+    
+          console.log("Pages after adding:", pm.getAll());
+    
+          pm.select(data.pages[0].id);
+          setCurrentPage(data.pages[0].id);
+    
+          // Set canvas content for first page
+          editorRef.current.setComponents(data.pages[0].html || "");
+          editorRef.current.setStyle(data.pages[0].css || "");
+    
+          // Force React to update state
+          setPages([...pm.getAll().map((p) => ({ id: p.id, name: p.get("name") }))]);
+        } else {
+          toast.error("Template has no pages!");
+        }
+    
+        // Set template details safely
+        setTemplateDetails({
+          title: data.title || "",
+          description: data.description || "",
+          category: data.category || "",
+        });
+    
+        toast.success("Template loaded successfully!");
+      } catch (err) {
+        console.error("Failed to load template:", err);
+        toast.error("Error loading template.");
       }
     };
+    
 
     editor.on("load", loadTemplate);
 

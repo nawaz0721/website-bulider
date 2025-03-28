@@ -34,7 +34,7 @@ const PreviewPage = () => {
           : `${AppRoutes.template}/${templateId}`;
 
         console.log("Fetching from:", apiURL);
-        const res = await axios.get(apiURL);
+        const res = await axios.get(`${AppRoutes.template}/${templateId}`);
         const templateData = res.data;
 
         if (!templateData?.pages || templateData?.pages.length === 0) {

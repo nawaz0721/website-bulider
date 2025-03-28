@@ -12,7 +12,7 @@ export const AppRoutes = {
     verifyotp: devUrl + "auth/verify-otp",
     resetPassword: devUrl + "auth/reset-password",
     template: devUrl + "template/templates",
-    userTemplate: devUrl + "template/user-templates",
+    userTemplate: devUrl + "usertemplate/user-templates",
     userTemplatePreview: devUrl + "template/user-templates-preview",
     alltemplate: devUrl + "template/template",
     user: devUrl + "user/users",

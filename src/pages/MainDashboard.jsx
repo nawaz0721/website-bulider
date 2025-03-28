@@ -2,7 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { Search, Brain, Eye, MoreVertical, Plus } from "lucide-react";
+import {
+  Search,
+  Brain,
+  Eye,
+  MoreVertical,
+  Plus,
+  Pencil,
+  Trash,
+} from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -29,8 +37,8 @@ import {
   DropdownMenuTrigger,
 } from "@radix-ui/react-dropdown-menu";
 import { useNavigate, Link, useLocation } from "react-router-dom";
-import PreviewPage from "./preview-modal";
 import toast from "react-hot-toast";
+import TemplateDetails from "./TemplateDetails";
 
 export default function Dashboard() {
   const [templates, setTemplates] = useState([]);
@@ -42,7 +50,7 @@ export default function Dashboard() {
   const location = useLocation(); // ✅ Define location inside function
 
   const user = Cookies?.get("user");
-      const userDetails = user ? JSON.parse(user) : null;
+  const userDetails = user ? JSON.parse(user) : null;
 
   const fetchTemplates = async () => {
     try {
@@ -96,14 +104,14 @@ export default function Dashboard() {
 
   // Use template => navigate to Editor with template ID (/editor/:id)
   const handleUseTemplate = (template) => {
-    setSelectedTemplate(template); // set template data
-    setShowPreview(true); // open modal
+    console.log(template);
+    navigate(`/templatedetails/${template._id}`);
   };
 
-  const handleClosePreview = () => {
-    setShowPreview(false);
-    setSelectedTemplate(null);
-  };
+  // const handleClosePreview = () => {
+  //   setShowPreview(false);
+  //   setSelectedTemplate(null);
+  // };
 
   const handleDeleteTemplate = async (templateId) => {
     try {
@@ -113,9 +121,6 @@ export default function Dashboard() {
         return;
       }
 
-      // Show loading toast
-      const loadingToast = toast.loading("Deleting template...");
-
       // Delete the template
       await axios.delete(`${AppRoutes.template}/${templateId}`, {
         headers: {
@@ -124,7 +129,6 @@ export default function Dashboard() {
       });
 
       // Dismiss loading toast and show success
-      toast.dismiss(loadingToast);
       toast.success("Template deleted successfully!");
 
       // Refresh the templates list
@@ -136,23 +140,23 @@ export default function Dashboard() {
   };
 
   console.log(userDetails);
-  
+
   const handlePreview = async (template) => {
     try {
       if (!template?._id) {
         toast.error("Template ID is missing!");
         return;
       }
-  
+
       console.log("Clicked Preview for Template:", template._id);
       console.log("Current Path:", location.pathname);
-  
+
       const isMainDashboard = location.pathname.startsWith("/main-dashboard");
       const isUser = userDetails?.role === "user";
       const isAdmin = userDetails?.role === "admin";
-  
+
       let apiURL = "";
-  
+
       if (isUser && isMainDashboard) {
         apiURL = `${AppRoutes.userTemplatePreview}/${template._id}`;
       } else if (isUser && !isMainDashboard) {
@@ -163,33 +167,32 @@ export default function Dashboard() {
         toast.error("Invalid user role or path!");
         return;
       }
-  
+
       console.log("Fetching from:", apiURL);
-  
+
       const res = await axios.get(apiURL);
       const templateData = res.data;
-  
+
       if (!templateData.pages || templateData.pages.length === 0) {
         toast.error("No pages found in this template!");
         return;
       }
-  
+
       const firstPage = templateData.pages[0];
-      const firstPageSlug = firstPage.id?.toLowerCase().replace(/\s+/g, "-") || "home";
-      
+      const firstPageSlug =
+        firstPage.id?.toLowerCase().replace(/\s+/g, "-") || "home";
+
       const previewURL = `/previewpage/${templateData._id}/${firstPageSlug}`;
-  
+
       console.log("Opening Preview URL:", previewURL);
-  
+
       // ✅ Navigate with previous route info
       navigate(previewURL, { state: { from: location.pathname } });
-  
     } catch (err) {
       console.error("Error fetching template details:", err);
       toast.error("Failed to fetch template details!");
     }
   };
-  
 
   const authToken = Cookies.get("authToken"); // Check if user is authenticated
 
@@ -201,13 +204,7 @@ export default function Dashboard() {
       <Sidebar />
 
       {/* Conditional rendering */}
-      {showPreview && selectedTemplate ? (
-        <PreviewPage
-          template={selectedTemplate}
-          isOpen={showPreview}
-          onClose={handleClosePreview}
-        />
-      ) : (
+      {/* {showPreview && selectedTemplate ?  ( */}
         <div className="mx-auto w-full mt-12 ml-16 p-6 space-y-6">
           {/* Action Cards */}
           <div className="grid gap-4 md:grid-cols-4">
@@ -300,39 +297,34 @@ export default function Dashboard() {
                   className="overflow-hidden border-0 shadow-md"
                 >
                   {/* Preview section */}
-                  <div className="aspect-video overflow-hidden bg-muted/30 relative group">
-                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="rounded-full bg-slate-400 h-8 w-8 p-0"
-                          >
-                            <MoreVertical className="h-4 w-4 text-black" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          <DropdownMenuItem
-                            onSelect={() => navigate(`/editor/${template._id}`)}
-                          >
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onSelect={() => handleDeleteTemplate(template._id)}
-                          >
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                  <div className="aspect-video bg-muted/30 relative group">
+                    {/* Edit & Delete Buttons - Always Visible */}
+                    <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-50">
+                      {/* Edit Button */}
+                      {/* <button
+                        onClick={() => navigate(`/editor/${template._id}`)}
+                        className="p-2 bg-blue-500 rounded-full text-white shadow-md hover:bg-blue-600 transition"
+                      >
+                        <Pencil className="h-5 w-5" />
+                      </button> */}
+
+                      {/* Delete Button */}
+                      <button
+                        onClick={() => handleDeleteTemplate(template._id)}
+                        className="p-2 bg-red-500 rounded-full text-white shadow-md hover:bg-red-600 transition"
+                      >
+                        <Trash className="h-5 w-5" />
+                      </button>
                     </div>
+
+                    {/* Template Image */}
                     <img
                       src={
                         template.image ||
                         "/placeholder.svg?height=200&width=400"
                       }
                       alt={template.name}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      className="w-full h-full object-cover transition-transform duration-500"
                     />
                   </div>
 
@@ -349,6 +341,7 @@ export default function Dashboard() {
                         className=" bg-slate-400  "
                         onClick={() => handlePreview(template)}
                       >
+                        <Eye className="h-4 w-4 mr-2 " />
                         Preview
                       </Button>
                       <Button
@@ -382,7 +375,7 @@ export default function Dashboard() {
             )}
           </div>
         </div>
-      )}
+      {/* ) */}
     </SidebarProvider>
   );
 }

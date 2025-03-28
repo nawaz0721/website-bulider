@@ -15,7 +15,7 @@ import Editor from './pages/Editor';
 import { Toaster } from 'react-hot-toast';
 import SelectWebsite from './pages/SelectWebsite';
 import PreviewPage from './components/PreviewPage';
-import PreviewModal from './pages/preview-modal';
+import TemplateDetails from './pages/TemplateDetails';
 // import Editor from './pages/Editor'; 
 
 
@@ -48,7 +48,7 @@ const App = () => {
           <Route path="/editor" element={<Editor />} />
           <Route path="/editor/:id" element={<Editor />} />
           <Route path="/previewpage/:templateId/:pageId" element={<PreviewPage />} />
-          <Route path="/preview/:id" element={<PreviewModal />} />
+          <Route path="/templatedetails/:id" element={<TemplateDetails />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/setting" element={<SettingsPage />} />
           <Route path="/templates" element={<TemplatesPage />} />

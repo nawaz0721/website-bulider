@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,11 +11,35 @@ import { Badge } from "@/components/ui/badge";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import axios from "axios";
+import { AppRoutes } from "@/constant/constant";
 
-export default function PreviewModal({ isOpen, onClose, template }) {
+export default function TemplateDetails() {
+   const { id } = useParams();
   const [activeTab, setActiveTab] = useState("pages");
+  const [template, setTemplates] = useState([]);
   const navigate = useNavigate()
+
+   const fetchUserTemplates = async () => {
+          try {
+            const response = await axios.get(
+              `${AppRoutes.userTemplate}/${id}`
+            );
+            console.log(response);
+            
+            setTemplates(response.data);
+          } catch (error) {
+            console.error("Error fetching user templates:", error);
+          }
+          
+        };
+  
+
+  useEffect(() => {
+    fetchUserTemplates();
+  }, []);
+  
 
   const pages = [
     { id: "1", title: "aa", link: ".../aa/", lastModified: "2025-03-18 08:27:10", status: "Published" },
