@@ -15,8 +15,8 @@ import Editor from './pages/Editor';
 import { Toaster } from 'react-hot-toast';
 import SelectWebsite from './pages/SelectWebsite';
 import TemplateDetails from './pages/TemplateDetails';
-import Dashboardpreview from './components/dashboardpreview';
-import Templatepreview from './components/templatepreview';
+import Dashboardpreview from './components/Dashboardpreview';
+import Templatepreview from './components/Templatepreview';
 // import Editor from './pages/Editor'; 
 
 
