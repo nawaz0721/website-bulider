@@ -69,7 +69,7 @@ export default function Dashboard() {
       const fetchUserTemplates = async () => {
         try {
           const response = await axios.get(
-            `${AppRoutes.userTemplate}/${userId}`
+             `${AppRoutes.templateByUserId}/${userId}`
           );
           setTemplates(response.data);
         } catch (error) {
@@ -107,12 +107,7 @@ export default function Dashboard() {
     console.log(template);
     navigate(`/templatedetails/${template._id}`);
   };
-
-  // const handleClosePreview = () => {
-  //   setShowPreview(false);
-  //   setSelectedTemplate(null);
-  // };
-
+  
   const handleDeleteTemplate = async (templateId) => {
     try {
       const authToken = Cookies.get("authToken");
@@ -122,7 +117,7 @@ export default function Dashboard() {
       }
 
       // Delete the template
-      await axios.delete(`${AppRoutes.template}/${templateId}`, {
+      await axios.delete(`${AppRoutes.userTemplate}/${templateId}`, {
         headers: {
           Authorization: `Bearer ${authToken}`,
         },
@@ -139,64 +134,12 @@ export default function Dashboard() {
     }
   };
 
-  console.log(userDetails);
 
   const handlePreview = async (template) => {
-    try {
-      if (!template?._id) {
-        toast.error("Template ID is missing!");
-        return;
-      }
+    window.open(`/dashboardpreview/${template._id}/${template.pages[0].id}`, "_blank")
 
-      console.log("Clicked Preview for Template:", template._id);
-      console.log("Current Path:", location.pathname);
-
-      const isMainDashboard = location.pathname.startsWith("/main-dashboard");
-      const isUser = userDetails?.role === "user";
-      const isAdmin = userDetails?.role === "admin";
-
-      let apiURL = "";
-
-      if (isUser && isMainDashboard) {
-        apiURL = `${AppRoutes.userTemplatePreview}/${template._id}`;
-      } else if (isUser && !isMainDashboard) {
-        apiURL = `${AppRoutes.template}/${template._id}`;
-      } else if (isAdmin) {
-        apiURL = `${AppRoutes.template}/${template._id}`;
-      } else {
-        toast.error("Invalid user role or path!");
-        return;
-      }
-
-      console.log("Fetching from:", apiURL);
-
-      const res = await axios.get(apiURL);
-      const templateData = res.data;
-
-      if (!templateData.pages || templateData.pages.length === 0) {
-        toast.error("No pages found in this template!");
-        return;
-      }
-
-      const firstPage = templateData.pages[0];
-      const firstPageSlug =
-        firstPage.id?.toLowerCase().replace(/\s+/g, "-") || "home";
-
-      const previewURL = `/previewpage/${templateData._id}/${firstPageSlug}`;
-
-      console.log("Opening Preview URL:", previewURL);
-
-      // ✅ Navigate with previous route info
-      navigate(previewURL, { state: { from: location.pathname } });
-    } catch (err) {
-      console.error("Error fetching template details:", err);
-      toast.error("Failed to fetch template details!");
-    }
   };
 
-  const authToken = Cookies.get("authToken"); // Check if user is authenticated
-
-  console.log(templates);
 
   return (
     <SidebarProvider>

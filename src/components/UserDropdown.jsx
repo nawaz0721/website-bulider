@@ -18,8 +18,7 @@ const UserDropdown = () => {
    // Get logged-in user details
     const user = Cookies.get("user");
     const userdetails = JSON.parse(user);
-    console.log("Logged-in user details:", userdetails);
-
+  
      const handleLogout = () => {
         Cookies.remove("authToken");
         Cookies.remove("user");

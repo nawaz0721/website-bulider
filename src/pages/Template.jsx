@@ -24,6 +24,7 @@ export default function TemplatesPage() {
   const [allTemplates, setAllTemplates] = useState([]);
   const [displayedTemplates, setDisplayedTemplates] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [cartedTemplates, setCartedTemplates] = useState(new Set());
   const navigate = useNavigate();
 
   let userDetails = null;
@@ -98,8 +99,8 @@ export default function TemplatesPage() {
 
   const handlePreview = (template) => {
     console.log(template.pages[0].id);
-    navigate( `/previewpage/${template._id}/${template.pages[0].id}`);
-  };
+    window.open(`/templatepreview/${template._id}/${template.pages[0].id}`, "_blank")
+  } 
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-b from-background to-background/80">

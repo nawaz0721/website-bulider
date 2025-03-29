@@ -5,7 +5,7 @@ import { AppRoutes } from "@/constant/constant";
 import Cookies from "js-cookie";
 import { toast } from "react-toastify";
 
-const PreviewPage = () => {
+const Dashboardpreview = () => {
   const { templateId, pageId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -13,28 +13,28 @@ const PreviewPage = () => {
   const [content, setContent] = useState({ html: "", css: "" });
   const [notFound, setNotFound] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [cameFromMainDashboard, setCameFromMainDashboard] = useState(false);
 
   const user = Cookies?.get("user");
   const userDetails = user ? JSON.parse(user) : null;
 
-  // ✅ Detect where the user came from (Only Once)
-  useEffect(() => {
-    const previousRoute = location.state?.from || document.referrer || "/";
-    setCameFromMainDashboard(previousRoute.includes("/main-dashboard"));
-  }, []);
 
   useEffect(() => {
+    const defaultPageId = "home";
+    // navigate(`/dashboardpreview/${templateId}/${defaultPageId}`, { state: { from: location.pathname } });
+    const previewUrl = `/dashboardpreview/${templateId}/${defaultPageId}`;
+    window.open(previewUrl, "_blank"); // Opens in a new tab
+  }, []);
+
+
+  useEffect(() => {
+
     const fetchTemplateData = async () => {
       try {
         setLoading(true);
 
-        let apiURL = cameFromMainDashboard
-          ? `${AppRoutes.userTemplatePreview}/${templateId}`
-          : `${AppRoutes.template}/${templateId}`;
-
-        console.log("Fetching from:", apiURL);
-        const res = await axios.get(`${AppRoutes.template}/${templateId}`);
+        const res = await axios.get(`${AppRoutes.userTemplatePreview}/${templateId}`);
+        console.log(res.data);
+        
         const templateData = res.data;
 
         if (!templateData?.pages || templateData?.pages.length === 0) {
@@ -45,7 +45,9 @@ const PreviewPage = () => {
 
         if (!pageId) {
           const defaultPageId = templateData.pages[0]?.id || "home";
-          navigate(`/previewpage/${templateId}/${defaultPageId}`, { state: { from: location.pathname } });
+          // navigate(`/dashboardpreview/${templateId}/${defaultPageId}`, { state: { from: location.pathname } });
+          const previewUrl = `/dashboardpreview/${templateId}/${defaultPageId}`;
+          window.open(previewUrl, "_blank"); // Opens in a new tab
           return;
         }
 
@@ -59,6 +61,7 @@ const PreviewPage = () => {
 
         setContent({ html: page.html, css: page.css });
         setNotFound(false);
+    
       } catch (error) {
         console.error("Error fetching template data:", error);
         setNotFound(true);
@@ -68,7 +71,7 @@ const PreviewPage = () => {
     };
 
     fetchTemplateData();
-  }, [templateId, pageId, cameFromMainDashboard]);
+  }, [templateId, pageId]);
 
   if (loading) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
@@ -99,4 +102,4 @@ const PreviewPage = () => {
   );
 };
 
-export default PreviewPage;
+export default Dashboardpreview;

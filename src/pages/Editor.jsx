@@ -37,6 +37,10 @@ const Editor = () => {
   const [showModal, setShowModal] = useState(false);
   const [showAddPageModal, setShowAddPageModal] = useState(false);
   const [newPageName, setNewPageName] = useState("");
+  const [headerHtml, setHeaderHtml] = useState("");
+  const [headerCss, setHeaderCss] = useState("");
+  const [footerHtml, setFooterHtml] = useState("");
+  const [footerCss, setFooterCss] = useState("");  
   const [templateDetails, setTemplateDetails] = useState({
     title: "",
     description: "",
@@ -113,38 +117,36 @@ const Editor = () => {
         setCurrentPage("home");
         return;
       }
-    
+
       try {
         let data = null; // Store fetched data
-    
+
         if (userDetails?.role === "admin") {
           const res = await axios.get(`${AppRoutes.template}/${id}`);
           data = res.data;
           console.log(data);
-          
         } else {
           const res = await axios.get(`${AppRoutes.userTemplate}/${id}`);
           data = res.data;
           console.log(data);
-
         }
-    
+
         if (!data) {
           toast.error("Failed to load template data.");
           return;
         }
-    
+
         console.log("Template Data:", data);
-    
+
         const pm = editorRef.current.Pages;
-    
+
         // Remove existing pages
         pm.getAll().forEach((p) => pm.remove(p.id));
-    
+
         // **Check if `pages` exists and is an array before using `forEach`**
         if (Array.isArray(data.pages) && data.pages.length > 0) {
           console.log("Pages received:", data.pages);
-    
+
           data.pages.forEach((page) => {
             const newPage = pm.add({
               id: page.id,
@@ -153,36 +155,42 @@ const Editor = () => {
             newPage.set("customHtml", page.html || "");
             newPage.set("customCss", page.css || "");
           });
-    
+
           console.log("Pages after adding:", pm.getAll());
-    
+
           pm.select(data.pages[0].id);
           setCurrentPage(data.pages[0].id);
-    
+
           // Set canvas content for first page
           editorRef.current.setComponents(data.pages[0].html || "");
           editorRef.current.setStyle(data.pages[0].css || "");
-    
+
           // Force React to update state
-          setPages([...pm.getAll().map((p) => ({ id: p.id, name: p.get("name") }))]);
+          setPages([
+            ...pm.getAll().map((p) => ({ id: p.id, name: p.get("name") })),
+          ]);
         } else {
           toast.error("Template has no pages!");
         }
-    
+
         // Set template details safely
         setTemplateDetails({
           title: data.title || "",
           description: data.description || "",
           category: data.category || "",
         });
-    
+
+        setHeaderHtml(data.header?.html || "");
+        setHeaderCss(data.header?.css || "");
+        setFooterHtml(data.footer?.html || "");
+        setFooterCss(data.footer?.css || "");
+
         toast.success("Template loaded successfully!");
       } catch (err) {
         console.error("Failed to load template:", err);
         toast.error("Error loading template.");
       }
     };
-    
 
     editor.on("load", loadTemplate);
 
@@ -227,18 +235,58 @@ const Editor = () => {
     }
   };
 
+  // const switchToPage = (pageId) => {
+  //   const pm = editorRef.current.Pages;
+  //   const nextPage = pm.get(pageId);
+  //   if (nextPage) {
+  //     saveCurrentPageState();
+  //     pm.select(pageId);
+  //     editorRef.current.setComponents(nextPage.get("customHtml") || "");
+  //     editorRef.current.setStyle(nextPage.get("customCss") || "");
+  //     setCurrentPage(pageId);
+  //   }
+  // };
+
   const switchToPage = (pageId) => {
     const pm = editorRef.current.Pages;
     const nextPage = pm.get(pageId);
+  
     if (nextPage) {
-      saveCurrentPageState();
+      saveCurrentPageState(); // Save the current page before switching
+  
       pm.select(pageId);
-      editorRef.current.setComponents(nextPage.get("customHtml") || "");
-      editorRef.current.setStyle(nextPage.get("customCss") || "");
+  
+      let pageHtml = nextPage.get("customHtml") || "";
+      let pageCss = nextPage.get("customCss") || "";
+  
+      // Get the existing editor content
+      const editor = editorRef.current;
+      const canvasContent = editor.getHtml();
+  
+      // Ensure the header and footer are only set once
+      if (!canvasContent.includes("class=\"header\"")) {
+        editor.setComponents(`
+          <div class="header">${headerHtml}</div>
+          <div class="page-content">${pageHtml}</div>
+          <div class="footer">${footerHtml}</div>
+        `);
+        editor.setStyle(`${headerCss} ${pageCss} ${footerCss}`);
+      }
+  
+      // Only update the page content (without re-adding header/footer)
+      const pageContentElement = document.querySelector(".page-x");
+      if (pageContentElement) {
+        pageContentElement.innerHTML = pageHtml;
+      }
+  
+      // Apply page-specific styles
+      editor.setStyle(`${headerCss} ${pageCss} ${footerCss}`);
+  
       setCurrentPage(pageId);
     }
   };
-
+  
+  
   const handleAddPage = () => {
     setNewPageName("");
     setShowAddPageModal(true);
@@ -297,29 +345,6 @@ const Editor = () => {
     }
   };
 
-  // const handleSavePage = () => {
-  //   const editor = editorRef.current;
-  //   const page = editor.Pages.getSelected();
-  //   const pageData = {
-  //     id: page.id,
-  //     name: page.get("name"),
-  //     html: editor.getHtml(),
-  //     css: editor.getCss(),
-  //   };
-  //   localStorage.setItem(`page-${page.id}`, JSON.stringify(pageData));
-  //   toast.success("Page saved successfully!");
-  // };
-
-  // const handlePreviewPage = () => {
-  //   const editor = editorRef.current;
-  //   const page = editor.Pages.getSelected();
-  //   const html = editor.getHtml();
-  //   const css = editor.getCss();
-  //   const pageName = page.get("name") || "previewpage";
-  //   localStorage.setItem(`preview-${pageName}`, JSON.stringify({ html, css }));
-  //   window.open(`/previewpage/${pageName}`, "_blank");
-  // };
-
   const handleSaveTemplate = () => {
     // localStorage.clear();
     setShowModal(true);
@@ -330,6 +355,28 @@ const Editor = () => {
     setTemplateDetails((prevDetails) => ({ ...prevDetails, [name]: value }));
   };
 
+  const handleSetHeader = () => {
+    const selected = editorRef.current.getSelected();
+    if (!selected) {
+      toast.error("Please select a header component.");
+      return;
+    }
+    setHeaderHtml(selected.toHTML());
+    setHeaderCss(editorRef.current.getCss());
+    toast.success("Header applied to all pages!");
+  };
+  
+  const handleSetFooter = () => {
+    const selected = editorRef.current.getSelected();
+    if (!selected) {
+      toast.error("Please select a footer component.");
+      return;
+    }
+    setFooterHtml(selected.toHTML());
+    setFooterCss(editorRef.current.getCss());
+    toast.success("Footer applied to all pages!");
+  };
+  
   const captureHomePageScreenshot = async () => {
     const editor = editorRef.current;
     const frame = editor.Canvas.getFrameEl();
@@ -369,10 +416,14 @@ const Editor = () => {
       category: templateDetails.category,
       image,
       pages: projectPages,
+      header: { html: headerHtml, css: headerCss , id: projectPages.id},
+      footer: { html: footerHtml, css: footerCss , id: projectPages.id}, 
+
+
+      
     };
-    
+
     console.log(projectData);
-    
 
     try {
       if (userDetails.role === "admin") {
@@ -391,22 +442,30 @@ const Editor = () => {
 
         if (id) {
           // 🛑 Instead of updating, make a copy in usertemplates collection
-          const res = await axios.get(`${AppRoutes.template}/${id}`);
+          const res = await axios.get(`${AppRoutes.userTemplate}/${id}`);
           copiedTemplate = {
             ...res.data,
             userID: userDetails._id, // Assign user ID
           };
+          console.log(copiedTemplate);
+          
+          await axios.put(`${AppRoutes.userTemplate}/${id}`, projectData);
+          toast.success("User Template saved successfully!");
         } else {
           // New template by user
-    console.log(userDetails._id);
+          console.log(userDetails._id);
 
           copiedTemplate = projectData;
+          const userTemplateRes = await axios.post(
+            AppRoutes.userTemplate,
+            projectData
+          );
+          toast.success("User created template successfully");
+          console.log(userTemplateRes);
         }
 
-        const userTemplateRes = await axios.post(
-          AppRoutes.userTemplate,
-          copiedTemplate
-        );
+        
+       
         toast.success("Template saved to your personal dashboard!");
       }
       navigate("/main-dashboard");
@@ -450,25 +509,26 @@ const Editor = () => {
           <Plus className="w-4 h-4 mr-2" /> Add Page
         </button>
 
-        {/* <button
-          onClick={handleSavePage}
+        <button
+          onClick={handleSetHeader}
           className="flex items-center justify-center mt-4 p-2 bg-blue-600 hover:bg-blue-700 rounded"
         >
-          <Save className="w-4 h-4 mr-2" /> Save Page
-        </button> */}
+          Set Header
+        </button>
 
-        {/* <button
-          onClick={handlePreviewPage}
-          className="flex items-center justify-center mt-4 p-2 bg-yellow-600 hover:bg-yellow-700 rounded"
+        <button
+          onClick={handleSetFooter}
+          className="flex items-center justify-center mt-4 p-2 bg-blue-600 hover:bg-blue-700 rounded"
         >
-          <Eye className="w-4 h-4 mr-2" /> Preview
-        </button> */}
+          Set Footer
+        </button>
 
         <button
           onClick={handleSaveTemplate}
           className="flex items-center justify-center mt-4 p-2 bg-purple-600 hover:bg-purple-700 rounded"
         >
-          <FileText className="w-4 h-4 mr-2" /> {id ? "Update Template" : "Save Template"}
+          <FileText className="w-4 h-4 mr-2" />{" "}
+          {id ? "Update Template" : "Save Template"}
         </button>
       </div>
 
@@ -484,10 +544,12 @@ const Editor = () => {
           >
             {/* Close Button */}
             <div className="flex justify-between">
-            <h2 className="text-xl font-bold">Template Details</h2>
-              <RxCross2 onClick={closeTemplateModal} className="cursor-pointer" />
+              <h2 className="text-xl font-bold">Template Details</h2>
+              <RxCross2
+                onClick={closeTemplateModal}
+                className="cursor-pointer"
+              />
             </div>
-
 
             {/* Title Input */}
             <input
@@ -532,35 +594,36 @@ const Editor = () => {
 
       {/* Add Page Modal */}
       {showAddPageModal && (
-       <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-       <div className="bg-white p-6 rounded shadow-lg w-80 relative">
-         {/* Close Icon Positioned Correctly */}
-         <div className="flex justify-between">
-         <div className="absolute top-5 right-5 cursor-pointer">
-         <RxCross2 onClick={closePageModal} className="w-5 h-5 text-gray-600 hover:text-black" />
-         </div>
-         <h2 className="text-lg font-bold mb-4">New Page</h2>
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded shadow-lg w-80 relative">
+            {/* Close Icon Positioned Correctly */}
+            <div className="flex justify-between">
+              <div className="absolute top-5 right-5 cursor-pointer">
+                <RxCross2
+                  onClick={closePageModal}
+                  className="w-5 h-5 text-gray-600 hover:text-black"
+                />
+              </div>
+              <h2 className="text-lg font-bold mb-4">New Page</h2>
+            </div>
+
+            <input
+              type="text"
+              placeholder="Enter page name"
+              value={newPageName}
+              onChange={(e) => setNewPageName(e.target.value)}
+              className="w-full p-2 border rounded mb-4"
+              required
+            />
+
+            <button
+              onClick={handleAddPageSubmit}
+              className="w-full p-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+            >
+              Add Page
+            </button>
           </div>
-     
-     
-         <input
-           type="text"
-           placeholder="Enter page name"
-           value={newPageName}
-           onChange={(e) => setNewPageName(e.target.value)}
-           className="w-full p-2 border rounded mb-4"
-           required
-         />
-     
-         <button
-           onClick={handleAddPageSubmit}
-           className="w-full p-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
-         >
-           Add Page
-         </button>
-       </div>
-     </div>
-     
+        </div>
       )}
     </div>
   );

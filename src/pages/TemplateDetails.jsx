@@ -5,8 +5,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Plus, Edit, MoreVertical, ExternalLink } from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
@@ -14,45 +26,36 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { AppRoutes } from "@/constant/constant";
+import { Card } from "antd";
+import { CardDescription, CardTitle } from "@/components/ui/card";
 
 export default function TemplateDetails() {
-   const { id } = useParams();
+  const { id } = useParams();
   const [activeTab, setActiveTab] = useState("pages");
-  const [template, setTemplates] = useState([]);
-  const navigate = useNavigate()
+  const [template, setTemplate] = useState(null);
+  const [pages, setPages] = useState([]);
+  const navigate = useNavigate();
 
-   const fetchUserTemplates = async () => {
-          try {
-            const response = await axios.get(
-              `${AppRoutes.userTemplate}/${id}`
-            );
-            console.log(response);
-            
-            setTemplates(response.data);
-          } catch (error) {
-            console.error("Error fetching user templates:", error);
-          }
-          
-        };
-  
+  // Fetch template details and pages
+  const fetchTemplateDetails = async () => {
+    try {
+      const response = await axios.get(`${AppRoutes.userTemplate}/${id}`);
+      const templateData = response.data;
+
+      setTemplate(templateData);
+      setPages(templateData.pages || []);
+    } catch (error) {
+      console.error("Error fetching template details:", error);
+    }
+  };
 
   useEffect(() => {
-    fetchUserTemplates();
+    fetchTemplateDetails();
   }, []);
-  
 
-  const pages = [
-    { id: "1", title: "aa", link: ".../aa/", lastModified: "2025-03-18 08:27:10", status: "Published" },
-    { id: "2", title: "My account", link: ".../my-account/", lastModified: "2025-03-18 08:14:52", status: "Published" },
-    { id: "3", title: "Checkout", link: ".../checkout/", lastModified: "2025-03-18 08:14:52", status: "Published" },
-    { id: "4", title: "Cart", link: ".../cart/", lastModified: "2025-03-18 08:14:52", status: "Published" },
-    { id: "5", title: "Shop", link: ".../shop/", lastModified: "2025-03-18 08:14:52", status: "Published" },
-  ];
-
-  // Use template => navigate to Editor with template ID (/editor/:id)
-  const addPage = (template) => {
-    console.log("template", template);
-    navigate(`/editor/${template._id}`);
+  // Navigate to Editor with the selected template ID
+  const handleEditTemplate = () => {
+    navigate(`/editor/${id}`);
   };
 
   return (
@@ -64,7 +67,10 @@ export default function TemplateDetails() {
         {/* Header */}
         <div className="p-4 border-b bg-white shadow-sm flex flex-col gap-2">
           <div className="flex items-center justify-between">
-            <Badge variant="outline" className="bg-green-100 text-green-800 flex items-center gap-1">
+            <Badge
+              variant="outline"
+              className="bg-green-100 text-green-800 flex items-center gap-1"
+            >
               <span className="h-2 w-2 rounded-full bg-green-500"></span>
               Live Environment
             </Badge>
@@ -74,50 +80,39 @@ export default function TemplateDetails() {
           </div>
           <div>
             <span className="text-sm text-yellow-500 flex items-center gap-2">
-              ⚠️ Frontpage is not set. Please publish a page to set it as frontpage.
+              ⚠️ Frontpage is not set. Please publish a page to set it as
+              frontpage.
             </span>
           </div>
           <div>
-            <h2 className="text-lg font-semibold">{template?.name || "Untitled Website"}</h2>
-            <p className="text-sm text-gray-600">{template?.description || "No description available."}</p>
+            <h2 className="text-lg font-semibold">
+              {template?.title || "Untitled Website"}
+            </h2>
+            <p className="text-sm text-gray-600">
+              {template?.description || "No description available."}
+            </p>
           </div>
         </div>
 
         <div className="flex flex-1 overflow-hidden">
           {/* Sidebar Section */}
-          <div className="w-64 border-r bg-gray-50 flex flex-col">
-
-            <div className="flex-1 overflow-y-auto">
-              <div className="p-2">
-                <div className="flex items-center gap-2 p-2 rounded bg-gray-100">
-                  <Search className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm font-medium">Main</span>
-                </div>
-
-                <div className="mt-2">
-                  {[
-                    { icon: "≡", label: "Navigation", active: false },
-                  ].map((item, index) => (
-                    <div
-                      key={index}
-                      className={`flex items-center justify-between p-2 rounded my-1 ${
-                        item.active ? "bg-blue-50" : "hover:bg-gray-100"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm">{item.icon}</span>
-                        <span className="text-sm">{item.label}</span>
-                      </div>
-                      {item.badge && (
-                        <Badge variant="outline" className="text-xs bg-black text-white">
-                          {item.badge}
-                        </Badge>
-                      )}
-                    </div>
-                  ))}
-                </div>
+          <div className="w-64 border-r bg-gray-50 flex flex-col p-3">
+            <Card
+              key={template?._id}
+              className="overflow-hidden border-0 shadow-md"
+            >
+              <img
+                src={template?.image || "/placeholder.svg?height=200&width=400"}
+                alt={template?.name}
+                className="w-full h-full object-cover transition-transform duration-500"
+              />
+              <div className="bg-white p-3 flex flex-col">
+                <CardTitle className="text-xl">{template?.name}</CardTitle>
+                <CardDescription className="mt-2 line-clamp-2">
+                  {template?.description || "No description available"}
+                </CardDescription>
               </div>
-            </div>
+            </Card>
           </div>
 
           {/* Main Content Section */}
@@ -125,11 +120,15 @@ export default function TemplateDetails() {
             <Tabs defaultValue="pages" className="flex-1 flex flex-col">
               <div className="border-b">
                 <TabsList className="px-4">
-                  {["Pages", "Header", "Footer", "Single", "Archive", "Slide"].map((tab) => (
+                  {["Pages", "Header", "Footer"].map((tab) => (
                     <TabsTrigger
                       key={tab}
                       value={tab.toLowerCase()}
-                      className={`${activeTab === tab.toLowerCase() ? "border-b-2 border-blue-500" : ""}`}
+                      className={`${
+                        activeTab === tab.toLowerCase()
+                          ? "border-b-2 border-blue-500"
+                          : ""
+                      }`}
                       onClick={() => setActiveTab(tab.toLowerCase())}
                     >
                       {tab}
@@ -145,8 +144,11 @@ export default function TemplateDetails() {
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input placeholder="Search..." className="pl-10" />
                   </div>
-                  <Button className="bg-blue-600 hover:bg-blue-700"  onClick={() => addPage(template)}>
-                    <Plus className="h-4 w-4 mr-2" /> Add Page
+                  <Button
+                    className="bg-blue-600 hover:bg-blue-700"
+                    onClick={handleEditTemplate}
+                  >
+                    <Plus className="h-4 w-4 mr-2" /> Use Template
                   </Button>
                 </div>
 
@@ -155,61 +157,146 @@ export default function TemplateDetails() {
                     <TableRow>
                       <TableHead>Title</TableHead>
                       <TableHead>Link</TableHead>
-                      <TableHead>Last modified</TableHead>
-                      <TableHead>Status</TableHead>
                       <TableHead>Edit</TableHead>
-                      <TableHead></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {pages.map((page) => (
-                      <TableRow key={page.id}>
-                        <TableCell className="font-medium flex items-center gap-2">
-                          <div className="h-5 w-5 border rounded flex-shrink-0"></div>
-                          {page.title}
-                        </TableCell>
-                        <TableCell className="text-blue-500">{page.link}</TableCell>
-                        <TableCell>{page.lastModified}</TableCell>
-                        <TableCell>
-                          <select className="border rounded p-1 bg-white">
-                            <option>Published</option>
-                            <option>Draft</option>
-                          </select>
-                        </TableCell>
-                        <TableCell>
-                          <Button variant="ghost" size="sm" className="h-8 px-2">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm" className="h-8 px-2">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>Duplicate</DropdownMenuItem>
-                              <DropdownMenuItem>Rename</DropdownMenuItem>
-                              <DropdownMenuItem className="text-red-500">Delete</DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                    {pages.length > 0 ? (
+                      pages.map((page) => (
+                        <TableRow key={page.id}>
+                          <TableCell className="font-medium flex items-center gap-2">
+                            {page.name}
+                          </TableCell>
+                          <TableCell className="text-blue-500">
+                            /{page.id}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 px-2"
+                              onClick={() =>
+                                navigate(`/editor/${id}`)
+                              }
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell
+                          colSpan="3"
+                          className="text-center text-gray-500 py-4"
+                        >
+                          No pages found.
                         </TableCell>
                       </TableRow>
-                    ))}
+                    )}
                   </TableBody>
                 </Table>
               </TabsContent>
 
-              {/* Placeholder tabs */}
-              {["header", "footer", "single", "archive", "slide"].map((tab) => (
-                <TabsContent key={tab} value={tab} className="flex-1 p-4">
-                  <div className="flex items-center justify-center h-full text-gray-500">
-                    {tab.charAt(0).toUpperCase() + tab.slice(1)} content would be displayed here
-                  </div>
-                </TabsContent>
-              ))}
+              {/* Header Tab */}
+              {/* <TabsContent value="header" className="flex-1 p-4 overflow-auto">
+                <h2 className="text-xl font-semibold mb-4">
+                  Header Components
+                </h2>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Component Name</TableHead>
+                      <TableHead>Edit</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {headerComponents.length > 0 ? (
+                      headerComponents.map((header) => (
+                        <TableRow key={header.id}>
+                          <TableCell>{header.name}</TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 px-2"
+                              onClick={() =>
+                                navigate(`/editor/${id}/${header.id}`)
+                              }
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell
+                          colSpan="2"
+                          className="text-center text-gray-500 py-4"
+                        >
+                          No headers found.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TabsContent> */}
+
+              {/* Footer Tab */}
+              {/* <TabsContent value="footer" className="flex-1 p-4 overflow-auto">
+                <h2 className="text-xl font-semibold mb-4">
+                  Footer Components
+                </h2>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Component Name</TableHead>
+                      <TableHead>Edit</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {footerComponents.length > 0 ? (
+                      footerComponents.map((footer) => (
+                        <TableRow key={footer.id}>
+                          <TableCell>{footer.name}</TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 px-2"
+                              onClick={() =>
+                                navigate(`/editor/${id}/${footer.id}`)
+                              }
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell
+                          colSpan="2"
+                          className="text-center text-gray-500 py-4"
+                        >
+                          No footers found.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TabsContent> */}
+            {["header", "footer"].map((tab) => (
+              <TabsContent key={tab} value={tab} className="flex-1 p-4">
+                <div className="flex items-center justify-center h-full text-gray-500">
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)} content would be
+                  displayed here
+                </div>
+              </TabsContent>
+            ))}
             </Tabs>
+
           </div>
         </div>
       </div>
