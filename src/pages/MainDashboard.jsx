@@ -71,6 +71,8 @@ export default function Dashboard() {
           const response = await axios.get(
              `${AppRoutes.templateByUserId}/${userId}`
           );
+          console.log(response.data);
+          
           setTemplates(response.data);
         } catch (error) {
           console.error("Error fetching user templates:", error);

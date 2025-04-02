@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, Edit, MoreVertical, ExternalLink } from "lucide-react";
+import { Search, Plus, Edit, MoreVertical, ExternalLink, Code } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -56,6 +56,20 @@ export default function TemplateDetails() {
   // Navigate to Editor with the selected template ID
   const handleEditTemplate = () => {
     navigate(`/editor/${id}`);
+  };
+
+  // Navigate to edit specific component
+  const handleEditComponent = (componentType) => {
+    navigate(`/editor/${id}?edit=${componentType}`);
+  };
+
+  const PreviewContent = ({ html }) => {
+    return (
+      <div 
+        className="border rounded-lg p-4 bg-gray-50 overflow-auto max-h-64"
+        dangerouslySetInnerHTML={{ __html: html || '<p class="text-gray-500">No content available</p>' }}
+      />
+    );
   };
 
   return (
@@ -199,104 +213,71 @@ export default function TemplateDetails() {
               </TabsContent>
 
               {/* Header Tab */}
-              {/* <TabsContent value="header" className="flex-1 p-4 overflow-auto">
-                <h2 className="text-xl font-semibold mb-4">
-                  Header Components
-                </h2>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Component Name</TableHead>
-                      <TableHead>Edit</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {headerComponents.length > 0 ? (
-                      headerComponents.map((header) => (
-                        <TableRow key={header.id}>
-                          <TableCell>{header.name}</TableCell>
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 px-2"
-                              onClick={() =>
-                                navigate(`/editor/${id}/${header.id}`)
-                              }
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell
-                          colSpan="2"
-                          className="text-center text-gray-500 py-4"
-                        >
-                          No headers found.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </TabsContent> */}
-
-              {/* Footer Tab */}
-              {/* <TabsContent value="footer" className="flex-1 p-4 overflow-auto">
-                <h2 className="text-xl font-semibold mb-4">
-                  Footer Components
-                </h2>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Component Name</TableHead>
-                      <TableHead>Edit</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {footerComponents.length > 0 ? (
-                      footerComponents.map((footer) => (
-                        <TableRow key={footer.id}>
-                          <TableCell>{footer.name}</TableCell>
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 px-2"
-                              onClick={() =>
-                                navigate(`/editor/${id}/${footer.id}`)
-                              }
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell
-                          colSpan="2"
-                          className="text-center text-gray-500 py-4"
-                        >
-                          No footers found.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </TabsContent> */}
-            {["header", "footer"].map((tab) => (
-              <TabsContent key={tab} value={tab} className="flex-1 p-4">
-                <div className="flex items-center justify-center h-full text-gray-500">
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)} content would be
-                  displayed here
+              <TabsContent value="header" className="flex-1 p-4 overflow-auto">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold">Header Content</h2>
+                  <Button
+                    onClick={() => handleEditComponent('header')}
+                    variant="outline"
+                    className="flex items-center gap-2 text-white"
+                  >
+                    <Edit className="h-4 w-4 text-white" />
+                    Edit Header
+                  </Button>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-medium mb-2">HTML Preview</h3>
+                    <PreviewContent html={template?.header?.html} />
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium mb-2">CSS Styles</h3>
+                    <div className="border rounded-lg p-4 bg-gray-50 overflow-auto max-h-64">
+                      {template?.header?.css ? (
+                        <pre className="text-sm">{template.header.css}</pre>
+                      ) : (
+                        <p className="text-gray-500">No CSS styles defined</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </TabsContent>
-            ))}
-            </Tabs>
 
+              {/* Footer Tab */}
+              <TabsContent value="footer" className="flex-1 p-4 overflow-auto">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold">Footer Content</h2>
+                  <Button
+                    onClick={() => handleEditComponent('footer')}
+                    variant="outline"
+                    className="flex items-center gap-2 text-white"
+                  >
+                    <Edit className="h-4 w-4 text-white" />
+                    Edit Footer
+                  </Button>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-medium mb-2">HTML Preview</h3>
+                    <PreviewContent html={template?.footer?.html} />
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium mb-2">CSS Styles</h3>
+                    <div className="border rounded-lg p-4 bg-gray-50 overflow-auto max-h-64">
+                      {template?.footer?.css ? (
+                        <pre className="text-sm">{template.footer.css}</pre>
+                      ) : (
+                        <p className="text-gray-500">No CSS styles defined</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
       </div>

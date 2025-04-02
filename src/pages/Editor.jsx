@@ -37,16 +37,48 @@ const Editor = () => {
   const [showModal, setShowModal] = useState(false);
   const [showAddPageModal, setShowAddPageModal] = useState(false);
   const [newPageName, setNewPageName] = useState("");
-  const [headerHtml, setHeaderHtml] = useState("");
-  const [headerCss, setHeaderCss] = useState("");
-  const [footerHtml, setFooterHtml] = useState("");
-  const [footerCss, setFooterCss] = useState("");  
   const [templateDetails, setTemplateDetails] = useState({
     title: "",
     description: "",
     category: "",
   });
   const navigate = useNavigate();
+
+  // Initialize default pages
+  const initializeDefaultPages = (editor) => {
+    const pm = editor.Pages;
+    
+    // Clear existing pages
+    pm.getAll().forEach(page => pm.remove(page.id));
+    
+    // Add default pages
+    const homePage = pm.add({
+      id: "home",
+      name: "Home",
+      component: `<div class='p-4'>Home Page Content</div>`,
+    });
+    
+    const headerPage = pm.add({
+      id: "header",
+      name: "Header",
+      component: `<header class='p-4 bg-gray-100'>Header Content</header>`,
+    });
+    
+    const footerPage = pm.add({
+      id: "footer",
+      name: "Footer",
+      component: `<footer class='p-4 bg-gray-100'>Footer Content</footer>`,
+    });
+    
+    // Select home page by default
+    pm.select("home");
+    setCurrentPage("home");
+    setPages([
+      { id: "home", name: "Home" },
+      { id: "header", name: "Header" },
+      { id: "footer", name: "Footer" }
+    ]);
+  };
 
   useEffect(() => {
     const editor = grapesjs.init({
@@ -74,7 +106,7 @@ const Editor = () => {
     editorRef.current = editor;
     window.editor = editor;
 
-    // 🚩 Internal Link Command for <a> tag
+    // Internal Link Command for <a> tag
     editor.Commands.add("set-internal-link", {
       run(editor) {
         const slug = prompt("Enter page slug (e.g. home, about, contact)");
@@ -105,16 +137,8 @@ const Editor = () => {
 
     const loadTemplate = async () => {
       if (!id) {
-        // No ID → Load default empty page
-        const pm = editorRef.current.Pages;
-        const homePage = pm.add({
-          id: "home",
-          name: "Home",
-          component: `<div class='p-4'></div>`,
-        });
-        pm.select("home");
-        setPages([{ id: "home", name: "Home" }]);
-        setCurrentPage("home");
+        // No ID → Initialize default pages
+        initializeDefaultPages(editor);
         return;
       }
 
@@ -124,29 +148,24 @@ const Editor = () => {
         if (userDetails?.role === "admin") {
           const res = await axios.get(`${AppRoutes.template}/${id}`);
           data = res.data;
-          console.log(data);
         } else {
           const res = await axios.get(`${AppRoutes.userTemplate}/${id}`);
           data = res.data;
-          console.log(data);
         }
 
         if (!data) {
           toast.error("Failed to load template data.");
+          initializeDefaultPages(editor);
           return;
         }
 
-        console.log("Template Data:", data);
-
-        const pm = editorRef.current.Pages;
+        const pm = editor.Pages;
 
         // Remove existing pages
         pm.getAll().forEach((p) => pm.remove(p.id));
 
-        // **Check if `pages` exists and is an array before using `forEach`**
+        // Add pages from database
         if (Array.isArray(data.pages) && data.pages.length > 0) {
-          console.log("Pages received:", data.pages);
-
           data.pages.forEach((page) => {
             const newPage = pm.add({
               id: page.id,
@@ -156,39 +175,54 @@ const Editor = () => {
             newPage.set("customCss", page.css || "");
           });
 
-          console.log("Pages after adding:", pm.getAll());
+          // Add header and footer if they exist in the template
+          if (data.header) {
+            const headerPage = pm.add({
+              id: "header",
+              name: "Header",
+            });
+            headerPage.set("customHtml", data.header.html || "");
+            headerPage.set("customCss", data.header.css || "");
+          }
 
+          if (data.footer) {
+            const footerPage = pm.add({
+              id: "footer",
+              name: "Footer",
+            });
+            footerPage.set("customHtml", data.footer.html || "");
+            footerPage.set("customCss", data.footer.css || "");
+          }
+
+          // Select first page by default
           pm.select(data.pages[0].id);
           setCurrentPage(data.pages[0].id);
 
           // Set canvas content for first page
-          editorRef.current.setComponents(data.pages[0].html || "");
-          editorRef.current.setStyle(data.pages[0].css || "");
+          editor.setComponents(data.pages[0].html || "");
+          editor.setStyle(data.pages[0].css || "");
 
-          // Force React to update state
+          // Update pages state
           setPages([
             ...pm.getAll().map((p) => ({ id: p.id, name: p.get("name") })),
           ]);
         } else {
-          toast.error("Template has no pages!");
+          // If no pages in template, initialize defaults
+          initializeDefaultPages(editor);
         }
 
-        // Set template details safely
+        // Set template details
         setTemplateDetails({
           title: data.title || "",
           description: data.description || "",
           category: data.category || "",
         });
 
-        setHeaderHtml(data.header?.html || "");
-        setHeaderCss(data.header?.css || "");
-        setFooterHtml(data.footer?.html || "");
-        setFooterCss(data.footer?.css || "");
-
         toast.success("Template loaded successfully!");
       } catch (err) {
         console.error("Failed to load template:", err);
         toast.error("Error loading template.");
+        initializeDefaultPages(editor);
       }
     };
 
@@ -228,65 +262,33 @@ const Editor = () => {
 
   const saveCurrentPageState = () => {
     const pm = editorRef.current.Pages;
-    const currentPage = pm.getSelected();
-    if (currentPage) {
-      currentPage.set("customHtml", editorRef.current.getHtml());
-      currentPage.set("customCss", editorRef.current.getCss());
+    const currentPageObj = pm.get(currentPage);
+    
+    if (currentPageObj) {
+      const html = editorRef.current.getHtml();
+      const css = editorRef.current.getCss();
+      
+      currentPageObj.set("customHtml", html);
+      currentPageObj.set("customCss", css);
     }
   };
-
-  // const switchToPage = (pageId) => {
-  //   const pm = editorRef.current.Pages;
-  //   const nextPage = pm.get(pageId);
-  //   if (nextPage) {
-  //     saveCurrentPageState();
-  //     pm.select(pageId);
-  //     editorRef.current.setComponents(nextPage.get("customHtml") || "");
-  //     editorRef.current.setStyle(nextPage.get("customCss") || "");
-  //     setCurrentPage(pageId);
-  //   }
-  // };
 
   const switchToPage = (pageId) => {
     const pm = editorRef.current.Pages;
     const nextPage = pm.get(pageId);
-  
+    
     if (nextPage) {
-      saveCurrentPageState(); // Save the current page before switching
-  
+      // Save current page state before switching
+      saveCurrentPageState();
+      
+      // Switch to the new page
       pm.select(pageId);
-  
-      let pageHtml = nextPage.get("customHtml") || "";
-      let pageCss = nextPage.get("customCss") || "";
-  
-      // Get the existing editor content
-      const editor = editorRef.current;
-      const canvasContent = editor.getHtml();
-  
-      // Ensure the header and footer are only set once
-      if (!canvasContent.includes("class=\"header\"")) {
-        editor.setComponents(`
-          <div class="header">${headerHtml}</div>
-          <div class="page-content">${pageHtml}</div>
-          <div class="footer">${footerHtml}</div>
-        `);
-        editor.setStyle(`${headerCss} ${pageCss} ${footerCss}`);
-      }
-  
-      // Only update the page content (without re-adding header/footer)
-      const pageContentElement = document.querySelector(".page-x");
-      if (pageContentElement) {
-        pageContentElement.innerHTML = pageHtml;
-      }
-  
-      // Apply page-specific styles
-      editor.setStyle(`${headerCss} ${pageCss} ${footerCss}`);
-  
+      editorRef.current.setComponents(nextPage.get("customHtml") || "");
+      editorRef.current.setStyle(nextPage.get("customCss") || "");
       setCurrentPage(pageId);
     }
   };
-  
-  
+
   const handleAddPage = () => {
     setNewPageName("");
     setShowAddPageModal(true);
@@ -296,23 +298,32 @@ const Editor = () => {
     const editor = editorRef.current;
     const pm = editor.Pages;
     const pageName = newPageName.trim();
+    
     if (!pageName) {
       toast.error("Page name cannot be empty");
       return;
     }
+    
     const pageId = pageName.toLowerCase().replace(/\s+/g, "-");
+    
+    // Check if page already exists
+    if (pm.get(pageId)) {
+      toast.error("Page with this name already exists");
+      return;
+    }
+    
     pm.add({
       id: pageId,
       name: pageName,
       component: `<div class='p-4'>${pageName} Page</div>`,
     });
+    
     setPages(pm.getAll().map((p) => ({ id: p.id, name: p.get("name") })));
     switchToPage(pageId);
     setShowAddPageModal(false);
   };
 
   const closePageModal = () => {
-    setShowModal(false);
     setShowAddPageModal(false);
   };
 
@@ -323,10 +334,18 @@ const Editor = () => {
   const handleDeletePage = async (pageId) => {
     const editor = editorRef.current;
     const pm = editor.Pages;
-    if (pm.getAll().length <= 1) {
-      toast.error("Cannot delete the last page");
+    
+    // Prevent deletion of default pages
+    if (["home", "header", "footer"].includes(pageId)) {
+      toast.error("Cannot delete default pages");
       return;
     }
+    
+    if (pm.getAll().length <= 3) { // 3 default pages
+      toast.error("Cannot delete the last custom page");
+      return;
+    }
+    
     try {
       if (id) {
         await axios.delete(`${AppRoutes.template}/${id}/page/${pageId}`);
@@ -334,11 +353,13 @@ const Editor = () => {
       } else {
         toast.success("Page deleted locally!");
       }
+      
       pm.remove(pageId);
       setPages(pm.getAll().map((p) => ({ id: p.id, name: p.get("name") })));
+      
       if (currentPage === pageId) {
-        const firstPage = pm.getAll()[0];
-        if (firstPage) switchToPage(firstPage.id);
+        // Switch to home page if current page was deleted
+        switchToPage("home");
       }
     } catch (error) {
       toast.error("Failed to delete page.");
@@ -346,7 +367,6 @@ const Editor = () => {
   };
 
   const handleSaveTemplate = () => {
-    // localStorage.clear();
     setShowModal(true);
   };
 
@@ -355,79 +375,116 @@ const Editor = () => {
     setTemplateDetails((prevDetails) => ({ ...prevDetails, [name]: value }));
   };
 
-  const handleSetHeader = () => {
-    const selected = editorRef.current.getSelected();
-    if (!selected) {
-      toast.error("Please select a header component.");
-      return;
-    }
-    setHeaderHtml(selected.toHTML());
-    setHeaderCss(editorRef.current.getCss());
-    toast.success("Header applied to all pages!");
-  };
-  
-  const handleSetFooter = () => {
-    const selected = editorRef.current.getSelected();
-    if (!selected) {
-      toast.error("Please select a footer component.");
-      return;
-    }
-    setFooterHtml(selected.toHTML());
-    setFooterCss(editorRef.current.getCss());
-    toast.success("Footer applied to all pages!");
-  };
-  
   const captureHomePageScreenshot = async () => {
     const editor = editorRef.current;
-    const frame = editor.Canvas.getFrameEl();
-    const canvasEl = frame?.contentWindow?.document?.body;
-
-    if (!canvasEl) {
-      toast.error("Could not capture canvas");
+    const pm = editor.Pages;
+    
+    // Save current page state
+    saveCurrentPageState();
+    
+    // Switch to home page to capture screenshot
+    const homePage = pm.get("home");
+    if (!homePage) {
+      toast.error("Home page not found");
       return null;
     }
-
-    const html2canvas = (await import("html2canvas")).default;
-    const canvas = await html2canvas(canvasEl);
-    return canvas.toDataURL("image/png");
+    
+    // Switch to home page temporarily
+    const previousPage = currentPage;
+    pm.select("home");
+    editor.setComponents(homePage.get("customHtml") || "");
+    editor.setStyle(homePage.get("customCss") || "");
+    
+    // Wait for the canvas to update
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    try {
+      const frame = editor.Canvas.getFrameEl();
+      const canvasEl = frame?.contentWindow?.document?.body;
+      
+      if (!canvasEl) {
+        toast.error("Could not capture canvas");
+        return null;
+      }
+      
+      const html2canvas = (await import("html2canvas")).default;
+      const canvas = await html2canvas(canvasEl, {
+        scale: 1,
+        logging: false,
+        useCORS: true,
+        allowTaint: true,
+      });
+      
+      // Switch back to the previous page
+      if (previousPage !== "home") {
+        const prevPage = pm.get(previousPage);
+        if (prevPage) {
+          pm.select(previousPage);
+          editor.setComponents(prevPage.get("customHtml") || "");
+          editor.setStyle(prevPage.get("customCss") || "");
+        }
+      }
+      
+      return canvas.toDataURL("image/png");
+    } catch (error) {
+      console.error("Error capturing screenshot:", error);
+      toast.error("Failed to capture screenshot");
+      
+      // Switch back to the previous page even if capture fails
+      if (previousPage !== "home") {
+        const prevPage = pm.get(previousPage);
+        if (prevPage) {
+          pm.select(previousPage);
+          editor.setComponents(prevPage.get("customHtml") || "");
+          editor.setStyle(prevPage.get("customCss") || "");
+        }
+      }
+      
+      return null;
+    }
   };
-
+  
   const handleModalSubmit = async (e) => {
     e.preventDefault();
     const editor = editorRef.current;
-
-    const image = await captureHomePageScreenshot();
     const pm = editor.Pages;
-
-    const projectPages = pm.getAll().map((page) => {
-      pm.select(page.id);
-      return {
-        id: page.id,
-        name: page.get("name"),
-        html: editor.getHtml(),
-        css: editor.getCss(),
-      };
-    });
-
+  
+    // Save the current page before sending data
+    saveCurrentPageState();
+  
+    // Get all pages except header and footer for the pages array
+    const customPages = pm.getAll().filter(
+      page => !["header", "footer"].includes(page.id)
+    );
+    
+    // Get header and footer separately
+    const headerPage = pm.get("header");
+    const footerPage = pm.get("footer");
+    
     const projectData = {
       userID: userDetails._id,
       title: templateDetails.title,
       description: templateDetails.description,
       category: templateDetails.category,
-      image,
-      pages: projectPages,
-      header: { html: headerHtml, css: headerCss , id: projectPages.id},
-      footer: { html: footerHtml, css: footerCss , id: projectPages.id}, 
-
-
-      
+      image: await captureHomePageScreenshot(),
+      pages: customPages.map((page) => ({
+        id: page.id,
+        name: page.get("name"),
+        html: page.get("customHtml") || "",
+        css: page.get("customCss") || "",
+      })),
+      header: {
+        html: headerPage?.get("customHtml") || "",
+        css: headerPage?.get("customCss") || "",
+      },
+      footer: {
+        html: footerPage?.get("customHtml") || "",
+        css: footerPage?.get("customCss") || "",
+      },
     };
-
-    console.log(projectData);
-
+  
     try {
       if (userDetails.role === "admin") {
-        // ✅ Admins can add and update in templates collection
         if (id) {
           await axios.put(`${AppRoutes.template}/${id}`, projectData);
           toast.success("Template updated successfully!");
@@ -436,38 +493,15 @@ const Editor = () => {
           toast.success("Template added successfully!");
         }
       } else {
-        // ✅ Users can only save templates in usertemplates
-        console.log(userDetails._id);
-        let copiedTemplate;
-
         if (id) {
-          // 🛑 Instead of updating, make a copy in usertemplates collection
-          const res = await axios.get(`${AppRoutes.userTemplate}/${id}`);
-          copiedTemplate = {
-            ...res.data,
-            userID: userDetails._id, // Assign user ID
-          };
-          console.log(copiedTemplate);
-          
           await axios.put(`${AppRoutes.userTemplate}/${id}`, projectData);
-          toast.success("User Template saved successfully!");
+          toast.success("User template saved successfully!");
         } else {
-          // New template by user
-          console.log(userDetails._id);
-
-          copiedTemplate = projectData;
-          const userTemplateRes = await axios.post(
-            AppRoutes.userTemplate,
-            projectData
-          );
+          await axios.post(AppRoutes.userTemplate, projectData);
           toast.success("User created template successfully");
-          console.log(userTemplateRes);
         }
-
-        
-       
-        toast.success("Template saved to your personal dashboard!");
       }
+  
       navigate("/main-dashboard");
     } catch (error) {
       toast.error("Error saving template.");
@@ -489,9 +523,9 @@ const Editor = () => {
               }`}
             >
               <span className="flex-1" onClick={() => switchToPage(page.id)}>
-                {page?.name || "Home"}
+                {page.name}
               </span>
-              {page.id !== "home" && (
+              {!["home", "header", "footer"].includes(page.id) && (
                 <button
                   onClick={() => handleDeletePage(page.id)}
                   className="p-1 hover:bg-red-500 rounded"
@@ -510,17 +544,17 @@ const Editor = () => {
         </button>
 
         <button
-          onClick={handleSetHeader}
+          onClick={() => switchToPage("header")}
           className="flex items-center justify-center mt-4 p-2 bg-blue-600 hover:bg-blue-700 rounded"
         >
-          Set Header
+          Edit Header
         </button>
 
         <button
-          onClick={handleSetFooter}
+          onClick={() => switchToPage("footer")}
           className="flex items-center justify-center mt-4 p-2 bg-blue-600 hover:bg-blue-700 rounded"
         >
-          Set Footer
+          Edit Footer
         </button>
 
         <button
@@ -542,7 +576,6 @@ const Editor = () => {
             onSubmit={handleModalSubmit}
             className="bg-white p-8 rounded shadow-lg space-y-4 w-96"
           >
-            {/* Close Button */}
             <div className="flex justify-between">
               <h2 className="text-xl font-bold">Template Details</h2>
               <RxCross2
@@ -551,7 +584,6 @@ const Editor = () => {
               />
             </div>
 
-            {/* Title Input */}
             <input
               name="title"
               value={templateDetails.title}
@@ -561,7 +593,6 @@ const Editor = () => {
               required
             />
 
-            {/* Description Input */}
             <input
               name="description"
               value={templateDetails.description}
@@ -571,7 +602,6 @@ const Editor = () => {
               required
             />
 
-            {/* Category Input */}
             <input
               name="category"
               value={templateDetails.category}
@@ -581,7 +611,6 @@ const Editor = () => {
               required
             />
 
-            {/* Submit Button */}
             <button
               type="submit"
               className="w-full p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
@@ -596,7 +625,6 @@ const Editor = () => {
       {showAddPageModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded shadow-lg w-80 relative">
-            {/* Close Icon Positioned Correctly */}
             <div className="flex justify-between">
               <div className="absolute top-5 right-5 cursor-pointer">
                 <RxCross2

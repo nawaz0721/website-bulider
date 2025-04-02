@@ -24,7 +24,7 @@ export default function TemplatesPage() {
   const [allTemplates, setAllTemplates] = useState([]);
   const [displayedTemplates, setDisplayedTemplates] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [cartedTemplates, setCartedTemplates] = useState(new Set());
+  const [userTemplates, setUserTemplates] = useState([]);
   const navigate = useNavigate();
 
   let userDetails = null;
@@ -38,20 +38,23 @@ export default function TemplatesPage() {
   }
 
   useEffect(() => {
-    const fetchTemplates = async () => {
+    const fetchData = async () => {
       try {
         setIsLoading(true);
+        
+        // Fetch all templates
         const templatesResponse = await axios.get(AppRoutes.template);
         setAllTemplates(templatesResponse.data);
+
       } catch (error) {
-        console.error("Error fetching templates:", error);
+        console.error("Error fetching data:", error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchTemplates();
-  }, []);
+    fetchData();
+  }, [userDetails?._id]);
 
   useEffect(() => {
     let filtered = [...allTemplates];
@@ -59,18 +62,28 @@ export default function TemplatesPage() {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
         (t) =>
-          (t.name?.toLowerCase()?.includes(query) || "") || 
+          (t.title?.toLowerCase()?.includes(query) || "") || 
           (t.description?.toLowerCase()?.includes(query) || "")
       );
-      
     }
     setDisplayedTemplates(filtered);
   }, [allTemplates, searchQuery]);
+
+  // Check if template is already in user's collection
+  const isTemplateAdded = (templateId) => {
+    return userTemplates.some(t => t.templateID === templateId);
+  };
 
   const handleAddToCart = async (template) => {
     try {
       if (!userDetails?._id) {
         toast.error("You need to be logged in to add templates.");
+        return;
+      }
+
+      // Check if template already exists in user's collection
+      if (isTemplateAdded(template._id)) {
+        toast.error("This template is already in your collection!");
         return;
       }
 
@@ -82,14 +95,26 @@ export default function TemplatesPage() {
         image: template.image,
         description: template.description,
         pages: template.pages,
+        header: template.header,
+        footer: template.footer
       };
 
-      await axios.post(AppRoutes.userTemplate, newTemplate);
+      console.log(newTemplate);
+      
+      const response = await axios.post(AppRoutes.userTemplate, newTemplate);
+      
+      // Update local state with the newly added template
+      setUserTemplates([...userTemplates, response.data]);
+      
       toast.success("Template added to your collection!");
       navigate("/main-dashboard");
     } catch (error) {
       console.error("Error adding template:", error);
-      toast.error("Failed to add template.");
+      if (error.response?.status === 409) {
+        toast.error("This template is already in your collection!");
+      } else {
+        toast.error("Failed to add template.");
+      }
     }
   };
 
@@ -98,7 +123,6 @@ export default function TemplatesPage() {
   };
 
   const handlePreview = (template) => {
-    console.log(template.pages[0].id);
     window.open(`/templatepreview/${template._id}/${template.pages[0].id}`, "_blank")
   } 
 
@@ -130,12 +154,13 @@ export default function TemplatesPage() {
 
       {/* Main Content */}
       <main className="flex-1 container mx-auto px-4 py-10">
-      <div className="space-y-2 m-2">
-            <h1 className="text-4xl font-bold tracking-tight">Templates Gallery</h1>
-            <p className="text-muted-foreground text-lg max-w-2xl">
-              Browse our collection of professionally designed templates to kickstart your next project
-            </p>
-          </div>
+        <div className="space-y-2 m-2">
+          <h1 className="text-4xl font-bold tracking-tight">Templates Gallery</h1>
+          <p className="text-muted-foreground text-lg max-w-2xl">
+            Browse our collection of professionally designed templates to kickstart your next project
+          </p>
+        </div>
+        
         {/* Search Bar */}
         <div className="mb-6 flex gap-4 items-center">
           <Input
@@ -159,11 +184,11 @@ export default function TemplatesPage() {
               <Card key={template._id} className="shadow-lg hover:shadow-xl transition duration-300">
                 <img
                   src={template.image || "/placeholder.svg"}
-                  alt={template.name}
+                  alt={template.title}
                   className="w-full h-40 object-cover rounded-t-md"
                 />
                 <CardHeader>
-                  <CardTitle>{template.name}</CardTitle>
+                  <CardTitle>{template.title}</CardTitle>
                   <CardDescription>{template.description}</CardDescription>
                   <Badge>{template.category}</Badge>
                 </CardHeader>
@@ -177,7 +202,12 @@ export default function TemplatesPage() {
                       Use Template
                     </Button>
                   ) : (
-                    <Button onClick={() => handleAddToCart(template)}>Add to Cart</Button>
+                    <Button 
+                      onClick={() => handleAddToCart(template)}
+                      disabled={isTemplateAdded(template._id)}
+                    >
+                      {isTemplateAdded(template._id) ? "Added" : "Add to Collection"}
+                    </Button>
                   )}
                 </CardFooter>
               </Card>
