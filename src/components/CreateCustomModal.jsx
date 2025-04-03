@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Link, useNavigate } from "react-router-dom";
 
-function CreateWordPressModal({ isOpen, onClose }) {
+function CreateCustomModal({ isOpen, onClose }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({
     location: "council-bluffs",
@@ -18,15 +18,15 @@ function CreateWordPressModal({ isOpen, onClose }) {
     }
   }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setCurrentStep(1);
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-    setCurrentStep(2);
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-    setCurrentStep(3);
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-  };
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   setCurrentStep(1);
+  //   await new Promise((resolve) => setTimeout(resolve, 3000));
+  //   setCurrentStep(2);
+  //   await new Promise((resolve) => setTimeout(resolve, 3000));
+  //   setCurrentStep(3);
+  //   await new Promise((resolve) => setTimeout(resolve, 2000));
+  // };
 
   const updateFormData = (newData) => {
     setFormData((prev) => ({ ...prev, ...newData }));
@@ -40,8 +40,8 @@ function CreateWordPressModal({ isOpen, onClose }) {
           ✖
         </button>
           <>
-            <h2 className="text-2xl font-bold mb-2">Create a New WordPress Website</h2>
-            <p className="text-gray-600 dark:text-gray-400">Build your website with AI or custom setup.</p>
+            <h2 className="text-2xl font-bold mb-2">Create a New Custom Website</h2>
+            <p className="text-gray-600 dark:text-gray-400">Build your website with custom setup.</p>
             <form onSubmit={()=>{navigate("/templates")}} className="space-y-4 mt-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Choose Location</label>
@@ -77,4 +77,4 @@ function CreateWordPressModal({ isOpen, onClose }) {
   );
 }
 
-export default CreateWordPressModal;
+export default CreateCustomModal;

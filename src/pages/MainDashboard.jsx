@@ -40,7 +40,7 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import TemplateDetails from "./TemplateDetails";
 
-export default function Dashboard() {
+export default function MainDashboard() {
   const [templates, setTemplates] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showPreview, setShowPreview] = useState(false);
@@ -71,7 +71,6 @@ export default function Dashboard() {
           const response = await axios.get(
              `${AppRoutes.templateByUserId}/${userId}`
           );
-          console.log(response.data);
           
           setTemplates(response.data);
         } catch (error) {
@@ -106,7 +105,6 @@ export default function Dashboard() {
 
   // Use template => navigate to Editor with template ID (/editor/:id)
   const handleUseTemplate = (template) => {
-    console.log(template);
     navigate(`/templatedetails/${template._id}`);
   };
   

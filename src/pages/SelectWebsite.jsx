@@ -7,10 +7,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import WebsiteCard from "@/components/WebsiteCard";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import CreateWordPressModal from "@/components/CreateWordPressModal";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import Cookies from "js-cookie";
+import CreateCustomModal from "@/components/CreateCustomModal";
+import WordPressSetupModal from "@/components/WordPressSetupForm";
 
 // Dummy data for websites (replace with actual API data)
 const websites = []; // Empty array means no websites exist
@@ -18,9 +19,10 @@ const websites = []; // Empty array means no websites exist
 export default function SelectWebsite() {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isWordpressModalOpen, setIsWordpressModalOpen] = useState(false);
 
   const handleAIWebsiteClick = () => {
-    navigate("/create-website");
+    setIsWordpressModalOpen(true);
   };
 
   const handleCustomWebsiteClick = () => {
@@ -87,7 +89,7 @@ export default function SelectWebsite() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 {/* AI Website Builder */}
                 <div className="bg-gray-50 rounded-lg p-6">
-                  <h3 className="text-xl font-bold mb-2">Use AI to create your website</h3>
+                  <h3 className="text-xl font-bold mb-2">Use AI Wordpress to create your website</h3>
                   <p className="text-gray-600 text-sm mb-6">
                     Let AI generate content and images for you.
                   </p>
@@ -95,7 +97,7 @@ export default function SelectWebsite() {
                     onClick={handleAIWebsiteClick}
                     className="text-black bg-white hover:text-white hover:bg-black w-full transition-colors border-black"  variant="outline"
                   >
-                    Start with AI
+                    Start with AI Wordpress
                   </Button>
                 </div>
 
@@ -119,7 +121,8 @@ export default function SelectWebsite() {
       </div>
 
       {/* Create WordPress Modal */}
-      {isModalOpen && <CreateWordPressModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />}
+      {isModalOpen && <CreateCustomModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />}
+       {isWordpressModalOpen && <WordPressSetupModal isOpen={isWordpressModalOpen} onClose={() => setIsWordpressModalOpen(true)} />} 
       </>
   );
 }

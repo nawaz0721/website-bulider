@@ -17,6 +17,8 @@ import SelectWebsite from './pages/SelectWebsite';
 import TemplateDetails from './pages/TemplateDetails';
 import Dashboardpreview from './components/Dashboardpreview';
 import Templatepreview from './components/Templatepreview';
+import WordPressSetupForm from './components/WordPressSetupForm';
+import WordpressTemplateDetails from './pages/WordpressTemplateDetails';
 // import Editor from './pages/Editor'; 
 
 
@@ -39,6 +41,7 @@ const App = () => {
         <Route path="/select-website" element={<SelectWebsite />} />
         <Route path="/main-dashboard" element={<MainDashboard />} />
         <Route path="/create-website" element={<CreateWebsiteFlow />} />
+        <Route path="/wordpress-form" element={<WordPressSetupForm />} />
         <Route path="/convert-site" element={<ConvertSite />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
@@ -51,6 +54,7 @@ const App = () => {
           <Route path="/dashboardpreview/:templateId/:pageId" element={<Dashboardpreview />} />
           <Route path="/templatepreview/:templateId/:pageId" element={<Templatepreview />} />
           <Route path="/templatedetails/:id" element={<TemplateDetails />} />
+          <Route path="/wordprestemplatedetails" element={<WordpressTemplateDetails />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/setting" element={<SettingsPage />} />
           <Route path="/templates" element={<TemplatesPage />} />

@@ -14,7 +14,6 @@ export default function Header() {
   useEffect(() => {
     const token = Cookies.get("authToken");
     const userData = Cookies.get("user");
-    console.log(userData);
     
     if (token) {
       setAuthToken(token);

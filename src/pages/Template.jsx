@@ -99,7 +99,6 @@ export default function TemplatesPage() {
         footer: template.footer
       };
 
-      console.log(newTemplate);
       
       const response = await axios.post(AppRoutes.userTemplate, newTemplate);
       
