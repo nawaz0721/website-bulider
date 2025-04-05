@@ -2,6 +2,7 @@
 // http://localhost:4000/
 // https://website-bulider-backend.vercel.app/
 const devUrl = 'https://website-bulider-backend.vercel.app/';
+const phpUrl = 'https://wp.website4x.com/';
 export const BASE_URL = devUrl
 
 export const AppRoutes = {
@@ -19,4 +20,8 @@ export const AppRoutes = {
     user: devUrl + "user/users",
     profile: devUrl + "profile/profile",
     profileAvatar: devUrl + "profile/upload-avatar",
+    wordpress: devUrl + "wordpressform/wordpress",
+    install: phpUrl + "installword.php",
+    plugin: phpUrl + "installwo.php",
+    pages: phpUrl + "wppage.php",
 }

@@ -1,20 +1,51 @@
 "use client";
 
+import React from "react";
 import { useState, useEffect } from "react";
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Eye, EyeOff, Check, Loader2 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { AppRoutes } from "@/constant/constant";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
-function WordPressSetupModal({ isOpen, onClose }) {
-  const [password, setPassword] = useState("");
-  const [passwordVisible, setPasswordVisible] = useState(false);
+export default function WordPressSetupModal({
+  isOpen,
+  onClose,
+  onInstall,
+  isProgressModalOpen,
+  setIsProgressModalOpen,
+  formData,
+}) {
+  const [pass, setPassword] = useState("");
+  const [passVisible, setPassVisible] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
-  const [formData, setFormData] = useState({
-    siteTitle: "",
-    username: "",
-    email: "",
+  const [currentStep, setCurrentStep] = useState(0);
+  const [steps, setSteps] = useState({
+    saveData: { completed: false, loading: false },
+    installWP: { completed: false, loading: false },
+    installPlugin: { completed: false, loading: false },
+    createSite: { completed: false, loading: false },
   });
 
-  const navigate = useNavigate();
+  const [localFormData, setLocalFormData] = useState({
+    title: "",
+    stitle: "",
+    uname: "",
+    Email: "",
+  });
+
+  const router = useNavigate();
 
   useEffect(() => {
     if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
@@ -23,165 +54,342 @@ function WordPressSetupModal({ isOpen, onClose }) {
   }, []);
 
   const updateFormData = (newData) => {
-    setFormData((prev) => ({ ...prev, ...newData }));
+    setLocalFormData((prev) => ({ ...prev, ...newData }));
   };
 
-  // Password Strength Checker
   const getPasswordStrength = (password) => {
-    if (password.length < 6) return "Weak";
-    if (password.length < 8) return "Medium";
-    if (/[A-Z]/.test(password) && /[a-z]/.test(password)) return "Strong";
-    return "Medium";
+    if (password.length < 6)
+      return { text: "Weak", color: "bg-red-500", percentage: 33 };
+    if (password.length < 8)
+      return { text: "Medium", color: "bg-yellow-500", percentage: 66 };
+    if (
+      /[A-Z]/.test(password) &&
+      /[a-z]/.test(password) &&
+      /[0-9]/.test(password)
+    )
+      return { text: "Strong", color: "bg-green-500", percentage: 100 };
+    return { text: "Medium", color: "bg-yellow-500", percentage: 66 };
   };
+
+  const passwordStrength = getPasswordStrength(pass);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const completeForm = { ...localFormData, pass };
+       
+  // Validate all fields are filled
+  if (!completeForm.title || !completeForm.stitle || !completeForm.uname || !completeForm.Email || !completeForm.pass) {
+    toast.error("Please fill out all fields");
+    return;
+  }
+
+  // Validate email format
+  if (!/^\S+@\S+\.\S+$/.test(completeForm.Email)) {
+    toast.error("Please enter a valid email address");
+    return;
+  }
+
+  // Validate password strength
+  if (completeForm.pass.length < 6) {
+    toast.error("Password must be at least 6 characters long");
+    return;
+  }
+    onInstall(completeForm); // Pass form data to parent
+    
+    // Step 1: Save Data
+    setSteps((prev) => ({
+      ...prev,
+      saveData: { completed: false, loading: true },
+    }));
+
     try {
-      // const response = await fetch("http://localhost/install.php", {  // Replace with live URL if needed
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify(formData),
-      const result = true
-      if (result) {
-          navigate("/wordprestemplatedetails");
+      const { data: savedData } = await axios.post(AppRoutes.wordpress, completeForm, {
+        headers: { "Content-Type": "application/json" },
+      });
+
+      // let completeFormID = null;
+      var completeFormID = savedData._id;
+      setSteps((prev) => ({
+        ...prev,
+        saveData: { completed: true, loading: false },
+      }));
+      setCurrentStep(1);
+    } catch (e) {
+      console.log(e);
+      setSteps((prev) => ({
+        ...prev,
+        saveData: { completed: false, loading: false },
+      }));
+      return;
+    }
+
+    // Step 2: Install WordPress
+    setSteps((prev) => ({
+      ...prev,
+      installWP: { completed: false, loading: true },
+    }));
+
+    try {
+      const response = await fetch(AppRoutes.install, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams(completeForm).toString(),
+      });
+    
+      const result = await response.text();
+      console.log(result);
+
+      // const installPath = result?.path;
+      const installPath = JSON.stringify(result);
+      console.log("Installation Path:", installPath);
+    
+      if (!installPath) {
+        toast.error("Installation path missing in response");
+        return;
       }
+      console.log("Installation path");
+      // `${AppRoutes.wordpress}/${completeFormID}`
+      // ✅ Update MongoDB with path
+      const res = await axios.patch(`${AppRoutes.wordpress}/${completeFormID}`, {
+        paths: installPath,
+      })
+      console.log("Path Updated" + res.data);
+    
+      setSteps((prev) => ({
+        ...prev,
+        installWP: { completed: true, loading: false },
+      }));
+      setCurrentStep(2);
 
-      // const result = await response.json();
-  
+      // Step 3 & 4: Install Plugin and Create Site
+      setSteps((prev) => ({
+        ...prev,
+        installPlugin: { completed: false, loading: true },
+      }));
 
-      // if (result.status === "success") {
-      //   alert("WordPress Installed Successfully!");
-      //   navigate("/wordprestemplatedetails");
-      // } else {
-      //   alert("Error: " + result.message);
-      // }
+      try {
+        await fetch(AppRoutes.plugin, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: result,
+        });
+
+        setSteps((prev) => ({
+          ...prev,
+          installPlugin: { completed: true, loading: false },
+          createSite: { completed: true, loading: false },
+        }));
+        setCurrentStep(4);
+
+        setTimeout(() => {
+          setIsProgressModalOpen(false);
+          router("/wordprestemplatedetails");
+        }, 2000);
+      } catch (e) {
+        console.log("Error", e);
+        setSteps((prev) => ({
+          ...prev,
+          installPlugin: { completed: false, loading: false },
+        }));
+      }
     } catch (error) {
-      console.error("Installation Error:", error);
-      alert("Failed to install WordPress.");
+      console.error("❌ Installation Error:", error);
+      setSteps((prev) => ({
+        ...prev,
+        installWP: { completed: false, loading: false },
+      }));
     }
   };
-  
+
+  const totalProgress =
+    (steps.saveData.completed ? 25 : 0) +
+    (steps.installWP.completed ? 25 : 0) +
+    (steps.installPlugin.completed ? 25 : 0) +
+    (steps.createSite.completed ? 25 : 0);
+
+  if (!isOpen && !isProgressModalOpen) return null;
 
   return (
-    isOpen && (
-      <div
-        className={`fixed inset-0 w-full bg-opacity-50 flex items-center justify-center z-50 ${
-          darkMode ? "bg-black" : "bg-gray-200"
-        }`}
-      >
-        <div
-          className={`rounded-lg p-6 w-full max-w-md relative ${
-            darkMode ? "bg-gray-900 text-white" : "bg-white text-black"
-          }`}
-        >
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-          >
-            ✖
-          </button>
-          <>
-            <h2 className="text-2xl font-bold mb-2">WordPress Setup</h2>
-            <p className="text-gray-600 dark:text-gray-400">
-              Complete the setup process for your WordPress site.
-            </p>
-            <form
-             onSubmit={handleSubmit}
-              className="space-y-4 mt-4"
-            >
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Site Title
-                </label>
-                <input
-                  type="text"
-                  placeholder="My WordPress Site"
-                  className="w-full p-2 border rounded-md"
-                  value={formData.siteTitle}
-                  onChange={(e) =>
-                    updateFormData({ siteTitle: e.target.value })
-                  }
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Username
-                </label>
-                <input
-                  type="text"
-                  placeholder="Your username"
-                  className="w-full p-2 border rounded-md"
-                  value={formData.username}
-                  onChange={(e) =>
-                    updateFormData({ username: e.target.value })
-                  }
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Password
-                </label>
-                <div className="relative">
-                  <input
-                    type={passwordVisible ? "text" : "password"}
-                    className="w-full p-2 border rounded-md"
-                    placeholder="Enter a strong password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+    <>
+      {isOpen && (
+        <div className="fixed inset-0 w-full bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <Card className="w-full max-w-md shadow-xl bg-white">
+            <CardHeader>
+              <CardTitle className="text-2xl">WordPress Setup</CardTitle>
+              <CardDescription>
+                Complete the setup process for your WordPress site
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form className="space-y-4">
+                <div className="space-y-2">
+                  <label htmlFor="title" className="text-sm font-medium">
+                    Site Title
+                  </label>
+                  <Input
+                    id="title"
+                    placeholder="My WordPress Site"
+                    value={localFormData.title}
+                    onChange={(e) => updateFormData({ title: e.target.value })}
                     required
                   />
-                  <button
-                    type="button"
-                    className="absolute right-2 top-2 text-sm text-blue-600"
-                    onClick={() => setPasswordVisible(!passwordVisible)}
-                  >
-                    {passwordVisible ? "Hide" : "Show"}
-                  </button>
                 </div>
-                <p
-                  className={`text-xs mt-1 ${
-                    getPasswordStrength(password) === "Weak"
-                      ? "text-red-600"
-                      : getPasswordStrength(password) === "Medium"
-                      ? "text-orange-600"
-                      : "text-green-600"
-                  }`}
-                >
-                  {password ? getPasswordStrength(password) : "Enter a password"}
+
+                <div className="space-y-2">
+                  <label htmlFor="stitle" className="text-sm font-medium">
+                    Site Subtitle
+                  </label>
+                  <Input
+                    id="stitle"
+                    placeholder="Just another WordPress site"
+                    value={localFormData.stitle}
+                    onChange={(e) => updateFormData({ stitle: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="uname" className="text-sm font-medium">
+                    Username
+                  </label>
+                  <Input
+                    id="uname"
+                    placeholder="admin"
+                    value={localFormData.uname}
+                    onChange={(e) => updateFormData({ uname: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="email" className="text-sm font-medium">
+                    Email
+                  </label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="admin@example.com"
+                    value={localFormData.Email}
+                    onChange={(e) => updateFormData({ Email: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="password" className="text-sm font-medium">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={passVisible ? "text" : "password"}
+                      placeholder="Secure password"
+                      value={pass}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setPassVisible(!passVisible)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    >
+                      {passVisible ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  {pass && (
+                    <div className="mt-2">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-xs">{passwordStrength.text}</span>
+                      </div>
+                      <Progress
+                        value={passwordStrength.percentage}
+                        className={passwordStrength.color}
+                      />
+                    </div>
+                  )}
+                </div>
+              </form>
+            </CardContent>
+            <CardFooter className="flex justify-between">
+              <Button variant="outline" onClick={onClose} className="text-white">
+                Cancel
+              </Button>
+              <Button onClick={handleSubmit}>
+                Install WordPress
+              </Button>
+            </CardFooter>
+          </Card>
+        </div>
+      )}
+
+      {isProgressModalOpen && (
+        <div className="fixed inset-0 w-full bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <Card className="w-full max-w-md shadow-xl bg-white">
+            <CardHeader>
+              <CardTitle className="text-2xl">WordPress Installation</CardTitle>
+              <CardDescription>Setting up your WordPress site</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-4">
+                <Progress value={totalProgress} className="h-2 " />
+                <p className="text-sm text-right mt-1 text-muted-foreground">
+                  {totalProgress}% Complete
                 </p>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Your Email
-                </label>
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="w-full p-2 border rounded-md"
-                  value={formData.email}
-                  onChange={(e) => updateFormData({ email: e.target.value })}
-                  required
-                />
+              <div className="space-y-4 text-black">
+                {Object.entries({
+                  saveData: "Saving Data",
+                  installWP: "Installing WordPress",
+                  installPlugin: "Installing Plugins",
+                  createSite: "Creating WordPress Site"
+                }).map(([key, label]) => (
+                  <div key={key} className="flex items-center gap-3">
+                    {steps[key].loading ? (
+                      <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                    ) : steps[key].completed ? (
+                      <div className="h-5 w-5 rounded-full bg-green-500 flex items-center justify-center">
+                        <Check className="h-3 w-3 text-white" />
+                      </div>
+                    ) : (
+                      <div className="h-5 w-5 rounded-full border border-muted-foreground/30" />
+                    )}
+                    <div className="flex-1">
+                      <p className={`font-medium ${
+                        steps[key].completed || steps[key].loading
+                          ? "text-black"
+                          : "text-muted-foreground"
+                      }`}>
+                        {label}
+                      </p>
+                      {steps[key].loading && (
+                        <p className="text-xs text-muted-foreground text-black">
+                          {key === 'saveData' && 'Storing your configuration...'}
+                          {key === 'installWP' && 'Setting up WordPress core files...'}
+                          {key === 'installPlugin' && 'Adding essential WordPress plugins...'}
+                          {key === 'createSite' && 'Finalizing your WordPress installation...'}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
 
-              <Button
-                type="submit"
-                variant="outline"
-                className="h-8 border-black hover:text-white hover:bg-black bg-white text-black w-full"
-              >
-                Install WordPress
-              </Button>
-            </form>
-          </>
+              {steps.createSite.completed && (
+                <div className="mt-6 text-center">
+                  <p className="text-green-500 font-medium">
+                    Installation Complete!
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Redirecting to template selection...
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
-      </div>
-    )
+      )}
+    </>
   );
 }
-
-export default WordPressSetupModal;

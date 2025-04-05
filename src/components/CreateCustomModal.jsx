@@ -1,80 +1,100 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { Button } from "./ui/button";
-import { Link, useNavigate } from "react-router-dom";
+import React from "react"
 
-function CreateCustomModal({ isOpen, onClose }) {
-  const [currentStep, setCurrentStep] = useState(0);
+import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { X } from "lucide-react"
+import { useNavigate } from "react-router-dom"
+
+export default function CreateCustomModal({ isOpen, onClose }) {
   const [formData, setFormData] = useState({
     location: "council-bluffs",
     siteTitle: "",
-  });
-  const [darkMode, setDarkMode] = useState(false);
+  })
+  const [darkMode, setDarkMode] = useState(false)
+  const router = useNavigate()
 
   useEffect(() => {
     if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      setDarkMode(true);
+      setDarkMode(true)
     }
-  }, []);
-
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   setCurrentStep(1);
-  //   await new Promise((resolve) => setTimeout(resolve, 3000));
-  //   setCurrentStep(2);
-  //   await new Promise((resolve) => setTimeout(resolve, 3000));
-  //   setCurrentStep(3);
-  //   await new Promise((resolve) => setTimeout(resolve, 2000));
-  // };
+  }, [])
 
   const updateFormData = (newData) => {
-    setFormData((prev) => ({ ...prev, ...newData }));
-  };
-  const navigate = useNavigate()
+    setFormData((prev) => ({ ...prev, ...newData }))
+  }
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    router("/templates")
+  }
+
+  if (!isOpen) return null
+
+  const locations = [
+    { label: "Council Bluffs, USA", value: "council-bluffs" },
+    { label: "The Dalles, USA", value: "the-dalles" },
+    { label: "London, UK", value: "london" },
+    { label: "Mumbai, India", value: "mumbai" },
+    { label: "Sydney, Australia", value: "sydney" },
+  ]
 
   return (
-    <div className={`fixed inset-0 w-full bg-opacity-50 flex items-center justify-center z-50 ${darkMode ? "bg-black" : "bg-gray-200"}`}>
-      <div className={`rounded-lg p-6 w-full max-w-md relative ${darkMode ? "bg-gray-900 text-white" : "bg-white text-black"}`}>
-        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
-          ✖
-        </button>
-          <>
-            <h2 className="text-2xl font-bold mb-2">Create a New Custom Website</h2>
-            <p className="text-gray-600 dark:text-gray-400">Build your website with custom setup.</p>
-            <form onSubmit={()=>{navigate("/templates")}} className="space-y-4 mt-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Choose Location</label>
-                <select
-                  className="w-full p-2 border rounded-md"
-                  value={formData.location}
-                  onChange={(e) => updateFormData({ location: e.target.value })}
-                >
-                  {["Council Bluffs, USA", "The Dalles, USA", "London, UK", "Mumbai, India", "Sydney, Australia"].map((loc) => (
-                    <option key={loc} value={loc.toLowerCase().replace(/\s+/g, "-")}>{loc}</option>
+    <div className="fixed inset-0 w-full bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+      <Card className="w-full max-w-md shadow-xl bg-white">
+        <CardHeader className="relative">
+          <Button variant="ghost" size="icon" className="absolute right-4 top-4" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </Button>
+          <CardTitle className="text-2xl">Create a New Custom Website</CardTitle>
+          <CardDescription>Build your website with custom setup</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="location" className="text-sm font-medium">
+                Choose Location
+              </label>
+              <Select defaultValue={formData.location} onValueChange={(value) => updateFormData({ location: value })}>
+                <SelectTrigger id="location" className="w-full">
+                  <SelectValue placeholder="Select a location" />
+                </SelectTrigger>
+                <SelectContent>
+                  {locations.map((location) => (
+                    <SelectItem key={location.value} value={location.value}>
+                      {location.label}
+                    </SelectItem>
                   ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Site Title</label>
-                <input
-                  type="text"
-                  placeholder="My Website"
-                  className="w-full p-2 border rounded-md"
-                  value={formData.siteTitle}
-                  onChange={(e) => updateFormData({ siteTitle: e.target.value })}
-                  required
-                />
-              </div>
-              <Button type="submit" variant="outline"
-        className="h-8 border-black hover:text-white hover:bg-black bg-white text-black w-full ">
-                Next
-              </Button>
-            </form>
-          </>
-      </div>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="siteTitle" className="text-sm font-medium">
+                Site Title
+              </label>
+              <Input
+                id="siteTitle"
+                type="text"
+                placeholder="My Website"
+                value={formData.siteTitle}
+                onChange={(e) => updateFormData({ siteTitle: e.target.value })}
+                required
+              />
+            </div>
+          </form>
+        </CardContent>
+        <CardFooter>
+          <Button onClick={handleSubmit} className="w-full">
+            Next
+          </Button>
+        </CardFooter>
+      </Card>
     </div>
-  );
+  )
 }
 
-export default CreateCustomModal;
