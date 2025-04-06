@@ -18,6 +18,7 @@ import { AppRoutes } from "@/constant/constant";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import Cookies from "js-cookie";
 
 export default function WordPressSetupModal({
   isOpen,
@@ -141,7 +142,11 @@ export default function WordPressSetupModal({
 
       // const installPath = result?.path;
       const installPath = JSON.stringify(result);
-      console.log("Installation Path:", installPath);
+      console.log("Installation path:", installPath);
+      
+      // Save the installation path to cookies
+      Cookies.set("path", installPath, { expires: 1 });
+      console.log("Path saved to cookies:", installPath);
     
       if (!installPath) {
         toast.error("Installation path missing in response");

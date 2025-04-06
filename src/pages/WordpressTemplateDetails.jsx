@@ -35,6 +35,7 @@ import axios from "axios";
 import { AppRoutes } from "@/constant/constant";
 import { Card } from "antd";
 import { CardDescription, CardTitle } from "@/components/ui/card";
+import Cookies from "js-cookie";
 
 export default function WordpressTemplateDetails() {
   const { id } = useParams();
@@ -43,32 +44,55 @@ export default function WordpressTemplateDetails() {
   const [template, setTemplate] = useState(null);
   const [pages, setPages] = useState([]);
   const [plugins, setPlugins] = useState([]);
+  const [menus, setMenus] = useState([]);
+  const [showPageModal, setShowPageModal] = useState(false);
+  const [showMenuModal, setShowMenuModal] = useState(false);
+  const [formData, setFormData] = useState({
+    title: '',
+    content: ''
+  });
   const navigate = useNavigate();
+  const cookies = Cookies.get("path");
 
-  // Fetch template details and pages
-  const fetchTemplateDetails = async () => {
+  const apiCall = async (type, data = {}) => {
     try {
-      //   const response = await axios.get(`${AppRoutes.userTemplate}/${id}`);
-      const templateData = response.data;
+      const params = new URLSearchParams();
+      params.append('type', type);
+      params.append('path', cookies || '');
+      
+      Object.keys(data).forEach(key => {
+        params.append(key, data[key]);
+      });
 
-      setTemplate(templateData);
-      setPages(templateData.pages || []);
-      setPlugins(templateData.plugins || []);
+      
+      const response = await fetch(`${AppRoutes.pages}/${params.toString()}`);
+      console.log("API call error:", response);    
+      return await response.json();
     } catch (error) {
-      console.error("Error fetching template details:", error);
+      return { error: error.message };
+    }
+  };
+
+  const fetchPages = async () => {
+    const result = await apiCall('list_page');
+    if (!result.error) {
+      setPages(result);
+    }
+  };
+
+  const fetchMenus = async () => {
+    const result = await apiCall('list_menu');
+    if (!result.error) {
+      setMenus(result);
     }
   };
 
   useEffect(() => {
-    fetchTemplateDetails();
+    fetchPages();
+    fetchMenus();
   }, []);
 
-  // Navigate to Editor with the selected template ID
-  const handleEditTemplate = () => {
-    navigate(`/editor/${id}`);
-  };
 
-  // Navigate to edit specific component
   const handleEditComponent = (componentType) => {
     navigate(`/editor/${id}?edit=${componentType}`);
   };
@@ -120,6 +144,86 @@ export default function WordpressTemplateDetails() {
           </div>
         </div>
 
+        {/* Modals */}
+        {showPageModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg w-96">
+              <h3 className="text-lg font-semibold mb-4">Add New Page</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Page Title</label>
+                  <Input 
+                    value={formData.title}
+                    onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Content</label>
+                  <textarea
+                    className="w-full border rounded p-2 min-h-32"
+                    value={formData.content}
+                    onChange={(e) => setFormData({...formData, content: e.target.value})}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 mt-4">
+                <Button variant="outline" onClick={() => setShowPageModal(false)}>Cancel</Button>
+                <Button 
+                  onClick={async () => {
+                    console.log(formData);
+                    
+                    const result = await apiCall('add_page', {
+                      title: formData.title,
+                      cont: formData.content
+                    });
+                    if (!result.error) {
+                      fetchPages();
+                      setShowPageModal(false);
+                      setFormData({ title: '', content: '' });
+                    }
+                  }}
+                >
+                  Add Page
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showMenuModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg w-96">
+              <h3 className="text-lg font-semibold mb-4">Add New Menu</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Menu Name</label>
+                  <Input 
+                    value={formData.title}
+                    onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 mt-4">
+                <Button variant="outline" onClick={() => setShowMenuModal(false)}>Cancel</Button>
+                <Button 
+                  onClick={async () => {
+                    const result = await apiCall('add_menu', {
+                      title: formData.title
+                    });
+                    if (!result.error) {
+                      fetchMenus();
+                      setShowMenuModal(false);
+                      setFormData({ title: '', content: '' });
+                    }
+                  }}
+                >
+                  Add Menu
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-1 overflow-hidden bg-white">
           {/* Sidebar Section */}
           <div className="w-64 border-r bg-gray-50 flex flex-col p-4">
@@ -166,7 +270,7 @@ export default function WordpressTemplateDetails() {
                 <>
                   <h3 className="font-medium mb-2 px-2">Menu</h3>
                   <div className="text-sm text-gray-500 p-2">
-                    Menu management will be available here
+                    {menus.length} menu(s) available
                   </div>
                 </>
               )}
@@ -175,7 +279,7 @@ export default function WordpressTemplateDetails() {
                 <>
                   <h3 className="font-medium mb-2 px-2">Custom Code</h3>
                   <div className="text-sm text-gray-500 p-2">
-                    Custom HTML/CSS editor will be available here
+                    Custom HTML/CSS editor
                   </div>
                 </>
               )}
@@ -220,7 +324,7 @@ export default function WordpressTemplateDetails() {
                       </div>
                       <Button
                         className="bg-blue-600 hover:bg-blue-700"
-                        onClick={handleEditTemplate}
+                        onClick={() => setShowPageModal(true)}
                       >
                         <Plus className="h-4 w-4 mr-2" /> Add New Page
                       </Button>
@@ -230,6 +334,7 @@ export default function WordpressTemplateDetails() {
                       <TableHeader>
                         <TableRow>
                           <TableHead>Title</TableHead>
+                          <TableHead>Status</TableHead>
                           <TableHead>Link</TableHead>
                           <TableHead>Actions</TableHead>
                         </TableRow>
@@ -237,12 +342,17 @@ export default function WordpressTemplateDetails() {
                       <TableBody>
                         {pages.length > 0 ? (
                           pages.map((page) => (
-                            <TableRow key={page.id}>
+                            <TableRow key={page.post_title}>
                               <TableCell className="font-medium">
-                                {page.name}
+                                {page.post_title}
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant={page.post_status === 'publish' ? 'default' : 'outline'}>
+                                  {page.post_status}
+                                </Badge>
                               </TableCell>
                               <TableCell className="text-blue-500 hover:underline cursor-pointer">
-                                /{page.slug || page.id}
+                                /{page.post_title.toLowerCase().replace(/\s+/g, '-')}
                               </TableCell>
                               <TableCell>
                                 <div className="flex gap-2">
@@ -278,7 +388,7 @@ export default function WordpressTemplateDetails() {
                         ) : (
                           <TableRow>
                             <TableCell
-                              colSpan="3"
+                              colSpan="4"
                               className="text-center text-gray-500 py-4"
                             >
                               No pages found. Create your first page.
@@ -406,22 +516,74 @@ export default function WordpressTemplateDetails() {
                 <div className="space-y-6">
                   <div className="flex justify-between items-center">
                     <h2 className="text-xl font-semibold">Menu Management</h2>
-                    <Button className="bg-blue-600 hover:bg-blue-700">
+                    <Button 
+                      className="bg-blue-600 hover:bg-blue-700"
+                      onClick={() => setShowMenuModal(true)}
+                    >
                       <Plus className="h-4 w-4 mr-2" /> Create New Menu
                     </Button>
                   </div>
 
-                  <Card>
-                    <CardTitle>Menu Structure</CardTitle>
-                    <CardDescription className="mb-4">
-                      Drag and drop items to organize your menu
-                    </CardDescription>
-                    <div className="border rounded-lg p-4 bg-gray-50 min-h-64">
-                      <p className="text-gray-500 text-center py-8">
-                        Menu builder will be displayed here
-                      </p>
-                    </div>
-                  </Card>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {menus.length > 0 ? (
+                        menus.map((menu) => (
+                          <TableRow key={menu.term_id}>
+                            <TableCell className="font-medium">
+                              {menu.name}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 px-2"
+                                  onClick={async () => {
+                                    await apiCall('add_menu_item', {
+                                      title: `Link to ${menu.name}`,
+                                      menu_id: menu.term_id
+                                    });
+                                    fetchMenus();
+                                  }}
+                                >
+                                  <Plus className="h-4 w-4" /> Add Item
+                                </Button>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="sm" className="h-8 px-2">
+                                      <MoreVertical className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent>
+                                    <DropdownMenuItem>
+                                      <Edit className="h-4 w-4 mr-2" />
+                                      Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                      <ExternalLink className="h-4 w-4 mr-2" />
+                                      View
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan="2" className="text-center text-gray-500 py-4">
+                            No menus found. Create your first menu.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
                 </div>
               </TabsContent>
 
