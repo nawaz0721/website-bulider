@@ -1,17 +1,32 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Plus,
+  ChevronDown,
+  ChevronRight,
+  MoreVertical,
+  ExternalLink,
+  Search,
+  Edit,
+  Code,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import Cookies from "js-cookie";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Search,
-  Plus,
-  Edit,
-  MoreVertical,
-  ExternalLink,
-  Code,
-} from "lucide-react";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -20,93 +35,268 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { useNavigate, useParams } from "react-router-dom";
-import axios from "axios";
+import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { AppRoutes } from "@/constant/constant";
-import { Card } from "antd";
-import { CardDescription, CardTitle } from "@/components/ui/card";
-import Cookies from "js-cookie";
 
-export default function WordpressTemplateDetails() {
-  const { id } = useParams();
-  const [activeTab, setActiveTab] = useState("pages");
-  const [activeSubTab, setActiveSubTab] = useState("pages");
-  const [template, setTemplate] = useState(null);
-  const [pages, setPages] = useState([]);
-  const [plugins, setPlugins] = useState([]);
+export default function MenuManagement() {
   const [menus, setMenus] = useState([]);
+  const [pages, setPages] = useState([]);
+  const [menuItems, setMenuItems] = useState([]);
+  const [expandedItems, setExpandedItems] = useState({});
   const [showPageModal, setShowPageModal] = useState(false);
   const [showMenuModal, setShowMenuModal] = useState(false);
-  const [formData, setFormData] = useState({
-    title: '',
-    content: ''
-  });
-  const navigate = useNavigate();
-  const cookies = Cookies.get("path");
+  const [showMenuItemModal, setShowMenuItemModal] = useState(false);
+  const [selectedMenu, setSelectedMenu] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [activeSubTab, setActiveSubTab] = useState("pages");
+  const [activeTab, setActiveTab] = useState("pages");
 
+  const [formData, setFormData] = useState({
+    pageTitle: "",
+    pageContent: "",
+    menuTitle: "",
+    menuItemTitle: "",
+    menuItemUrl: "",
+    menuItemPage: "",
+    menuItemParent: "0",
+  });
+
+  // API Call Helper
   const apiCall = async (type, data = {}) => {
     try {
-      const params = new URLSearchParams();
-      params.append('type', type);
-      params.append('path', cookies || '');
-      
-      Object.keys(data).forEach(key => {
-        params.append(key, data[key]);
+      const params = new URLSearchParams({
+        type,
+        path: Cookies.get("path") || "",
+      });
+      Object.entries(data).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) params.append(key, value);
       });
 
-      
-      const response = await fetch(`${AppRoutes.pages}/${params.toString()}`);
-      console.log("API call error:", response);    
-      return await response.json();
+      const response = await fetch(
+        `${AppRoutes.pages}?${params}`
+      );
+      if (!response.ok)
+        throw new Error(`HTTP error! status: ${response.status}`);
+
+      const text = await response.text();
+      return text ? JSON.parse(text) : { success: true };
     } catch (error) {
+      console.error("API call error:", error);
       return { error: error.message };
     }
   };
 
+  // Fetch all pages
   const fetchPages = async () => {
-    const result = await apiCall('list_page');
+    const result = await apiCall("list_page");
     if (!result.error) {
-      setPages(result);
+      setPages(Array.isArray(result) ? result : []);
     }
   };
 
+  // Fetch all menus
   const fetchMenus = async () => {
-    const result = await apiCall('list_menu');
+    const result = await apiCall("list_menu");
     if (!result.error) {
-      setMenus(result);
+      setMenus(Array.isArray(result) ? result : []);
     }
+  };
+
+  // Fetch menu items
+  const fetchMenuItems = async (menuId) => {
+    const result = await apiCall("list_item", { id: menuId });
+    if (!result.error) {
+      const items = Array.isArray(result)
+        ? result.map((item) => ({
+            ID: item.ID || item.id,
+            title: item.title || item.post_title,
+            url: item.url || item.link,
+            menu_item_parent: item.menu_item_parent || item.parent || "0",
+            menu_id: menuId,
+          }))
+        : [];
+
+      setMenuItems(items);
+
+      // Initialize expanded state
+      const expanded = {};
+      items
+        .filter((item) => item.menu_item_parent === "0")
+        .forEach((item) => {
+          expanded[item.ID] = true;
+        });
+      setExpandedItems(expanded);
+    }
+  };
+
+  // Add new page
+  const handleAddPage = async () => {
+    setIsLoading(true);
+    try {
+      const result = await apiCall("add_page", {
+        title: formData.pageTitle,
+        cont: formData.pageContent,
+      });
+
+      if (!result.error) {
+        await fetchPages();
+        setFormData({ ...formData, pageTitle: "", pageContent: "" });
+        setShowPageModal(false);
+      }
+    } catch (error) {
+      console.error("Error adding page:", error);
+      setShowPageModal(false);
+    } finally {
+      setIsLoading(false);
+      setShowPageModal(false);
+    }
+  };
+
+  // Add new menu
+  const handleAddMenu = async () => {
+    setIsLoading(true);
+    try {
+      const result = await apiCall("add_menu", {
+        title: formData.menuTitle,
+      });
+
+      if (!result.error) {
+        await fetchMenus();
+        setShowMenuModal(false);
+        setFormData({ ...formData, menuTitle: "" });
+      }
+      setShowMenuModal(false);
+    } catch (error) {
+      console.error("Error adding menu:", error);
+    } finally {
+      setIsLoading(false);
+      setShowMenuModal(false);
+    }
+  };
+
+  // Add menu item
+  const handleAddMenuItem = async () => {
+    if (!selectedMenu || isLoading) return;
+
+    setIsLoading(true);
+    try {
+      const result = await apiCall("add_menu_item", {
+        id: selectedMenu.term_id,
+        title: formData.menuItemTitle,
+        url:
+          formData.menuItemPage === "custom"
+            ? formData.menuItemUrl
+            : formData.menuItemPage,
+        pmenu: formData.menuItemParent,
+      });
+
+      if (!result.error) {
+        await fetchMenuItems(selectedMenu.term_id);
+        setShowMenuItemModal(false);
+        setFormData({
+          ...formData,
+          menuItemTitle: "",
+          menuItemUrl: "",
+          menuItemPage: "",
+          menuItemParent: "0",
+        });
+      }
+      setShowMenuItemModal(false);
+    } catch (error) {
+      console.error("Error adding menu item:", error);
+    } finally {
+      setIsLoading(false);
+      setShowMenuItemModal(false);
+    }
+  };
+
+  // Toggle item expansion
+  const toggleExpand = (itemId) => {
+    setExpandedItems((prev) => ({
+      ...prev,
+      [itemId]: !prev[itemId],
+    }));
+  };
+
+  // Render menu items hierarchically
+  const renderMenuItems = (items, level = 0) => {
+    return items.map((item) => {
+      const children = menuItems.filter(
+        (child) =>
+          child.menu_item_parent === item.ID.toString() &&
+          child.menu_id === item.menu_id
+      );
+
+      return (
+        <div key={`item-${item.ID}-${item.menu_id}`} className="w-full">
+          <div
+            className={`flex items-center py-2 ${
+              level > 0 ? `pl-${level * 4}` : ""
+            }`}
+          >
+            {children.length > 0 ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => toggleExpand(item.ID)}
+                className="mr-2"
+              >
+                {expandedItems[item.ID] ? (
+                  <ChevronDown size={16} />
+                ) : (
+                  <ChevronRight size={16} />
+                )}
+              </Button>
+            ) : (
+              <div className="w-6"></div>
+            )}
+
+            <div className="flex-1 flex items-center">
+              <span className="mr-2">{item.title}</span>
+              <Badge variant="outline" className="mr-2">
+                {item.url.startsWith("http")
+                  ? new URL(item.url).pathname
+                  : item.url}
+              </Badge>
+              <Badge
+                variant={
+                  item.menu_item_parent === "0" ? "default" : "secondary"
+                }
+              >
+                {item.menu_item_parent === "0" ? "Parent" : "Child"}
+              </Badge>
+            </div>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MoreVertical size={16} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem>Edit</DropdownMenuItem>
+                <DropdownMenuItem>Delete</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          {expandedItems[item.ID] && children.length > 0 && (
+            <div className="ml-4">{renderMenuItems(children, level + 1)}</div>
+          )}
+        </div>
+      );
+    });
   };
 
   useEffect(() => {
-    fetchPages();
     fetchMenus();
+    fetchPages();
   }, []);
-
-
-  const handleEditComponent = (componentType) => {
-    navigate(`/editor/${id}?edit=${componentType}`);
-  };
-
-  const PreviewContent = ({ html }) => {
-    return (
-      <div
-        className="border rounded-lg p-4 bg-gray-50 overflow-auto max-h-64"
-        dangerouslySetInnerHTML={{
-          __html: html || '<p class="text-gray-500">No content available</p>',
-        }}
-      />
-    );
-  };
 
   return (
     <SidebarProvider>
@@ -135,12 +325,8 @@ export default function WordpressTemplateDetails() {
             </span>
           </div>
           <div>
-            <h2 className="text-lg font-semibold">
-              {template?.title || "Untitled Website"}
-            </h2>
-            <p className="text-sm text-gray-600">
-              {template?.description || "No description available."}
-            </p>
+            <h2 className="text-lg font-semibold">Untitled Website</h2>
+            <p className="text-sm text-gray-600">No description available.</p>
           </div>
         </div>
 
@@ -151,39 +337,41 @@ export default function WordpressTemplateDetails() {
               <h3 className="text-lg font-semibold mb-4">Add New Page</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Page Title</label>
-                  <Input 
-                    value={formData.title}
-                    onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  <label className="block text-sm font-medium mb-1">
+                    Page Title*
+                  </label>
+                  <Input
+                    value={formData.pageTitle}
+                    onChange={(e) =>
+                      setFormData({ ...formData, pageTitle: e.target.value })
+                    }
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Content</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Content
+                  </label>
                   <textarea
                     className="w-full border rounded p-2 min-h-32"
-                    value={formData.content}
-                    onChange={(e) => setFormData({...formData, content: e.target.value})}
+                    value={formData.pageContent}
+                    onChange={(e) =>
+                      setFormData({ ...formData, pageContent: e.target.value })
+                    }
                   />
                 </div>
               </div>
               <div className="flex justify-end gap-2 mt-4">
-                <Button variant="outline" onClick={() => setShowPageModal(false)}>Cancel</Button>
-                <Button 
-                  onClick={async () => {
-                    console.log(formData);
-                    
-                    const result = await apiCall('add_page', {
-                      title: formData.title,
-                      cont: formData.content
-                    });
-                    if (!result.error) {
-                      fetchPages();
-                      setShowPageModal(false);
-                      setFormData({ title: '', content: '' });
-                    }
-                  }}
+                <Button
+                  variant="outline"
+                  onClick={() => setShowPageModal(false)}
                 >
-                  Add Page
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleAddPage}
+                  disabled={!formData.pageTitle || isLoading}
+                >
+                  {isLoading ? "Adding..." : "Add Page"}
                 </Button>
               </div>
             </div>
@@ -196,28 +384,163 @@ export default function WordpressTemplateDetails() {
               <h3 className="text-lg font-semibold mb-4">Add New Menu</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Menu Name</label>
-                  <Input 
-                    value={formData.title}
-                    onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  <label className="block text-sm font-medium mb-1">
+                    Menu Name*
+                  </label>
+                  <Input
+                    value={formData.menuTitle}
+                    onChange={(e) =>
+                      setFormData({ ...formData, menuTitle: e.target.value })
+                    }
                   />
                 </div>
               </div>
               <div className="flex justify-end gap-2 mt-4">
-                <Button variant="outline" onClick={() => setShowMenuModal(false)}>Cancel</Button>
-                <Button 
-                  onClick={async () => {
-                    const result = await apiCall('add_menu', {
-                      title: formData.title
-                    });
-                    if (!result.error) {
-                      fetchMenus();
-                      setShowMenuModal(false);
-                      setFormData({ title: '', content: '' });
-                    }
-                  }}
+                <Button
+                  variant="outline"
+                  onClick={() => setShowMenuModal(false)}
                 >
-                  Add Menu
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleAddMenu}
+                  disabled={!formData.menuTitle || isLoading}
+                >
+                  {isLoading ? "Adding..." : "Add Menu"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showMenuItemModal && selectedMenu && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg w-96">
+              <h3 className="text-lg font-semibold mb-4">
+                Add Item to {selectedMenu.name}
+              </h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Title*
+                  </label>
+                  <Input
+                    value={formData.menuItemTitle}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        menuItemTitle: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Link To*
+                  </label>
+                  <Select
+                    value={formData.menuItemPage}
+                    onValueChange={(value) =>
+                      setFormData({
+                        ...formData,
+                        menuItemPage: value,
+                        menuItemUrl: value === "custom" ? "" : value,
+                      })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a page" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="custom">Custom URL</SelectItem>
+                      {pages.map((page) => {
+                        const pageValue =
+                          page.post_name ||
+                          page.post_title.toLowerCase().replace(/\s+/g, "-");
+                        // Ensure we have a valid value
+                        if (!pageValue) return null;
+
+                        return (
+                          <SelectItem key={`page-${page.ID}`} value={pageValue}>
+                            {page.post_title}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {formData.menuItemPage === "custom" && (
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Custom URL*
+                    </label>
+                    <Input
+                      value={formData.menuItemUrl}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          menuItemUrl: e.target.value,
+                        })
+                      }
+                      placeholder="https://example.com"
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Parent Item
+                  </label>
+                  <Select
+                    value={formData.menuItemParent}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, menuItemParent: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select parent item" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">-- Top Level --</SelectItem>
+                      {menuItems
+                        .filter((item) => item.menu_id == selectedMenu.term_id)
+                        .filter((item) => item.menu_item_parent === "0")
+                        .map((item) => {
+                          // Ensure we have a valid ID
+                          if (!item.ID) return null;
+
+                          return (
+                            <SelectItem
+                              key={`parent-${item.ID}`}
+                              value={item.ID.toString()}
+                            >
+                              {item.title}
+                            </SelectItem>
+                          );
+                        })}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 mt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowMenuItemModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleAddMenuItem}
+                  disabled={
+                    !formData.menuItemTitle ||
+                    (formData.menuItemPage === "custom" &&
+                      !formData.menuItemUrl) ||
+                    isLoading
+                  }
+                >
+                  {isLoading ? "Adding..." : "Add Item"}
                 </Button>
               </div>
             </div>
@@ -225,10 +548,10 @@ export default function WordpressTemplateDetails() {
         )}
 
         <div className="flex flex-1 overflow-hidden bg-white">
-          {/* Sidebar Section */}
+          {/* Sidebar */}
           <div className="w-64 border-r bg-gray-50 flex flex-col p-4">
-            <Tabs 
-              value={activeSubTab} 
+            <Tabs
+              value={activeSubTab}
               onValueChange={setActiveSubTab}
               className="flex flex-col"
             >
@@ -236,36 +559,32 @@ export default function WordpressTemplateDetails() {
                 <>
                   <h3 className="font-medium mb-2 px-2">Page Components</h3>
                   <TabsList className="flex flex-col items-start h-auto p-0 bg-transparent">
-                    {["Pages", "Header", "Footer"].map((tab) => (
+                    {["pages", "header", "footer"].map((tab) => (
                       <TabsTrigger
                         key={tab}
-                        value={tab.toLowerCase()}
+                        value={tab}
                         className={`w-full justify-start px-2 py-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600 ${
-                          activeSubTab === tab.toLowerCase()
+                          activeSubTab === tab
                             ? "border-l-2 border-blue-500"
                             : ""
                         }`}
                       >
-                        {tab}
+                        {tab.charAt(0).toUpperCase() + tab.slice(1)}
                       </TabsTrigger>
                     ))}
                   </TabsList>
                 </>
               )}
-              
+
               {activeTab === "plugin" && (
                 <>
                   <h3 className="font-medium mb-2 px-2">Plugins</h3>
-                  <div className="space-y-2">
-                    {plugins.map(plugin => (
-                      <div key={plugin.id} className="flex items-center p-2 hover:bg-gray-100 rounded">
-                        <span className="text-sm">{plugin.name}</span>
-                      </div>
-                    ))}
+                  <div className="text-sm text-gray-500 p-2">
+                    No plugins installed
                   </div>
                 </>
               )}
-              
+
               {activeTab === "menu" && (
                 <>
                   <h3 className="font-medium mb-2 px-2">Menu</h3>
@@ -274,22 +593,22 @@ export default function WordpressTemplateDetails() {
                   </div>
                 </>
               )}
-              
+
               {activeTab === "custom html & css" && (
                 <>
                   <h3 className="font-medium mb-2 px-2">Custom Code</h3>
                   <div className="text-sm text-gray-500 p-2">
-                    Custom HTML/CSS editor
+                    No custom HTML/CSS added
                   </div>
                 </>
               )}
             </Tabs>
           </div>
 
-          {/* Main Content Section */}
+          {/* Main Content */}
           <div className="flex-1 flex flex-col overflow-hidden">
-            <Tabs 
-              value={activeTab} 
+            <Tabs
+              value={activeTab}
               onValueChange={setActiveTab}
               className="flex-1 flex flex-col"
             >
@@ -313,14 +632,17 @@ export default function WordpressTemplateDetails() {
                 </TabsList>
               </div>
 
-              {/* Pages Tab Content */}
+              {/* Pages Tab */}
               <TabsContent value="pages" className="flex-1 p-6 overflow-auto">
                 {activeSubTab === "pages" && (
                   <>
                     <div className="flex justify-between items-center mb-6">
                       <div className="relative w-96">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <Input placeholder="Search pages..." className="pl-10" />
+                        <Input
+                          placeholder="Search pages..."
+                          className="pl-10"
+                        />
                       </div>
                       <Button
                         className="bg-blue-600 hover:bg-blue-700"
@@ -342,17 +664,27 @@ export default function WordpressTemplateDetails() {
                       <TableBody>
                         {pages.length > 0 ? (
                           pages.map((page) => (
-                            <TableRow key={page.post_title}>
+                            <TableRow key={page.ID || page.post_title}>
                               <TableCell className="font-medium">
                                 {page.post_title}
                               </TableCell>
                               <TableCell>
-                                <Badge variant={page.post_status === 'publish' ? 'default' : 'outline'}>
+                                <Badge
+                                  variant={
+                                    page.post_status === "publish"
+                                      ? "default"
+                                      : "outline"
+                                  }
+                                >
                                   {page.post_status}
                                 </Badge>
                               </TableCell>
                               <TableCell className="text-blue-500 hover:underline cursor-pointer">
-                                /{page.post_title.toLowerCase().replace(/\s+/g, '-')}
+                                /
+                                {page.post_name ||
+                                  page.post_title
+                                    .toLowerCase()
+                                    .replace(/\s+/g, "-")}
                               </TableCell>
                               <TableCell>
                                 <div className="flex gap-2">
@@ -360,13 +692,16 @@ export default function WordpressTemplateDetails() {
                                     variant="ghost"
                                     size="sm"
                                     className="h-8 px-2"
-                                    onClick={() => navigate(`/editor/${id}`)}
                                   >
                                     <Edit className="h-4 w-4" />
                                   </Button>
                                   <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                      <Button variant="ghost" size="sm" className="h-8 px-2">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-8 px-2"
+                                      >
                                         <MoreVertical className="h-4 w-4" />
                                       </Button>
                                     </DropdownMenuTrigger>
@@ -404,31 +739,18 @@ export default function WordpressTemplateDetails() {
                   <div className="space-y-6">
                     <div className="flex justify-between items-center">
                       <h2 className="text-xl font-semibold">Header Content</h2>
-                      <Button
-                        onClick={() => handleEditComponent("header")}
-                        className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
-                      >
+                      <Button className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2">
                         <Edit className="h-4 w-4" />
                         Edit Header
                       </Button>
                     </div>
-
                     <Card>
                       <CardTitle>Preview</CardTitle>
                       <CardDescription className="mb-4">
                         This is how your header will appear on the site
                       </CardDescription>
-                      <PreviewContent html={template?.header?.html} />
-                    </Card>
-
-                    <Card>
-                      <CardTitle>CSS Styles</CardTitle>
                       <div className="border rounded-lg p-4 bg-gray-50 overflow-auto max-h-64">
-                        {template?.header?.css ? (
-                          <pre className="text-sm">{template.header.css}</pre>
-                        ) : (
-                          <p className="text-gray-500">No CSS styles defined</p>
-                        )}
+                        <p className="text-gray-500">No content available</p>
                       </div>
                     </Card>
                   </div>
@@ -438,85 +760,37 @@ export default function WordpressTemplateDetails() {
                   <div className="space-y-6">
                     <div className="flex justify-between items-center">
                       <h2 className="text-xl font-semibold">Footer Content</h2>
-                      <Button
-                        onClick={() => handleEditComponent("footer")}
-                        className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
-                      >
+                      <Button className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2">
                         <Edit className="h-4 w-4" />
                         Edit Footer
                       </Button>
                     </div>
-
                     <Card>
                       <CardTitle>Preview</CardTitle>
                       <CardDescription className="mb-4">
                         This is how your footer will appear on the site
                       </CardDescription>
-                      <PreviewContent html={template?.footer?.html} />
-                    </Card>
-
-                    <Card>
-                      <CardTitle>CSS Styles</CardTitle>
                       <div className="border rounded-lg p-4 bg-gray-50 overflow-auto max-h-64">
-                        {template?.footer?.css ? (
-                          <pre className="text-sm">{template.footer.css}</pre>
-                        ) : (
-                          <p className="text-gray-500">No CSS styles defined</p>
-                        )}
+                        <p className="text-gray-500">No content available</p>
                       </div>
                     </Card>
                   </div>
                 )}
               </TabsContent>
 
-              {/* Plugin Tab Content */}
+              {/* Plugin Tab */}
               <TabsContent value="plugin" className="flex-1 p-6 overflow-auto">
-                <div className="space-y-6">
-                  <div className="flex justify-between items-center">
-                    <h2 className="text-xl font-semibold">Installed Plugins</h2>
-                    <Button className="bg-blue-600 hover:bg-blue-700">
-                      <Plus className="h-4 w-4 mr-2" /> Add Plugin
-                    </Button>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {plugins.length > 0 ? (
-                      plugins.map(plugin => (
-                        <Card key={plugin.id} className="hover:shadow-md transition-shadow">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h3 className="font-medium">{plugin.name}</h3>
-                              <p className="text-sm text-gray-600">{plugin.description}</p>
-                            </div>
-                            <Badge variant={plugin.active ? "default" : "outline"}>
-                              {plugin.active ? "Active" : "Inactive"}
-                            </Badge>
-                          </div>
-                          <div className="mt-4 flex gap-2">
-                            <Button variant="outline" size="sm">
-                              Settings
-                            </Button>
-                            <Button variant="outline" size="sm">
-                              {plugin.active ? "Deactivate" : "Activate"}
-                            </Button>
-                          </div>
-                        </Card>
-                      ))
-                    ) : (
-                      <div className="col-span-3 text-center py-8 text-gray-500">
-                        No plugins installed. Add your first plugin to extend functionality.
-                      </div>
-                    )}
-                  </div>
+                <div className="text-center py-8 text-gray-500">
+                  No plugins installed
                 </div>
               </TabsContent>
 
-              {/* Menu Tab Content */}
+              {/* Menu Tab */}
               <TabsContent value="menu" className="flex-1 p-6 overflow-auto">
                 <div className="space-y-6">
                   <div className="flex justify-between items-center">
                     <h2 className="text-xl font-semibold">Menu Management</h2>
-                    <Button 
+                    <Button
                       className="bg-blue-600 hover:bg-blue-700"
                       onClick={() => setShowMenuModal(true)}
                     >
@@ -527,119 +801,63 @@ export default function WordpressTemplateDetails() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Name</TableHead>
+                        <TableHead>Menu Name</TableHead>
+                        <TableHead>Items</TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {menus.length > 0 ? (
-                        menus.map((menu) => (
-                          <TableRow key={menu.term_id}>
-                            <TableCell className="font-medium">
-                              {menu.name}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 px-2"
-                                  onClick={async () => {
-                                    await apiCall('add_menu_item', {
-                                      title: `Link to ${menu.name}`,
-                                      menu_id: menu.term_id
-                                    });
-                                    fetchMenus();
-                                  }}
-                                >
-                                  <Plus className="h-4 w-4" /> Add Item
-                                </Button>
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="sm" className="h-8 px-2">
-                                      <MoreVertical className="h-4 w-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent>
-                                    <DropdownMenuItem>
-                                      <Edit className="h-4 w-4 mr-2" />
-                                      Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem>
-                                      <ExternalLink className="h-4 w-4 mr-2" />
-                                      View
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
+                      {menus.map((menu) => (
+                        <TableRow key={menu.term_id}>
+                          <TableCell className="font-medium">
+                            {menu.name}
+                          </TableCell>
+                          <TableCell>
+                            {menuItems.filter(
+                              (item) => item.menu_id == menu.term_id
+                            ).length > 0 ? (
+                              <div className="border rounded p-2">
+                                {renderMenuItems(
+                                  menuItems
+                                    .filter(
+                                      (item) => item.menu_id == menu.term_id
+                                    )
+                                    .filter(
+                                      (item) => item.menu_item_parent === "0"
+                                    )
+                                )}
                               </div>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan="2" className="text-center text-gray-500 py-4">
-                            No menus found. Create your first menu.
+                            ) : (
+                              <div className="text-gray-500">
+                                No items in this menu
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              onClick={() => {
+                                setSelectedMenu(menu);
+                                fetchMenuItems(menu.term_id);
+                                setShowMenuItemModal(true);
+                              }}
+                            >
+                              <Plus className="mr-2" /> Add Item
+                            </Button>
                           </TableCell>
                         </TableRow>
-                      )}
+                      ))}
                     </TableBody>
                   </Table>
                 </div>
               </TabsContent>
 
-              {/* Custom HTML & CSS Tab Content */}
-              <TabsContent value="custom html & css" className="flex-1 p-6 overflow-auto">
-                <div className="space-y-6">
-                  <h2 className="text-xl font-semibold">Custom Code</h2>
-                  
-                  <Card>
-                    <CardTitle>Global CSS</CardTitle>
-                    <CardDescription className="mb-4">
-                      Add custom CSS that will be applied globally
-                    </CardDescription>
-                    <div className="border rounded-lg p-4 bg-gray-50 min-h-48">
-                      <pre className="text-sm text-gray-500">
-                        {template?.globalCSS || "/* Add your custom CSS here */"}
-                      </pre>
-                    </div>
-                    <div className="mt-4 flex justify-end">
-                      <Button className="bg-blue-600 hover:bg-blue-700">
-                        Save Changes
-                      </Button>
-                    </div>
-                  </Card>
-
-                  <Card>
-                    <CardTitle>Header/Footer Scripts</CardTitle>
-                    <CardDescription className="mb-4">
-                      Add scripts that will be loaded in the header or footer
-                    </CardDescription>
-                    <Tabs defaultValue="header">
-                      <TabsList>
-                        <TabsTrigger value="header">Header</TabsTrigger>
-                        <TabsTrigger value="footer">Footer</TabsTrigger>
-                      </TabsList>
-                      <TabsContent value="header" className="pt-4">
-                        <div className="border rounded-lg p-4 bg-gray-50 min-h-48">
-                          <pre className="text-sm text-gray-500">
-                            {template?.headerScripts || "<!-- Add header scripts here -->"}
-                          </pre>
-                        </div>
-                      </TabsContent>
-                      <TabsContent value="footer" className="pt-4">
-                        <div className="border rounded-lg p-4 bg-gray-50 min-h-48">
-                          <pre className="text-sm text-gray-500">
-                            {template?.footerScripts || "<!-- Add footer scripts here -->"}
-                          </pre>
-                        </div>
-                      </TabsContent>
-                    </Tabs>
-                    <div className="mt-4 flex justify-end">
-                      <Button className="bg-blue-600 hover:bg-blue-700">
-                        Save Changes
-                      </Button>
-                    </div>
-                  </Card>
+              {/* Custom HTML & CSS Tab */}
+              <TabsContent
+                value="custom html & css"
+                className="flex-1 p-6 overflow-auto"
+              >
+                <div className="text-center py-8 text-gray-500">
+                  No custom HTML/CSS added
                 </div>
               </TabsContent>
             </Tabs>

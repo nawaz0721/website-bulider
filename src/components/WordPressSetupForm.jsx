@@ -140,15 +140,15 @@ export default function WordPressSetupModal({
       const result = await response.text();
       console.log(result);
 
-      // const installPath = result?.path;
-      const installPath = JSON.stringify(result);
-      console.log("Installation path:", installPath);
+      // // const installPath = result?.path;
+      // const installPath = JSON.stringify(result);
+      // console.log("Installation path:", installPath);
       
       // Save the installation path to cookies
-      Cookies.set("path", installPath, { expires: 1 });
-      console.log("Path saved to cookies:", installPath);
+      Cookies.set("path", result, { expires: 1 });
+      console.log("Path saved to cookies:", result);
     
-      if (!installPath) {
+      if (!result) {
         toast.error("Installation path missing in response");
         return;
       }
@@ -156,7 +156,7 @@ export default function WordPressSetupModal({
       // `${AppRoutes.wordpress}/${completeFormID}`
       // ✅ Update MongoDB with path
       const res = await axios.patch(`${AppRoutes.wordpress}/${completeFormID}`, {
-        paths: installPath,
+        paths: result,
       })
       console.log("Path Updated" + res.data);
     
