@@ -43,6 +43,8 @@ export default function MenuManagement() {
   const [selectedMenuForSidebar, setSelectedMenuForSidebar] = useState(null)
   const [showAllItemsModal, setShowAllItemsModal] = useState(false)
   const [allMenuItems, setAllMenuItems] = useState([])
+  // Add a new state for search term
+  const [searchTerm, setSearchTerm] = useState("")
 
   const [formData, setFormData] = useState({
     pageTitle: "",
@@ -265,7 +267,7 @@ export default function MenuManagement() {
               {item.title}
             </div>
           </TableCell>
-          <TableCell>{item.url}</TableCell>
+          <TableCell>{item.link}</TableCell>
           <TableCell>
             <div className="flex gap-2">
               <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
@@ -274,23 +276,7 @@ export default function MenuManagement() {
               <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-500">
                 <Trash2 className="h-4 w-4" />
               </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem>
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="text-red-600">
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              
             </div>
           </TableCell>
         </TableRow>,
@@ -380,6 +366,36 @@ export default function MenuManagement() {
     }
   }, [selectedMenu])
 
+  // Add this function to filter menu items by title (recursive)
+  const filterMenuItemsByTitle = (items, term) => {
+    if (!term) return items
+
+    const filtered = []
+
+    items.forEach((item) => {
+      // Check if the current item's title matches the search term
+      if (item.title.toLowerCase().includes(term.toLowerCase())) {
+        // If it matches, add it to filtered items
+        const itemCopy = { ...item }
+        if (item.children && item.children.length > 0) {
+          itemCopy.children = filterMenuItemsByTitle(item.children, term)
+        }
+        filtered.push(itemCopy)
+      }
+      // If it doesn't match but has children, check if any children match
+      else if (item.children && item.children.length > 0) {
+        const filteredChildren = filterMenuItemsByTitle(item.children, term)
+        if (filteredChildren.length > 0) {
+          const itemCopy = { ...item }
+          itemCopy.children = filteredChildren
+          filtered.push(itemCopy)
+        }
+      }
+    })
+
+    return filtered
+  }
+
   return (
     <SidebarProvider>
       <Navbar />
@@ -463,7 +479,7 @@ export default function MenuManagement() {
 
         {/* Add Menu Modal */}
         <Dialog open={showMenuModal} onOpenChange={setShowMenuModal}>
-          <DialogContent className="sm:max-w-[400px]">
+          <DialogContent className="sm:max-w-[400px] bg-white">
             <DialogHeader>
               <DialogTitle>Add New Menu</DialogTitle>
             </DialogHeader>
@@ -478,7 +494,7 @@ export default function MenuManagement() {
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowMenuModal(false)}>
+              <Button variant="outline" onClick={() => setShowMenuModal(false)} className="text-white">
                 Cancel
               </Button>
               <Button onClick={handleAddMenu} disabled={!formData.menuTitle || isLoading}>
@@ -490,7 +506,7 @@ export default function MenuManagement() {
 
         {/* Menu Item Modal */}
         <Dialog open={showMenuItemModal} onOpenChange={setShowMenuItemModal}>
-          <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-auto">
+          <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-auto bg-white">
             <DialogHeader>
               <DialogTitle>Add Item to {selectedMenu?.name}</DialogTitle>
             </DialogHeader>
@@ -526,7 +542,7 @@ export default function MenuManagement() {
                   <SelectTrigger>
                     <SelectValue placeholder="Select a page" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white">
                     <SelectItem value="custom">Custom URL</SelectItem>
                     {pages.map((page) => (
                       <SelectItem
@@ -567,7 +583,7 @@ export default function MenuManagement() {
                   <SelectTrigger>
                     <SelectValue placeholder="Select parent item" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white">
                     <SelectItem value="0">-- Top Level --</SelectItem>
                     {getParentOptions().map((item) => (
                       <SelectItem key={`parent-${item.id}`} value={item.id.toString()} className="flex items-center">
@@ -580,7 +596,7 @@ export default function MenuManagement() {
             </div>
 
             <div className="flex justify-end gap-2 mt-6">
-              <Button variant="outline" onClick={() => setShowMenuItemModal(false)}>
+              <Button variant="outline" onClick={() => setShowMenuItemModal(false)} className="text-white">
                 Cancel
               </Button>
               <Button
@@ -597,7 +613,7 @@ export default function MenuManagement() {
 
         {/* All Items Modal */}
         <Dialog open={showAllItemsModal} onOpenChange={setShowAllItemsModal}>
-          <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-auto">
+          <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-auto bg-white">
             <DialogHeader>
               <DialogTitle>All Items in {selectedMenu?.name}</DialogTitle>
             </DialogHeader>
@@ -869,7 +885,12 @@ export default function MenuManagement() {
                         <h3 className="font-medium">Menu Items</h3>
                         <div className="relative w-64">
                           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                          <Input placeholder="Search items..." className="pl-10 h-8" />
+                          <Input
+                            placeholder="Search items..."
+                            className="pl-10 h-8"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                          />
                         </div>
                       </div>
                       <Table>
@@ -882,10 +903,10 @@ export default function MenuManagement() {
                         </TableHeader>
                         <TableBody>
                           {menuItems.length > 0 ? (
-                            renderMenuItemsTable(menuItems)
+                            renderMenuItemsTable(filterMenuItemsByTitle(menuItems, searchTerm))
                           ) : (
                             <TableRow>
-                              <TableCell colSpan={3} className="text-center text-gray-500 py-4">
+                              <TableCell colSpan={2} className="text-center text-gray-500 py-4">
                                 No items in this menu yet. Add your first item.
                               </TableCell>
                             </TableRow>
