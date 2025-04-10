@@ -317,7 +317,7 @@ export default function WordPressSetupModal({
               </form>
             </CardContent>
             <CardFooter className="flex justify-between">
-              <Button variant="outline" onClick={onClose} className="text-white">
+              <Button variant="outline" onClick={onClose}>
                 Cancel
               </Button>
               <Button onClick={handleSubmit}>

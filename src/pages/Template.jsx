@@ -170,7 +170,7 @@ export default function TemplatesPage() {
             className="w-full md:w-1/2"
           />
           <Button variant="outline">
-            <Search className="h-5 w-5 text-white" />
+            <Search className="h-5 w-5 " />
           </Button>
         </div>
 
@@ -189,10 +189,10 @@ export default function TemplatesPage() {
                 <CardHeader>
                   <CardTitle>{template.title}</CardTitle>
                   <CardDescription>{template.description}</CardDescription>
-                  <Badge>{template.category}</Badge>
+                  <Badge className="bg-black text-white p-3">{template.category}</Badge>
                 </CardHeader>
                 <CardFooter className="flex justify-between space-x-2">
-                  <Button variant="outline" onClick={() => handlePreview(template)} className="text-white">
+                  <Button variant="outline" onClick={() => handlePreview(template)} >
                     <Eye className="h-4 w-4 mr-2 " />
                     Preview
                   </Button>

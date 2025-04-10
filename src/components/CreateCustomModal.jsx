@@ -63,7 +63,7 @@ export default function CreateCustomModal({ isOpen, onClose }) {
                 <SelectTrigger id="location" className="w-full">
                   <SelectValue placeholder="Select a location" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white">
                   {locations.map((location) => (
                     <SelectItem key={location.value} value={location.value}>
                       {location.label}
