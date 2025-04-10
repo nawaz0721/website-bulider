@@ -139,30 +139,32 @@ export default function MenuManagement() {
     return { error: error.message }
   }
 }
-  // Fetch all plugins
-  const fetchPlugins = async () => {
-    setIsLoading(true)
-    try {
-      const result = await apiCall("plugin_list")
-      if (!result.error) {
-        // Ensure each plugin has an 'active' property
-        const pluginsWithStatus = Array.isArray(result) 
-          ? result.map(plugin => ({
-              ...plugin,
-              active: plugin.active || false
-            }))
-          : []
-        setPlugins(pluginsWithStatus)
-      } else {
-        toast.error("Error fetching plugins")
-      }
-    } catch (error) {
-      console.error("Error fetching plugins:", error)
-      toast.error("Error fetching plugins")
-    } finally {
-      setIsLoading(false)
+ // Fetch all plugins
+const fetchPlugins = async () => {
+  setIsLoading(true);
+  try {
+    const result = await apiCall("plugin_list");
+    console.log("plugin_list result", result);
+    if (!result.error) {
+      // Ensure each plugin has a 'status' property
+      const pluginsWithStatus = Array.isArray(result) 
+        ? result.map(plugin => ({
+            ...plugin,
+            status: plugin.status || "inactive", // Default to inactive if status not provided
+            active: plugin.status === "active" // Keep active for backward compatibility
+          }))
+        : [];
+      setPlugins(pluginsWithStatus);
+    } else {
+      toast.error("Error fetching plugins");
     }
+  } catch (error) {
+    console.error("Error fetching plugins:", error);
+    toast.error("Error fetching plugins");
+  } finally {
+    setIsLoading(false);
   }
+}
 
   // Install plugin
   const handleInstallPlugin = async () => {
@@ -196,6 +198,7 @@ export default function MenuManagement() {
 
     try {
       const result = await apiCall("plugin_activate", { pname: plugin.slug || plugin.name })
+      console.log("plugin_activate result",result);
       if (!result.error) {
         // Update the plugin's active status in state
         setPlugins(prevPlugins => 
@@ -215,30 +218,31 @@ export default function MenuManagement() {
     }
   }
 
-    // Deactivate plugin
-    const handleDeactivatePlugin = async (plugin) => {
-      setPluginActionLoading((prev) => ({ ...prev, [plugin.name]: true }))
-  
-      try {
-        const result = await apiCall("plugin_deactivate", { pname: plugin.slug || plugin.name })
-        if (!result.error) {
-          // Update the plugin's active status in state
-          setPlugins(prevPlugins => 
-            prevPlugins.map(p => 
-              p.name === plugin.name ? { ...p, active: false } : p
-            )
-          )
-          toast.success(`${plugin.name} has been deactivated successfully.`)
-        } else {
-          toast.error("Deactivation failed")
-        }
-      } catch (error) {
-        console.error("Error deactivating plugin:", error)
-        toast.error("Deactivation failed")
-      } finally {
-        setPluginActionLoading((prev) => ({ ...prev, [plugin.name]: false }))
-      }
+   // Inactivate plugin
+const handleInactivatePlugin = async (plugin) => {
+  setPluginActionLoading((prev) => ({ ...prev, [plugin.name]: true }));
+
+  try {
+    const result = await apiCall("plugin_deactivate", { pname: plugin.slug || plugin.name });
+    console.log("plugin_inactivate result", result);
+    if (!result.error) {
+      // Update the plugin's active status in state
+      setPlugins(prevPlugins => 
+        prevPlugins.map(p => 
+          p.name === plugin.name ? { ...p, active: false } : p
+        )
+      );
+      toast.success("Successfully Inactivated", result);
+    } else {
+      toast.error("Deactivation failed");
     }
+  } catch (error) {
+    console.error("Error deactivating plugin:", error);
+    toast.error("Deactivation failed");
+  } finally {
+    setPluginActionLoading((prev) => ({ ...prev, [plugin.name]: false }));
+  }
+}
 
   // Update plugin
   const handleUpdatePlugin = async (plugin) => {
@@ -606,27 +610,22 @@ export default function MenuManagement() {
 
   // Filter plugins by search term
   const filteredPlugins = availablePlugins.filter(
-    (plugin) =>
-      plugin.name.toLowerCase().includes(pluginSearchTerm.toLowerCase()) ||
-      plugin.description.toLowerCase().includes(pluginSearchTerm.toLowerCase())
+    (plugin) => plugin.name.toLowerCase().includes(pluginSearchTerm.toLowerCase()) 
   );
 
-  // Filter installed plugins by search term and active status
-  const filteredInstalledPlugins = plugins.filter((plugin) => {
-    // First filter by search term
-    const matchesSearch =
-      plugin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (plugin.description &&
-        plugin.description.toLowerCase().includes(searchTerm.toLowerCase()));
+ // Filter installed plugins by search term and active status
+const filteredInstalledPlugins = plugins.filter((plugin) => {
+  // First filter by search term
+  const matchesSearch =
+    plugin.name.toLowerCase().includes(searchTerm.toLowerCase());
 
-    // Then filter by active status if needed
-    if (activePluginFilter === "all") return matchesSearch;
-    if (activePluginFilter === "active") return matchesSearch && plugin.active;
-    if (activePluginFilter === "inactive")
-      return matchesSearch && !plugin.active;
+  // Then filter by active status if needed
+  if (activePluginFilter === "all") return matchesSearch;
+  if (activePluginFilter === "active") return matchesSearch && plugin.status === "active";
+  if (activePluginFilter === "inactive") return matchesSearch && plugin.status === "inactive";
 
-    return matchesSearch;
-  });
+  return matchesSearch;
+});
 
   // Add this function to filter menu items by title (recursive)
   const filterMenuItemsByTitle = (items, term) => {
@@ -682,10 +681,10 @@ export default function MenuManagement() {
             </CardDescription>
           </div>
           <Badge
-            variant={plugin.active ? "default" : "outline"}
-            className={plugin.active ? "bg-green-100 text-green-800 border-green-200" : ""}
+            variant={plugin.status === "active"  ? "default" : "outline"}
+            className={plugin.status === "active"  ? "bg-green-100 text-green-800 border-green-200" : "bg-red-100 text-red-800 border-red-200"}
           >
-            {plugin.active ? "Active" : "Inactive"}
+            {plugin.status === "active"  ? "Active" : "Inactive"}
           </Badge>
         </div>
       </CardHeader>
@@ -695,16 +694,16 @@ export default function MenuManagement() {
             <span>Version:</span>
             <span className="font-medium">{plugin.version || "Unknown"}</span>
           </div>
-          {plugin.author && (
+          {plugin.update && (
             <div className="flex items-center gap-1">
-              <span>Author:</span>
-              <span className="font-medium">{plugin.author}</span>
+              <span>Update:</span>
+              <span className="font-medium">{plugin.update}</span>
             </div>
           )}
         </div>
       </CardContent>
       <CardFooter className="flex justify-end gap-2 pt-2">
-        {!plugin.active ? (
+        {plugin.status !== "active" ? (
           <Button
             variant="outline"
             size="sm"
@@ -722,7 +721,7 @@ export default function MenuManagement() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => handleDeactivatePlugin(plugin)}
+            onClick={() => handleInactivatePlugin(plugin)}
             disabled={pluginActionLoading[plugin.name]}
           >
             {pluginActionLoading[plugin.name] ? (
@@ -730,7 +729,7 @@ export default function MenuManagement() {
             ) : (
               <PowerOff className="h-4 w-4 mr-2" />
             )}
-            Deactivate
+            Inactivate
           </Button>
         )}
         <Button
@@ -1101,7 +1100,7 @@ export default function MenuManagement() {
 
         {/* Plugin Install Modal */}
         <Dialog open={showPluginModal} onOpenChange={setShowPluginModal}>
-          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-auto">
+          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-auto bg-white">
             <DialogHeader>
               <DialogTitle>Add New Plugin</DialogTitle>
             </DialogHeader>
