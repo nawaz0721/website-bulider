@@ -55,6 +55,7 @@ const App = () => {
           <Route path="/templatepreview/:templateId/:pageId" element={<Templatepreview />} />
           <Route path="/templatedetails/:id" element={<TemplateDetails />} />
           <Route path="/wordprestemplatedetails" element={<WordpressTemplateDetails />} />
+          <Route path="/wordprestemplatedetails/:id" element={<WordpressTemplateDetails />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/setting" element={<SettingsPage />} />
           <Route path="/templates" element={<TemplatesPage />} />

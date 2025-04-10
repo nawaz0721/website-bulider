@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
+import { useEffect, useState } from "react";
 import {
   Plus,
   ChevronDown,
@@ -17,83 +17,208 @@ import {
   Power,
   PowerOff,
   Package,
-} from "lucide-react"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import Cookies from "js-cookie"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { SidebarProvider } from "@/components/ui/sidebar"
-import Navbar from "@/components/Navbar"
-import Sidebar from "@/components/Sidebar"
-import { Card, CardDescription, CardTitle, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
-import { AppRoutes } from "@/constant/constant"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import toast from "react-hot-toast"
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import Cookies from "js-cookie";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import Navbar from "@/components/Navbar";
+import Sidebar from "@/components/Sidebar";
+import {
+  Card,
+  CardDescription,
+  CardTitle,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
+import { AppRoutes } from "@/constant/constant";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import toast from "react-hot-toast";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export default function MenuManagement() {
-  const [menus, setMenus] = useState([])
-  const [pages, setPages] = useState([])
-  const [menuItems, setMenuItems] = useState([])
-  const [expandedItems, setExpandedItems] = useState({})
-  const [showPageModal, setShowPageModal] = useState(false)
-  const [showMenuModal, setShowMenuModal] = useState(false)
-  const [showMenuItemModal, setShowMenuItemModal] = useState(false)
-  const [selectedMenu, setSelectedMenu] = useState(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [pagesLoading, setPagesLoading] = useState(false)
-  const [menusLoading, setMenusLoading] = useState(false)
-  const [activeSubTab, setActiveSubTab] = useState("pages")
-  const [activeTab, setActiveTab] = useState("plugin") // Default to plugin tab for testing
-  const [selectedMenuForSidebar, setSelectedMenuForSidebar] = useState(null)
-  const [showAllItemsModal, setShowAllItemsModal] = useState(false)
-  const [allMenuItems, setAllMenuItems] = useState([])
-  const [searchTerm, setSearchTerm] = useState("")
+  const [menus, setMenus] = useState([]);
+  const [pages, setPages] = useState([]);
+  const [menuItems, setMenuItems] = useState([]);
+  const [expandedItems, setExpandedItems] = useState({});
+  const [showPageModal, setShowPageModal] = useState(false);
+  const [showMenuModal, setShowMenuModal] = useState(false);
+  const [showMenuItemModal, setShowMenuItemModal] = useState(false);
+  const [selectedMenu, setSelectedMenu] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [pagesLoading, setPagesLoading] = useState(false);
+  const [menusLoading, setMenusLoading] = useState(false);
+  const [activeSubTab, setActiveSubTab] = useState("pages");
+  const [activeTab, setActiveTab] = useState("pages"); // Default to plugin tab for testing
+  const [selectedMenuForSidebar, setSelectedMenuForSidebar] = useState(null);
+  const [showAllItemsModal, setShowAllItemsModal] = useState(false);
+  const [allMenuItems, setAllMenuItems] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const location = useLocation();
+  const navigate = useNavigate();
 
   // Plugin related states
-  const [plugins, setPlugins] = useState([])
-  const [showPluginModal, setShowPluginModal] = useState(false)
-  const [selectedPlugin, setSelectedPlugin] = useState(null)
-  const [pluginActionLoading, setPluginActionLoading] = useState({})
-  const [pluginSearchTerm, setPluginSearchTerm] = useState("")
-  const [activePluginFilter, setActivePluginFilter] = useState("all") // "all", "active", "inactive"
+  const [plugins, setPlugins] = useState([]);
+  const [showPluginModal, setShowPluginModal] = useState(false);
+  const [selectedPlugin, setSelectedPlugin] = useState(null);
+  const [pluginActionLoading, setPluginActionLoading] = useState({});
+  const [pluginSearchTerm, setPluginSearchTerm] = useState("");
+  const [activePluginFilter, setActivePluginFilter] = useState("all"); // "all", "active", "inactive"
 
   // Available plugins for installation
   const availablePlugins = [
     {
       name: "Yoast SEO",
       slug: "wordpress-seo",
-      description: "The #1 WordPress SEO plugin. Improve your website's SEO rankings and attract more visitors.",
+      description:
+        "A comprehensive SEO plugin that helps optimize your WordPress site for search engines, offering features like XML sitemaps and content analysis.",
     },
     {
       name: "WooCommerce",
       slug: "woocommerce",
-      description: "An eCommerce toolkit that helps you sell anything. Beautifully.",
+      description:
+        "A flexible, open-source eCommerce solution built on WordPress, empowering you to sell anything online.",
+    },
+    {
+      name: "Akismet Anti-Spam",
+      slug: "akismet",
+      description:
+        "An advanced anti-spam plugin that filters out spam comments and form submissions, protecting your site from malicious content.",
     },
     {
       name: "Contact Form 7",
       slug: "contact-form-7",
-      description: "Just another contact form plugin. Simple but flexible.",
-    },
-    { name: "Elementor", slug: "elementor", description: "The most advanced frontend drag & drop page builder." },
-    {
-      name: "Akismet Anti-Spam",
-      slug: "akismet",
-      description: "Used by millions, Akismet is quite possibly the best way to protect your blog from spam.",
+      description:
+        "A simple yet flexible plugin for creating and managing multiple contact forms, with support for customization and CAPTCHA.",
     },
     {
-      name: "Jetpack",
+      name: "Elementor",
+      slug: "elementor",
+      description:
+        "A powerful drag-and-drop page builder for WordPress, enabling you to create high-end, pixel-perfect websites with ease.",
+    },
+    {
+      name: "WPForms",
+      slug: "wpforms",
+      description:
+        "A beginner-friendly WordPress form builder that allows you to create beautiful contact forms, feedback forms, and more.",
+    },
+    {
+      name: "Jetpack by WordPress.com",
       slug: "jetpack",
-      description: "Security, performance, and marketing tools made by WordPress experts.",
+      description:
+        "A versatile plugin offering security, performance, and site management tools, including backups, malware scanning, and more.",
     },
-    { name: "WPForms", slug: "wpforms", description: "Drag & Drop WordPress Form Builder." },
-    { name: "Wordfence Security", slug: "wordfence", description: "WordPress security plugin." },
-    { name: "UpdraftPlus", slug: "updraftplus", description: "Backup and restoration plugin." },
-    { name: "WP Super Cache", slug: "wp-super-cache", description: "Very fast caching plugin for WordPress." },
-  ]
+    {
+      name: "Wordfence Security",
+      slug: "wordfence",
+      description:
+        "A comprehensive security solution for WordPress, featuring a firewall, malware scanner, and login security measures.",
+    },
+    {
+      name: "UpdraftPlus WordPress Backup Plugin",
+      slug: "updraftplus",
+      description:
+        "A reliable backup and restoration plugin that simplifies the process of safeguarding your WordPress site.",
+    },
+    {
+      name: "WP Super Cache",
+      slug: "wp-super-cache",
+      description:
+        "A static caching plugin that generates HTML files to serve visitors, reducing server load and improving site performance.",
+    },
+    {
+      name: "All in One SEO",
+      slug: "all-in-one-seo-pack",
+      description:
+        "A feature-rich SEO plugin designed to help you optimize your WordPress site for higher search engine rankings.",
+    },
+    {
+      name: "Classic Editor",
+      slug: "classic-editor",
+      description:
+        "An official plugin that restores the previous WordPress editor and the 'Edit Post' screen, maintaining compatibility with older workflows.",
+    },
+    {
+      name: "WooCommerce Subscriptions",
+      slug: "woocommerce-subscriptions",
+      description:
+        "An add-on for WooCommerce that allows you to create and manage products with recurring payments.",
+    },
+    {
+      name: "TablePress",
+      slug: "tablepress",
+      description:
+        "A plugin that enables you to create and manage beautiful tables without any coding knowledge, embedding them into posts, pages, or text widgets.",
+    },
+    {
+      name: "Mailchimp for WooCommerce",
+      slug: "mailchimp-for-woocommerce",
+      description:
+        "Integrates your WooCommerce store with Mailchimp, allowing you to sync customer data and automate marketing campaigns.",
+    },
+    {
+      name: "Sucuri Security",
+      slug: "sucuri-scanner",
+      description:
+        "A security plugin offering malware scanning, security activity auditing, and hardening options to protect your WordPress site.",
+    },
+    {
+      name: "Advanced Custom Fields",
+      slug: "advanced-custom-fields",
+      description:
+        "A plugin that allows you to add custom fields to your WordPress edit screens, enhancing content management capabilities.",
+    },
+    {
+      name: "WordPress SEO by RankMath",
+      slug: "seo-by-rank-math",
+      description:
+        "A powerful SEO plugin that offers a comprehensive set of tools to optimize your WordPress site for search engines.",
+    },
+    {
+      name: "SiteGround Optimizer",
+      slug: "siteground-optimizer",
+      description:
+        "A performance optimization plugin developed by SiteGround, offering caching, image optimization, and other speed-enhancing features.",
+    },
+    {
+      name: "Broken Link Checker",
+      slug: "broken-link-checker",
+      description:
+        "Monitors your WordPress site for broken links and missing images, notifying you to maintain site integrity.",
+    },
+  ];
 
   const [formData, setFormData] = useState({
     pageTitle: "",
@@ -103,184 +228,210 @@ export default function MenuManagement() {
     menuItemUrl: "",
     menuItemPage: "",
     menuItemParent: "0", // Default to top level
-  })
+  });
 
- // API Call Helper
- const apiCall = async (type, data = {}) => {
-  try {
-    const params = new URLSearchParams({
-      type,
-      path: Cookies.get("path") || "ii",
-    })
-    Object.entries(data).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) params.append(key, value)
-    })
-
-    const response = await fetch(`${AppRoutes.pages}?${params}`)
-
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
-
-    const text = await response.text()
-
-    // Check if the response starts with "Success:" and handle it as a success response
-    if (text.trim().startsWith("Success:")) {
-      return { success: true, message: text.trim() }
-    }
-
-    // Try to parse as JSON, but if it fails, return the text as a message
+  // API Call Helper
+  const apiCall = async (type, data = {}) => {
     try {
-      return text ? JSON.parse(text) : { success: true }
+      const params = new URLSearchParams({
+        type,
+        path: Cookies.get("path") || "ii",
+      });
+      Object.entries(data).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) params.append(key, value);
+      });
+
+      const response = await fetch(`${AppRoutes.pages}?${params}`);
+
+      if (!response.ok)
+        throw new Error(`HTTP error! status: ${response.status}`);
+
+      const text = await response.text();
+
+      // Check if the response starts with "Success:" and handle it as a success response
+      if (text.trim().startsWith("Success:")) {
+        return { success: true, message: text.trim() };
+      }
+
+      // Try to parse as JSON, but if it fails, return the text as a message
+      try {
+        return text ? JSON.parse(text) : { success: true };
+      } catch (error) {
+        console.log("Response is not valid JSON:", text);
+        return { success: true, message: text };
+      }
     } catch (error) {
-      console.log("Response is not valid JSON:", text)
-      return { success: true, message: text }
+      console.error("API call error:", error);
+      return { error: error.message };
     }
-  } catch (error) {
-    console.error("API call error:", error)
-    return { error: error.message }
-  }
-}
- // Fetch all plugins
-const fetchPlugins = async () => {
-  setIsLoading(true);
-  try {
-    const result = await apiCall("plugin_list");
-    console.log("plugin_list result", result);
-    if (!result.error) {
-      // Ensure each plugin has a 'status' property
-      const pluginsWithStatus = Array.isArray(result) 
-        ? result.map(plugin => ({
-            ...plugin,
-            status: plugin.status || "inactive", // Default to inactive if status not provided
-            active: plugin.status === "active" // Keep active for backward compatibility
-          }))
-        : [];
-      setPlugins(pluginsWithStatus);
-    } else {
+  };
+  // Fetch all plugins
+  const fetchPlugins = async () => {
+    setIsLoading(true);
+    try {
+      const result = await apiCall("plugin_list");
+      console.log("plugin_list result", result);
+      if (!result.error) {
+        // Ensure each plugin has a 'status' property
+        const pluginsWithStatus = Array.isArray(result)
+          ? result.map((plugin) => ({
+              ...plugin,
+              status: plugin.status || "inactive", // Default to inactive if status not provided
+              active: plugin.status === "active", // Keep active for backward compatibility
+            }))
+          : [];
+        setPlugins(pluginsWithStatus);
+      } else {
+        toast.error("Error fetching plugins");
+      }
+    } catch (error) {
+      console.error("Error fetching plugins:", error);
       toast.error("Error fetching plugins");
+    } finally {
+      setIsLoading(false);
     }
-  } catch (error) {
-    console.error("Error fetching plugins:", error);
-    toast.error("Error fetching plugins");
-  } finally {
-    setIsLoading(false);
-  }
-}
+  };
 
   // Install plugin
   const handleInstallPlugin = async () => {
-    if (!selectedPlugin) return
+    if (!selectedPlugin) return;
 
-    const plugin = availablePlugins.find((p) => p.name === selectedPlugin)
-    if (!plugin) return
+    const plugin = availablePlugins.find((p) => p.name === selectedPlugin);
+    if (!plugin) return;
 
-    setPluginActionLoading((prev) => ({ ...prev, [plugin.name]: true }))
+    // Check if plugin is already installed
+    const isAlreadyInstalled = plugins.some((p) => p.name === plugin.name);
+    if (isAlreadyInstalled) {
+      toast.error(`${plugin.name} is already installed!`);
+      return;
+    }
+
+    setPluginActionLoading((prev) => ({ ...prev, [plugin.name]: true }));
     try {
-      const result = await apiCall("plugin_install", { pname: plugin.slug })
+      const result = await apiCall("plugin_install", { pname: plugin.slug });
       if (!result.error) {
-        toast.success(`${plugin.name} has been installed successfully.`)
+        toast.success(`${plugin.name} has been installed successfully.`);
         // Add the new plugin with active: false by default
-        setPlugins((prevPlugins) => [...prevPlugins, { ...plugin, active: false }])
-        setShowPluginModal(false)
-        setSelectedPlugin(null)
+        setPlugins((prevPlugins) => [
+          ...prevPlugins,
+          { ...plugin, active: false },
+        ]);
+        setShowPluginModal(false);
+        setSelectedPlugin(null);
       } else {
-        toast.error("Installation failed")
+        toast.error("Installation failed");
       }
     } catch (error) {
-      console.error("Error installing plugin:", error)
-      toast.error("Installation failed")
+      console.error("Error installing plugin:", error);
+      toast.error("Installation failed");
     } finally {
-      setPluginActionLoading((prev) => ({ ...prev, [plugin.name]: false }))
+      setPluginActionLoading((prev) => ({ ...prev, [plugin.name]: false }));
     }
-  }
-   // Activate plugin
-   const handleActivatePlugin = async (plugin) => {
-    setPluginActionLoading((prev) => ({ ...prev, [plugin.name]: true }))
+  };
+
+  // Activate plugin
+  const handleActivatePlugin = async (plugin) => {
+    setPluginActionLoading((prev) => ({ ...prev, [plugin.name]: true }));
 
     try {
-      const result = await apiCall("plugin_activate", { pname: plugin.slug || plugin.name })
-      console.log("plugin_activate result",result);
+      const result = await apiCall("plugin_activate", {
+        pname: plugin.slug || plugin.name,
+      });
+      console.log("plugin_activate result", result);
       if (!result.error) {
         // Update the plugin's active status in state
-        setPlugins(prevPlugins => 
-          prevPlugins.map(p => 
-            p.name === plugin.name ? { ...p, active: true } : p
+        setPlugins((prevPlugins) =>
+          prevPlugins.map((p) =>
+            p.name === plugin.name
+              ? { ...p, active: true, status: "active" }
+              : p
           )
-        )
-        toast.success(`${plugin.name} has been activated successfully.`)
+        );
+        toast.success(`${plugin.name} has been activated successfully.`);
       } else {
-        toast.error("Activation failed")
+        toast.error("Activation failed");
       }
     } catch (error) {
-      console.error("Error activating plugin:", error)
-      toast.error("Activation failed")
+      console.error("Error activating plugin:", error);
+      toast.error("Activation failed");
     } finally {
-      setPluginActionLoading((prev) => ({ ...prev, [plugin.name]: false }))
+      setPluginActionLoading((prev) => ({ ...prev, [plugin.name]: false }));
     }
-  }
+  };
 
-   // Inactivate plugin
-const handleInactivatePlugin = async (plugin) => {
-  setPluginActionLoading((prev) => ({ ...prev, [plugin.name]: true }));
+  // Inactivate plugin
+  const handleInactivatePlugin = async (plugin) => {
+    setPluginActionLoading((prev) => ({ ...prev, [plugin.name]: true }));
 
-  try {
-    const result = await apiCall("plugin_deactivate", { pname: plugin.slug || plugin.name });
-    console.log("plugin_inactivate result", result);
-    if (!result.error) {
-      // Update the plugin's active status in state
-      setPlugins(prevPlugins => 
-        prevPlugins.map(p => 
-          p.name === plugin.name ? { ...p, active: false } : p
-        )
-      );
-      toast.success("Successfully Inactivated", result);
-    } else {
+    try {
+      const result = await apiCall("plugin_deactivate", {
+        pname: plugin.slug || plugin.name,
+      });
+      console.log("plugin_inactivate result", result);
+      if (!result.error) {
+        // Update the plugin's active status in state
+        setPlugins((prevPlugins) =>
+          prevPlugins.map((p) =>
+            p.name === plugin.name
+              ? { ...p, active: false, status: "inactive" }
+              : p
+          )
+        );
+        toast.success("Successfully Inactivated", result);
+      } else {
+        toast.error("Deactivation failed");
+      }
+    } catch (error) {
+      console.error("Error deactivating plugin:", error);
       toast.error("Deactivation failed");
+    } finally {
+      setPluginActionLoading((prev) => ({ ...prev, [plugin.name]: false }));
     }
-  } catch (error) {
-    console.error("Error deactivating plugin:", error);
-    toast.error("Deactivation failed");
-  } finally {
-    setPluginActionLoading((prev) => ({ ...prev, [plugin.name]: false }));
-  }
-}
+  };
 
   // Update plugin
   const handleUpdatePlugin = async (plugin) => {
-    setPluginActionLoading((prev) => ({ ...prev, [plugin.name]: true }))
+    setPluginActionLoading((prev) => ({ ...prev, [plugin.name]: true }));
     try {
-      const result = await apiCall("plugin_update", { pname: plugin.slug || plugin.name })
+      const result = await apiCall("plugin_update", {
+        pname: plugin.slug || plugin.name,
+      });
       if (!result.error) {
-        toast.success(`${plugin.name} has been updated successfully.`)
-        await fetchPlugins()
+        toast.success(`${plugin.name} has been updated successfully.`);
+        await fetchPlugins();
       } else {
-        toast.error("Update failed")
+        toast.error("Update failed");
       }
     } catch (error) {
-      console.error("Error updating plugin:", error)
-      toast.error("Update failed")
+      console.error("Error updating plugin:", error);
+      toast.error("Update failed");
     } finally {
-      setPluginActionLoading((prev) => ({ ...prev, [plugin.name]: false }))
+      setPluginActionLoading((prev) => ({ ...prev, [plugin.name]: false }));
     }
-  }
+  };
 
-   // Delete plugin
-   const handleDeletePlugin = async (plugin) => {
-    setPluginActionLoading((prev) => ({ ...prev, [plugin.name]: true }))
+  // Delete plugin
+  const handleDeletePlugin = async (plugin) => {
+    setPluginActionLoading((prev) => ({ ...prev, [plugin.name]: true }));
     try {
-      const result = await apiCall("plugin_delete", { pname: plugin.slug || plugin.name })
+      const result = await apiCall("plugin_delete", {
+        pname: plugin.slug || plugin.name,
+      });
       if (!result.error) {
-        toast.success(`${plugin.name} has been deleted successfully.`)
-        setPlugins((prevPlugins) => prevPlugins.filter((p) => p.name !== plugin.name))
+        toast.success(`${plugin.name} has been deleted successfully.`);
+        setPlugins((prevPlugins) =>
+          prevPlugins.filter((p) => p.name !== plugin.name)
+        );
       } else {
-        toast.error("Deletion failed")
+        toast.error("Deletion failed");
       }
     } catch (error) {
-      console.error("Error deleting plugin:", error)
-      toast.error("Deletion failed")
+      console.error("Error deleting plugin:", error);
+      toast.error("Deletion failed");
     } finally {
-      setPluginActionLoading((prev) => ({ ...prev, [plugin.name]: false }))
+      setPluginActionLoading((prev) => ({ ...prev, [plugin.name]: false }));
     }
-  }
+  };
 
   // Fetch all pages
   const fetchPages = async () => {
@@ -512,7 +663,7 @@ const handleInactivatePlugin = async (plugin) => {
           <TableCell>
             <div className="flex gap-2">
               <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <Edit className="h-4 w-4" />
+                <Edit className="h-4 w-4 text-green-600" />
               </Button>
               <Button
                 variant="ghost"
@@ -594,6 +745,10 @@ const handleInactivatePlugin = async (plugin) => {
   // Handle tab change
   const handleTabChange = (value) => {
     setActiveTab(value);
+
+    // Update the URL to reflect the current tab
+    navigate(`/wordprestemplatedetails/${value}`, { replace: false });
+
     if (value === "menu" && menus.length > 0 && !selectedMenuForSidebar) {
       setSelectedMenuForSidebar(menus[0]);
       setSelectedMenu(menus[0]);
@@ -609,23 +764,26 @@ const handleInactivatePlugin = async (plugin) => {
   };
 
   // Filter plugins by search term
-  const filteredPlugins = availablePlugins.filter(
-    (plugin) => plugin.name.toLowerCase().includes(pluginSearchTerm.toLowerCase()) 
+  const filteredPlugins = availablePlugins.filter((plugin) =>
+    plugin.name.toLowerCase().includes(pluginSearchTerm.toLowerCase())
   );
 
- // Filter installed plugins by search term and active status
-const filteredInstalledPlugins = plugins.filter((plugin) => {
-  // First filter by search term
-  const matchesSearch =
-    plugin.name.toLowerCase().includes(searchTerm.toLowerCase());
+  // Filter installed plugins by search term and active status
+  const filteredInstalledPlugins = plugins.filter((plugin) => {
+    // First filter by search term
+    const matchesSearch = plugin.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
 
-  // Then filter by active status if needed
-  if (activePluginFilter === "all") return matchesSearch;
-  if (activePluginFilter === "active") return matchesSearch && plugin.status === "active";
-  if (activePluginFilter === "inactive") return matchesSearch && plugin.status === "inactive";
+    // Then filter by active status if needed
+    if (activePluginFilter === "all") return matchesSearch;
+    if (activePluginFilter === "active")
+      return matchesSearch && plugin.status === "active";
+    if (activePluginFilter === "inactive")
+      return matchesSearch && plugin.status === "inactive";
 
-  return matchesSearch;
-});
+    return matchesSearch;
+  });
 
   // Add this function to filter menu items by title (recursive)
   const filterMenuItemsByTitle = (items, term) => {
@@ -669,6 +827,31 @@ const filteredInstalledPlugins = plugins.filter((plugin) => {
     }
   }, [selectedMenu]);
 
+  // Set active tab based on URL when component mounts
+  useEffect(() => {
+    // Extract the tab from the URL
+    const pathParts = location.pathname.split("/");
+    const lastSegment = pathParts[pathParts.length - 1];
+
+    // Check if the last segment matches any of our tabs
+    const validTabs = ["pages", "plugin", "menu", "custom html & css"];
+    if (validTabs.includes(lastSegment)) {
+      setActiveTab(lastSegment);
+
+      // Load appropriate data based on the tab
+      if (lastSegment === "menu" && menus.length > 0) {
+        setSelectedMenuForSidebar(menus[0]);
+        setSelectedMenu(menus[0]);
+        fetchMenuItems(menus[0].term_id);
+      } else if (lastSegment === "plugin") {
+        fetchPlugins();
+      }
+    } else {
+      // If no valid tab in URL, update URL to match the default tab
+      navigate(`/wordprestemplatedetails/${activeTab}`, { replace: true });
+    }
+  }, [location.pathname]);
+
   // Plugin card component with activation/deactivation buttons
   const PluginCard = ({ plugin }) => (
     <Card key={plugin.name} className="overflow-hidden">
@@ -681,10 +864,14 @@ const filteredInstalledPlugins = plugins.filter((plugin) => {
             </CardDescription>
           </div>
           <Badge
-            variant={plugin.status === "active"  ? "default" : "outline"}
-            className={plugin.status === "active"  ? "bg-green-100 text-green-800 border-green-200" : "bg-red-100 text-red-800 border-red-200"}
+            variant={plugin.status === "active" ? "default" : "outline"}
+            className={
+              plugin.status === "active"
+                ? "bg-green-100 text-green-800 border-green-200"
+                : "bg-red-100 text-red-800 border-red-200"
+            }
           >
-            {plugin.status === "active"  ? "Active" : "Inactive"}
+            {plugin.status === "active" ? "Active" : "Inactive"}
           </Badge>
         </div>
       </CardHeader>
@@ -761,7 +948,7 @@ const filteredInstalledPlugins = plugins.filter((plugin) => {
         </Button>
       </CardFooter>
     </Card>
-  )
+  );
 
   return (
     <SidebarProvider>
@@ -847,7 +1034,6 @@ const filteredInstalledPlugins = plugins.filter((plugin) => {
               <div className="flex justify-end gap-2 mt-4">
                 <Button
                   variant="outline"
-                  className="text-white"
                   onClick={() => setShowPageModal(false)}
                 >
                   Cancel
@@ -873,7 +1059,7 @@ const filteredInstalledPlugins = plugins.filter((plugin) => {
 
         {/* Add Menu Modal */}
         <Dialog open={showMenuModal} onOpenChange={setShowMenuModal}>
-          <DialogContent className="sm:max-w-[400px]">
+          <DialogContent className="sm:max-w-[400px] bg-white">
             <DialogHeader>
               <DialogTitle>Add New Menu</DialogTitle>
             </DialogHeader>
@@ -914,7 +1100,7 @@ const filteredInstalledPlugins = plugins.filter((plugin) => {
 
         {/* Menu Item Modal */}
         <Dialog open={showMenuItemModal} onOpenChange={setShowMenuItemModal}>
-          <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-auto">
+          <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-auto bg-white">
             <DialogHeader>
               <DialogTitle>Add Item to {selectedMenu?.name}</DialogTitle>
             </DialogHeader>
@@ -952,7 +1138,7 @@ const filteredInstalledPlugins = plugins.filter((plugin) => {
                   <SelectTrigger>
                     <SelectValue placeholder="Select a page" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white">
                     <SelectItem value="custom">Custom URL</SelectItem>
                     {pages.map((page) => (
                       <SelectItem
@@ -1002,7 +1188,7 @@ const filteredInstalledPlugins = plugins.filter((plugin) => {
                   <SelectTrigger>
                     <SelectValue placeholder="Select parent item" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white">
                     <SelectItem value="0">-- Top Level --</SelectItem>
                     {getParentOptions().map((item) => (
                       <SelectItem
@@ -1051,7 +1237,7 @@ const filteredInstalledPlugins = plugins.filter((plugin) => {
 
         {/* All Items Modal */}
         <Dialog open={showAllItemsModal} onOpenChange={setShowAllItemsModal}>
-          <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-auto">
+          <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-auto bg-white">
             <DialogHeader>
               <DialogTitle>All Items in {selectedMenu?.name}</DialogTitle>
             </DialogHeader>
@@ -1116,39 +1302,51 @@ const filteredInstalledPlugins = plugins.filter((plugin) => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto pr-2">
-                {filteredPlugins.map((plugin) => (
-                  <div
-                    key={plugin.name}
-                    className={`border rounded-md p-3 cursor-pointer transition-colors ${
-                      selectedPlugin === plugin.name
-                        ? "border-blue-500 bg-blue-50"
-                        : "hover:border-gray-300 hover:bg-gray-50"
-                    }`}
-                    onClick={() => setSelectedPlugin(plugin.name)}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 mt-1">
-                        <div
-                          className={`w-4 h-4 rounded-full border ${
-                            selectedPlugin === plugin.name
-                              ? "border-blue-500 bg-blue-500"
-                              : "border-gray-300"
-                          }`}
-                        >
-                          {selectedPlugin === plugin.name && (
-                            <div className="w-2 h-2 bg-white rounded-full m-auto mt-1"></div>
+                {filteredPlugins.map((plugin) => {
+                  const isInstalled = plugins.some(
+                    (p) => p.name === plugin.name
+                  );
+                  return (
+                    <div
+                      key={plugin.name}
+                      className={`border rounded-md p-3 cursor-pointer transition-colors ${
+                        selectedPlugin === plugin.name
+                          ? "border-blue-500 bg-blue-50"
+                          : "hover:border-gray-300 hover:bg-gray-50"
+                      } ${isInstalled ? "opacity-75 cursor-not-allowed" : ""}`}
+                      onClick={() =>
+                        !isInstalled && setSelectedPlugin(plugin.name)
+                      }
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 mt-1">
+                          <div
+                            className={`w-4 h-4 rounded-full border ${
+                              selectedPlugin === plugin.name
+                                ? "border-blue-500 bg-blue-500"
+                                : "border-gray-300"
+                            }`}
+                          >
+                            {selectedPlugin === plugin.name && (
+                              <div className="w-2 h-2 bg-white rounded-full m-auto mt-1"></div>
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <h3 className="font-medium text-sm">{plugin.name}</h3>
+                          <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                            {plugin.description}
+                          </p>
+                          {isInstalled && (
+                            <span className="text-xs text-green-600 mt-1">
+                              Already installed
+                            </span>
                           )}
                         </div>
                       </div>
-                      <div>
-                        <h3 className="font-medium text-sm">{plugin.name}</h3>
-                        <p className="text-xs text-gray-500 mt-1 line-clamp-2">
-                          {plugin.description}
-                        </p>
-                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {filteredPlugins.length === 0 && (
@@ -1167,7 +1365,9 @@ const filteredInstalledPlugins = plugins.filter((plugin) => {
               <Button
                 onClick={handleInstallPlugin}
                 disabled={
-                  !selectedPlugin || pluginActionLoading[selectedPlugin]
+                  !selectedPlugin ||
+                  pluginActionLoading[selectedPlugin] ||
+                  plugins.some((p) => p.name === selectedPlugin)
                 }
               >
                 {pluginActionLoading[selectedPlugin] ? (
@@ -1178,7 +1378,9 @@ const filteredInstalledPlugins = plugins.filter((plugin) => {
                 ) : (
                   <>
                     <Download className="h-4 w-4 mr-2" />
-                    Install Plugin
+                    {plugins.some((p) => p.name === selectedPlugin)
+                      ? "Already Installed"
+                      : "Install Plugin"}
                   </>
                 )}
               </Button>
@@ -1373,29 +1575,15 @@ const filteredInstalledPlugins = plugins.filter((plugin) => {
                                       size="sm"
                                       className="h-8 px-2"
                                     >
-                                      <Edit className="h-4 w-4" />
+                                      <Edit className="h-4 w-4 text-green-600" />
                                     </Button>
-                                    <DropdownMenu>
-                                      <DropdownMenuTrigger asChild>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-8 px-2"
-                                        >
-                                          <MoreVertical className="h-4 w-4" />
-                                        </Button>
-                                      </DropdownMenuTrigger>
-                                      <DropdownMenuContent>
-                                        <DropdownMenuItem>
-                                          <ExternalLink className="h-4 w-4 mr-2" />
-                                          View
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem>
-                                          <Code className="h-4 w-4 mr-2" />
-                                          View Source
-                                        </DropdownMenuItem>
-                                      </DropdownMenuContent>
-                                    </DropdownMenu>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-8 px-2"
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-2 text-red-500" />
+                                    </Button>
                                   </div>
                                 </TableCell>
                               </TableRow>
