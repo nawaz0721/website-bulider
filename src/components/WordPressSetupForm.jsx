@@ -48,6 +48,16 @@ export default function WordPressSetupModal({
 
   const router = useNavigate();
 
+   let userDetails = null;
+    try {
+      const user = Cookies?.get("user");
+      if (user) {
+        userDetails = JSON.parse(user);
+      }
+    } catch (err) {
+      console.error("Failed to parse user cookie:", err);
+    }
+
   useEffect(() => {
     if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
       setDarkMode(true);
@@ -76,7 +86,7 @@ export default function WordPressSetupModal({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const completeForm = { ...localFormData, pass };
+    const completeForm = { ...localFormData, pass , userID: userDetails._id, };
        
   // Validate all fields are filled
   if (!completeForm.title || !completeForm.stitle || !completeForm.uname || !completeForm.Email || !completeForm.pass) {

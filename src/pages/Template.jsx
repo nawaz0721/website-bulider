@@ -18,6 +18,8 @@ import { motion } from "framer-motion";
 import { AppRoutes } from "@/constant/constant";
 import Cookies from "js-cookie";
 import toast from "react-hot-toast";
+import TemplateCard from "@/components/TemplateCard";
+import { UserTemplateCard } from "@/components/UserTemplateCard";
 
 export default function TemplatesPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -180,36 +182,44 @@ export default function TemplatesPage() {
         ) : displayedTemplates.length > 0 ? (
           <motion.div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {displayedTemplates.map((template) => (
-              <Card key={template._id} className="shadow-lg hover:shadow-xl transition duration-300">
-                <img
-                  src={template.image || "/placeholder.svg"}
-                  alt={template.title}
-                  className="w-full h-40 object-cover rounded-t-md"
-                />
-                <CardHeader>
-                  <CardTitle>{template.title}</CardTitle>
-                  <CardDescription>{template.description}</CardDescription>
-                  <Badge className="bg-black text-white p-3">{template.category}</Badge>
-                </CardHeader>
-                <CardFooter className="flex justify-between space-x-2">
-                  <Button variant="outline" onClick={() => handlePreview(template)} >
-                    <Eye className="h-4 w-4 mr-2 " />
-                    Preview
-                  </Button>
-                  {userDetails?.role === "admin" ? (
-                    <Button variant="default" onClick={() => handleUseTemplate(template)}>
-                      Use Template
-                    </Button>
-                  ) : (
-                    <Button 
-                      onClick={() => handleAddToCart(template)}
-                      disabled={isTemplateAdded(template._id)}
-                    >
-                      {isTemplateAdded(template._id) ? "Added" : "Add to Collection"}
-                    </Button>
-                  )}
-                </CardFooter>
-              </Card>
+              // <Card key={template._id} className="shadow-lg hover:shadow-xl transition duration-300">
+              //   <img
+              //     src={template.image || "/placeholder.svg"}
+              //     alt={template.title}
+              //     className="w-full h-40 object-cover rounded-t-md"
+              //   />
+              //   <CardHeader>
+              //     <CardTitle>{template.title}</CardTitle>
+              //     <CardDescription>{template.description}</CardDescription>
+              //     <Badge className="bg-black text-white p-3">{template.category}</Badge>
+              //   </CardHeader>
+              //   <CardFooter className="flex justify-between space-x-2">
+              //     <Button variant="outline" onClick={() => handlePreview(template)} >
+              //       <Eye className="h-4 w-4 mr-2 " />
+              //       Preview
+              //     </Button>
+              //     {userDetails?.role === "admin" ? (
+              //       <Button variant="default" onClick={() => handleUseTemplate(template)}>
+              //         Use Template
+              //       </Button>
+              //     ) : (
+              //       <Button 
+              //         onClick={() => handleAddToCart(template)}
+              //         disabled={isTemplateAdded(template._id)}
+              //       >
+              //         {isTemplateAdded(template._id) ? "Added" : "Add to Collection"}
+              //       </Button>
+              //     )}
+              //   </CardFooter>
+              // </Card>
+              <UserTemplateCard
+          key={template._id}
+          template={template}
+          handlePreview={handlePreview}
+          handleUseTemplate={handleUseTemplate}
+          handleAddToCart={handleAddToCart}
+          isTemplateAdded={isTemplateAdded}
+        />
             ))}
           </motion.div>
         ) : (
