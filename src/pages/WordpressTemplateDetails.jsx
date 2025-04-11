@@ -64,9 +64,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import toast from "react-hot-toast";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
-export default function MenuManagement() {
+export default function WordpressTemplateDetails() {
   const [menus, setMenus] = useState([]);
   const [pages, setPages] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
@@ -87,6 +87,21 @@ export default function MenuManagement() {
 
   const location = useLocation();
   const navigate = useNavigate();
+  const { path, tab } = useParams();
+
+  // Set the path in cookies when component mounts
+  useEffect(() => {
+    if (path) {
+      Cookies.set("path", path);
+    }
+  }, [path]);
+
+  // Set active tab based on URL
+  useEffect(() => {
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, [tab]);
 
   // Plugin related states
   const [plugins, setPlugins] = useState([]);
@@ -220,6 +235,13 @@ export default function MenuManagement() {
     },
   ];
 
+  const tabs = [
+    { display: "Pages", value: "pages" },
+    { display: "Plugin", value: "plugin" },
+    { display: "Menu", value: "menu" },
+    { display: "Custom html & css", value: "custom-html-css" } // URL-friendly format
+  ];
+
   const [formData, setFormData] = useState({
     pageTitle: "",
     pageContent: "",
@@ -235,8 +257,9 @@ export default function MenuManagement() {
     try {
       const params = new URLSearchParams({
         type,
-        path: Cookies.get("path") || "ii",
+        path: path || Cookies.get("path") || "ii",
       });
+
       Object.entries(data).forEach(([key, value]) => {
         if (value !== undefined && value !== null) params.append(key, value);
       });
@@ -248,12 +271,10 @@ export default function MenuManagement() {
 
       const text = await response.text();
 
-      // Check if the response starts with "Success:" and handle it as a success response
       if (text.trim().startsWith("Success:")) {
         return { success: true, message: text.trim() };
       }
 
-      // Try to parse as JSON, but if it fails, return the text as a message
       try {
         return text ? JSON.parse(text) : { success: true };
       } catch (error) {
@@ -265,12 +286,12 @@ export default function MenuManagement() {
       return { error: error.message };
     }
   };
+
   // Fetch all plugins
   const fetchPlugins = async () => {
     setIsLoading(true);
     try {
       const result = await apiCall("plugin_list");
-      console.log("plugin_list result", result);
       if (!result.error) {
         // Ensure each plugin has a 'status' property
         const pluginsWithStatus = Array.isArray(result)
@@ -743,19 +764,9 @@ export default function MenuManagement() {
   };
 
   // Handle tab change
-  const handleTabChange = (value) => {
-    setActiveTab(value);
-
-    // Update the URL to reflect the current tab
-    navigate(`/wordprestemplatedetails/${value}`, { replace: false });
-
-    if (value === "menu" && menus.length > 0 && !selectedMenuForSidebar) {
-      setSelectedMenuForSidebar(menus[0]);
-      setSelectedMenu(menus[0]);
-      fetchMenuItems(menus[0].term_id);
-    } else if (value === "plugin") {
-      fetchPlugins();
-    }
+  const handleTabChange = (newTab) => {
+    setActiveTab(newTab);
+    navigate(`/wordprestemplatedetails/${path}/${newTab}`);
   };
 
   // Handle plugin filter change
@@ -768,7 +779,6 @@ export default function MenuManagement() {
     plugin.name.toLowerCase().includes(pluginSearchTerm.toLowerCase())
   );
 
-  // Filter installed plugins by search term and active status
   const filteredInstalledPlugins = plugins.filter((plugin) => {
     // First filter by search term
     const matchesSearch = plugin.name
@@ -834,7 +844,7 @@ export default function MenuManagement() {
     const lastSegment = pathParts[pathParts.length - 1];
 
     // Check if the last segment matches any of our tabs
-    const validTabs = ["pages", "plugin", "menu", "custom html & css"];
+    const validTabs = ["pages", "plugin", "menu", "custom-html-css"];
     if (validTabs.includes(lastSegment)) {
       setActiveTab(lastSegment);
 
@@ -949,6 +959,7 @@ export default function MenuManagement() {
       </CardFooter>
     </Card>
   );
+  
 
   return (
     <SidebarProvider>
@@ -985,17 +996,17 @@ export default function MenuManagement() {
         {/* Main Tabs - Moved outside the content area */}
         <div className="border-b bg-white">
           <div className="flex">
-            {["Pages", "Plugin", "Menu", "Custom HTML & CSS"].map((tab) => (
+            {tabs.map((tab) => (
               <button
-                key={tab}
-                onClick={() => handleTabChange(tab.toLowerCase())}
+                key={tab.value}
+                onClick={() => handleTabChange(tab.value)}
                 className={`px-4 py-3 text-sm font-medium ${
-                  activeTab === tab.toLowerCase()
+                  activeTab === tab.value
                     ? "border-b-2 border-blue-500 text-blue-600"
                     : "text-gray-600 hover:text-gray-900"
                 }`}
               >
-                {tab}
+                {tab.display}
               </button>
             ))}
           </div>
@@ -1482,8 +1493,10 @@ export default function MenuManagement() {
                       >
                         <MenuIcon className="h-4 w-4" />
                         <span className="text-sm">{menu.name}</span>
+                        <Trash2 className="h-4 w-4 mr-2 text-red-500 ml-auto" />
                       </button>
-                    ))
+                    )
+                    )
                   ) : (
                     <div className="text-sm text-gray-500 p-2">
                       No menus created
@@ -1493,7 +1506,7 @@ export default function MenuManagement() {
               </>
             )}
 
-            {activeTab === "custom html & css" && (
+            {activeTab === "custom-html-css" && (
               <>
                 <h3 className="font-medium mb-2 px-2">Custom Code</h3>
                 <div className="text-sm text-gray-500 p-2">
@@ -1562,7 +1575,6 @@ export default function MenuManagement() {
                                   </Badge>
                                 </TableCell>
                                 <TableCell className="text-blue-500 hover:underline cursor-pointer">
-                                  /
                                   {page.post_name ||
                                     page.post_title
                                       .toLowerCase()
@@ -1799,7 +1811,7 @@ export default function MenuManagement() {
             )}
 
             {/* Custom HTML & CSS Tab */}
-            {activeTab === "custom html & css" && (
+            {activeTab === "custom-html-css" && (
               <div className="flex-1 p-6 overflow-auto">
                 <div className="text-center py-8 text-gray-500">
                   No custom HTML/CSS added

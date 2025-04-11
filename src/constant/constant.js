@@ -21,6 +21,7 @@ export const AppRoutes = {
     profile: devUrl + "profile/profile",
     profileAvatar: devUrl + "profile/upload-avatar",
     wordpress: devUrl + "wordpressform/wordpress",
+    singlewordpress: devUrl + "/wordpressform/wordpress/:id",
     install: phpUrl + "installword.php",
     plugin: phpUrl + "installwo.php",
     pages: phpUrl + "wppage.php",

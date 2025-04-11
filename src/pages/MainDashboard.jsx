@@ -70,7 +70,6 @@ export default function MainDashboard() {
 
       const user = Cookies?.get("user");
       const path = Cookies?.get("path");
-      console.log("path", path);
 
       const userDetails = user ? JSON.parse(user) : null;
 
@@ -113,7 +112,6 @@ export default function MainDashboard() {
       const userid = userDetails._id
       // Make API call to get templates for this user
       const response = await axios.get(`${AppRoutes.wordpress}/${userid}`);
-      console.log("response",response.data);
       
       const data = await response.data;
       
@@ -146,6 +144,15 @@ export default function MainDashboard() {
       template.description?.toLowerCase().includes(query)
     );
   });
+
+  const filteredWordpressTemplates = wordpressTemplates.filter((template) => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      template.name?.toLowerCase().includes(query) ||
+      template.description?.toLowerCase().includes(query)
+      );
+      });
 
   // Use template => navigate to Editor with template ID (/editor/:id)
   const handleUseTemplate = (template) => {
@@ -533,8 +540,73 @@ export default function MainDashboard() {
             </Divider>
 
             {/* WordPress Template Cards (Placeholder for now) */}
-            <div className="col-span-full text-center py-12 bg-gray-50 rounded-lg border border-dashed mt-6">
-              <FaWordpress className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-6">
+            {
+              isLoading ? (
+                 // Show loading skeleton
+                 [1, 2, 3].map((i) => (
+                  <div key={i} className="rounded-lg border p-4 animate-pulse">
+                    <div className="h-40 bg-gray-200 rounded-lg"></div>
+                    <div className="mt-4 h-6 bg-gray-200 rounded w-3/4"></div>
+                    <div className="mt-2 h-4 bg-gray-200 rounded w-full"></div>
+                  </div>
+                ))
+              ) :  filteredWordpressTemplates.length > 0 ?(
+                // Show templates
+                filteredWordpressTemplates.map((template) => (
+                  <Card key={template._id} className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow">
+                  {/* Preview section */}
+                  <div className="aspect-video bg-muted/30 relative group">
+                    {/* Edit & Delete Buttons - Always Visible */}
+                    <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-50">
+                      {/* Delete Button */}
+                      <button
+                        onClick={() => handleDeleteWordpressTemplate(template._id)}
+                        className="p-2 bg-red-500 rounded-full text-white shadow-md hover:bg-red-600 transition"
+                      >
+                        <Trash className="h-5 w-5" />
+                      </button>
+                    </div>
+      
+                    {/* Template Image */}
+                    <img
+                      src={
+                        template.image || "/placeholder.svg?height=200&width=400" || "/placeholder.svg" || "/placeholder.svg"
+                      }
+                      alt={template.name || template.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  </div>
+      
+                  {/* Footer section */}
+                  <div className="bg-white p-4 flex flex-col">
+                    <div>
+                      <CardTitle className="text-xl">{template.name || template.title}</CardTitle>
+                      <CardDescription className="mt-2 line-clamp-2">
+                        {template.description || "No description available"}
+                      </CardDescription>
+                    </div>
+                    <div className="flex justify-end gap-3 mt-4">
+                      <Button
+                        variant="outline"
+                        className="hover:bg-gray-100"
+                        onClick={() => {
+                          window.open(`https://wp.website4x.com/${template.paths}`)
+                        }}
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        Preview
+                      </Button>
+                      <Button className="bg-green-600 hover:bg-green-700"  onClick={() => navigate(`/wordprestemplatedetails/${template.paths}/pages`)}>
+                        Manage
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+                ))
+              ) : (
+                <>
+                 <FaWordpress className="h-12 w-12 mx-auto text-gray-400 mb-4" />
               <h3 className="text-lg font-medium text-gray-700 mb-2">
                 No WordPress websites yet
               </h3>
@@ -549,6 +621,10 @@ export default function MainDashboard() {
                 <Plus className="h-4 w-4 mr-2" />
                 Create WordPress Website
               </Button>
+                </>
+              )
+            }
+             
             </div>
           </TabsContent>
         </Tabs>

@@ -6,9 +6,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Check, X } from "lucide-react";
+import { Check, MessageSquare, X } from "lucide-react";
 import { Select } from "antd";
-export default function TalkToSales() {
+import { cn } from "@/lib/utils";
+export default function TalkToSales({ isMobile = false }) {
   const [isOpen, setIsOpen] = useState(false);
   const handleChange = (value) => {
     console.log(`selected ${value}`);
@@ -17,13 +18,16 @@ export default function TalkToSales() {
     <>
       {/* Button to Open Modal */}
       <Button
-        onClick={() => setIsOpen(true)}
-        // className="text-black bg-white hover:text-white hover:bg-black w-full transition-colors text-sm font-medium px-12 "
-        variant="outline"
-        className="h-8 border-white hover:text-white hover:bg-black bg-white text-black text-sm font-medium px-12 "
-      >
-        Talk to Sales
-      </Button>
+       onClick={() => setIsOpen(true)}
+      variant="ghost"
+      className={cn(
+        "text-white hover:text-black hover:bg-white border border-white",
+        isMobile && "w-full justify-center",
+      )}
+    >
+      <MessageSquare className="h-4 w-4 mr-2" />
+      Talk to Sales
+    </Button>
       {/* Modal */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-6xl p-[0.1px] rounded-lg overflow-hidden">
