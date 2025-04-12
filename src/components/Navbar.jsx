@@ -39,9 +39,9 @@ const Navbar = () => {
           <div className="flex items-center gap-3">
             {/* Logo is hidden on mobile as it's in the sidebar */}
             <div className="hidden md:block h-8 w-8 ml-12">
-              <svg viewBox="0 0 24 24" className="h-full w-full">
+              {/* <svg viewBox="0 0 24 24" className="h-full w-full">
                 <rect width="24" height="24" fill="black" />
-              </svg>
+              </svg> */}
             </div>
 
             {/* Workspace dropdown - hidden on mobile */}
@@ -53,16 +53,7 @@ const Navbar = () => {
             <div className="hidden md:block ml-4 h-14 w-px bg-red-400" />
           </div>
 
-          {/* Center Section - Domain Button */}
-          <div className={cn("absolute left-1/2 transform -translate-x-1/2", isMobile ? "hidden" : "block")}>
-            <Button
-              className="text-black bg-white hover:text-white hover:bg-black transition-colors border-white"
-              variant="outline"
-            >
-              Get Free Custom Domain
-            </Button>
-          </div>
-
+         
           {/* Right Section */}
           <div className="flex items-center gap-2">
             {/* Talk to Sales - hidden on mobile */}
@@ -76,7 +67,7 @@ const Navbar = () => {
             {/* Icons - some hidden on mobile */}
             <div className="hidden sm:block">
               <Tooltip placement="bottom" title="Progress indicator">
-                <Button variant="ghost" size="icon" className="h-9 w-9 hover:text-black hover:bg-transparent">
+                <Button variant="ghost" size="icon" className="h-9 w-9 hover:text-blue-600 hover:bg-transparent">
                   <Clock className="h-5 w-5" />
                 </Button>
               </Tooltip>
@@ -88,13 +79,13 @@ const Navbar = () => {
             {/* Always visible icons */}
             <div className="hidden sm:flex items-center">
               <Tooltip placement="bottom" title="Knowledge base">
-                <Button variant="ghost" size="icon" className="h-9 w-9 hover:text-black hover:bg-transparent">
+                <Button variant="ghost" size="icon" className="h-9 w-9 hover:text-blue-600 hover:bg-transparent">
                   <FaBookOpen className="h-5 w-5" />
                 </Button>
               </Tooltip>
 
               <Tooltip placement="bottom" title="Usage summary">
-                <Button variant="ghost" size="icon" className="h-9 w-9 hover:text-black hover:bg-transparent">
+                <Button variant="ghost" size="icon" className="h-9 w-9 hover:text-blue-600 hover:bg-transparent">
                   <IoPieChart className="h-5 w-5" />
                 </Button>
               </Tooltip>
@@ -102,7 +93,7 @@ const Navbar = () => {
 
             {/* Notifications - always visible */}
             <Tooltip placement="bottom" title="Notifications">
-              <Button variant="ghost" size="icon" className="h-9 w-9 hover:text-black hover:bg-transparent">
+              <Button variant="ghost" size="icon" className="h-9 w-9 hover:text-blue-600 hover:bg-transparent">
                 <FaBell className="h-5 w-5" />
               </Button>
             </Tooltip>

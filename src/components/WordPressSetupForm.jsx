@@ -3,7 +3,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Eye, EyeOff, Check, Loader2, Globe, Mail, User, Lock, X, AlertCircle } from "lucide-react"
+import { Eye, EyeOff, Check, Loader2, Globe, Mail, User, Lock, X, AlertCircle, RefreshCw } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import { AppRoutes } from "@/constant/constant"
 import axios from "axios"
@@ -54,21 +54,23 @@ export default function WordPressSetupModal({
     if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
       setDarkMode(true)
     }
+    // Generate initial password when component mounts
+    generatePassword()
   }, [])
+
+  // Function to generate 6-digit alphanumeric password
+  const generatePassword = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+    let result = ''
+    for (let i = 0; i < 6; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length))
+    }
+    setPassword(result)
+  }
 
   const updateFormData = (newData) => {
     setLocalFormData((prev) => ({ ...prev, ...newData }))
   }
-
-  const getPasswordStrength = (password) => {
-    if (password.length < 6) return { text: "Weak", color: "bg-red-500", percentage: 33 }
-    if (password.length < 8) return { text: "Medium", color: "bg-yellow-500", percentage: 66 }
-    if (/[A-Z]/.test(password) && /[a-z]/.test(password) && /[0-9]/.test(password))
-      return { text: "Strong", color: "bg-green-500", percentage: 100 }
-    return { text: "Medium", color: "bg-yellow-500", percentage: 66 }
-  }
-
-  const passwordStrength = getPasswordStrength(pass)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -92,11 +94,6 @@ export default function WordPressSetupModal({
       return
     }
 
-    // Validate password strength
-    if (completeForm.pass.length < 6) {
-      toast.error("Password must be at least 6 characters long")
-      return
-    }
     onInstall(completeForm) // Pass form data to parent
 
     // Step 1: Save Data
@@ -110,7 +107,6 @@ export default function WordPressSetupModal({
         headers: { "Content-Type": "application/json" },
       })
 
-      // let completeFormID = null;
       var completeFormID = savedData._id
       setSteps((prev) => ({
         ...prev,
@@ -147,8 +143,8 @@ export default function WordPressSetupModal({
         toast.error("Installation path missing in response")
         return
       }
-      // `${AppRoutes.wordpress}/${completeFormID}`
-      // ✅ Update MongoDB with path
+
+      // Update MongoDB with path
       const res = await axios.patch(`${AppRoutes.wordpress}/${completeFormID}`, {
         paths: result,
       })
@@ -181,7 +177,6 @@ export default function WordPressSetupModal({
 
         setTimeout(() => {
           setIsProgressModalOpen(false)
-          // router("/wordprestemplatedetails");
           router("/main-dashboard")
         }, 2000)
       } catch (e) {
@@ -307,54 +302,6 @@ export default function WordPressSetupModal({
                         className="border-gray-300 focus:border-blue-500 focus:ring-blue-500 transition-all"
                       />
                     </div>
-
-                    <div className="space-y-2">
-                      <label htmlFor="password" className="text-sm font-medium flex items-center gap-2">
-                        <Lock className="h-4 w-4 text-blue-600" />
-                        Password
-                      </label>
-                      <div className="relative">
-                        <Input
-                          id="password"
-                          type={passVisible ? "text" : "password"}
-                          placeholder="Secure password"
-                          value={pass}
-                          onChange={(e) => setPassword(e.target.value)}
-                          required
-                          className="pr-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500 transition-all"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setPassVisible(!passVisible)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                        >
-                          {passVisible ? <EyeOff size={18} /> : <Eye size={18} />}
-                        </button>
-                      </div>
-                      {pass && (
-                        <div className="mt-2">
-                          <div className="flex justify-between items-center mb-1">
-                            <span
-                              className={`text-xs font-medium ${
-                                passwordStrength.text === "Weak"
-                                  ? "text-red-600"
-                                  : passwordStrength.text === "Medium"
-                                    ? "text-yellow-600"
-                                    : "text-green-600"
-                              }`}
-                            >
-                              {passwordStrength.text}
-                            </span>
-                            {passwordStrength.text === "Weak" && (
-                              <span className="text-xs text-red-600 flex items-center gap-1">
-                                <AlertCircle className="h-3 w-3" /> Use at least 8 characters with numbers and symbols
-                              </span>
-                            )}
-                          </div>
-                          <Progress value={passwordStrength.percentage} className={passwordStrength.color} />
-                        </div>
-                      )}
-                    </div>
                   </form>
                 </CardContent>
                 <CardFooter className="flex justify-between border-t pt-4">
@@ -373,8 +320,7 @@ export default function WordPressSetupModal({
                       !localFormData.stitle ||
                       !localFormData.uname ||
                       !localFormData.Email ||
-                      !pass ||
-                      passwordStrength.text === "Weak"
+                      !pass
                     }
                   >
                     Install WordPress

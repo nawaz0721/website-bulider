@@ -32,6 +32,7 @@ export default function TemplatesPage() {
     const user = Cookies?.get("user")
     if (user) {
       userDetails = JSON.parse(user)
+      
     }
   } catch (err) {
     console.error("Failed to parse user cookie:", err)
@@ -46,14 +47,18 @@ export default function TemplatesPage() {
         const templatesResponse = await axios.get(AppRoutes.template)
         setAllTemplates(templatesResponse.data)
 
+        console.log("templatesResponse",templatesResponse.data);
+        
         // If user is logged in, fetch their templates
         if (userDetails?._id) {
           const userTemplatesResponse = await axios.get(`${AppRoutes.userTemplate}/${userDetails._id}`)
           setUserTemplates(userTemplatesResponse.data || [])
+          console.log("userTemplatesResponse",userTemplatesResponse.data);
         }
+
+        
       } catch (error) {
         console.error("Error fetching data:", error)
-        toast.error("Failed to load templates")
       } finally {
         setIsLoading(false)
       }

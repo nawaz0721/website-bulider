@@ -1,45 +1,71 @@
-"use client"
+"use client";
 
-import { Search, Sparkles, Code, ArrowRight, Palette, Globe, Zap, Rocket } from "lucide-react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
-import { Checkbox } from "@/components/ui/checkbox"
-import WebsiteCard from "@/components/WebsiteCard"
-import { useNavigate } from "react-router-dom"
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import Header from "@/components/Header"
-import Cookies from "js-cookie"
-import CreateCustomModal from "@/components/CreateCustomModal"
-import WordPressSetupModal from "@/components/WordPressSetupForm"
-import { motion } from "framer-motion"
+import { Search, Sparkles, Code, ArrowRight, Palette, Globe, Zap, Rocket } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import WebsiteCard from "@/components/WebsiteCard";
+import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import Header from "@/components/Header";
+import Cookies from "js-cookie";
+import CreateCustomModal from "@/components/CreateCustomModal";
+import WordPressSetupModal from "@/components/WordPressSetupForm";
+import { motion } from "framer-motion";
+import { wordpressTemplates } from "@/data"; // Import mock data
+import WordPressTemplateModal from "@/components/WordpressTemplateModal";
 
-const websites = [] // Empty array means no websites exist
+const websites = []; // Empty array means no websites exist
 
 export default function SelectWebsite() {
-  const navigate = useNavigate()
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isWordpressModalOpen, setIsWordpressModalOpen] = useState(false)
-  const [isWordpressProgressModalOpen, setIsWordpressProgressModalOpen] = useState(false)
-  const [wordpressFormData, setWordpressFormData] = useState(null)
-  const [user, setUser] = useState(null)
+  const navigate = useNavigate();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isWordpressModalOpen, setIsWordpressModalOpen] = useState(false);
+  const [isWordpressTemplateModalOpen, setIsWordpressTemplateModalOpen] = useState(false);
+  const [isWordpressProgressModalOpen, setIsWordpressProgressModalOpen] = useState(false);
+  const [wordpressFormData, setWordpressFormData] = useState(null);
+  const [user, setUser] = useState(null);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    const userData = Cookies.get("user")
+    const userData = Cookies.get("user");
     if (userData) {
-      setUser(JSON.parse(userData))
+      setUser(JSON.parse(userData));
     }
-  }, [])
+  }, []);
 
   const handleWordPressInstall = async (formData) => {
-    setIsWordpressModalOpen(false)
-    setWordpressFormData(formData)
-    setIsWordpressProgressModalOpen(true)
-  }
+    setIsWordpressModalOpen(false);
+    setWordpressFormData(formData);
+    setIsWordpressProgressModalOpen(true);
+  };
 
   const handleCustomWebsiteClick = () => {
-    setIsModalOpen(true)
-  }
+    setIsModalOpen(true);
+  };
+
+  // Filter templates based on search and category
+  const filteredTemplates = wordpressTemplates.filter(template => {
+    const matchesSearch = template.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         template.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = categoryFilter === "all" || template.category === categoryFilter;
+    return matchesSearch && matchesCategory;
+  });
+
+  // Pagination
+  const templatesPerPage = 10;
+  const totalPages = Math.ceil(filteredTemplates.length / templatesPerPage);
+  const currentTemplates = filteredTemplates.slice(
+    (currentPage - 1) * templatesPerPage,
+    currentPage * templatesPerPage
+  );
+
+  // Get unique categories
+  const categories = ["all", ...new Set(wordpressTemplates.map(t => t.category))];
 
   // Animation variants
   const containerVariants = {
@@ -50,12 +76,12 @@ export default function SelectWebsite() {
         staggerChildren: 0.1,
       },
     },
-  }
+  };
 
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-  }
+  };
 
   return (
     <>
@@ -109,11 +135,15 @@ export default function SelectWebsite() {
                   How do you want to build your website?
                 </h1>
                 <p className="text-gray-600 text-lg">
-                  Choose between AI-assisted website creation or fully custom design to bring your vision to life.
+                  Choose between AI-assisted website creation or fully custom
+                  design to bring your vision to life.
                 </p>
               </motion.div>
 
-              <motion.div variants={containerVariants} className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+              <motion.div
+                variants={containerVariants}
+                className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12"
+              >
                 <motion.div
                   variants={itemVariants}
                   className="bg-white rounded-xl p-8 border border-gray-100 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden group"
@@ -126,11 +156,14 @@ export default function SelectWebsite() {
                       <Sparkles className="h-7 w-7" />
                     </div>
 
-                    <h3 className="text-2xl font-bold mb-3">Use AI WordPress to create your website</h3>
+                    <h3 className="text-2xl font-bold mb-3">
+                      Use AI WordPress to create your website
+                    </h3>
 
                     <p className="text-gray-600 mb-6">
-                      Let AI generate content and images for you. Perfect for quickly launching a professional website
-                      with minimal effort.
+                      Let AI generate content and images for you. Perfect for
+                      quickly launching a professional website with minimal
+                      effort.
                     </p>
 
                     <ul className="space-y-3 mb-8">
@@ -155,7 +188,7 @@ export default function SelectWebsite() {
                     </ul>
 
                     <Button
-                      onClick={() => setIsWordpressModalOpen(true)}
+                      onClick={() => setIsWordpressTemplateModalOpen(true)}
                       className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center"
                     >
                       Start with AI WordPress
@@ -176,11 +209,14 @@ export default function SelectWebsite() {
                       <Code className="h-7 w-7" />
                     </div>
 
-                    <h3 className="text-2xl font-bold mb-3">Create a custom website</h3>
+                    <h3 className="text-2xl font-bold mb-3">
+                      Create a custom website
+                    </h3>
 
                     <p className="text-gray-600 mb-6">
-                      Manually design and customize your website. Perfect for those who want complete control over their
-                      site's appearance.
+                      Manually design and customize your website. Perfect for
+                      those who want complete control over their site's
+                      appearance.
                     </p>
 
                     <ul className="space-y-3 mb-8">
@@ -215,7 +251,10 @@ export default function SelectWebsite() {
                 </motion.div>
               </motion.div>
 
-              <motion.div variants={itemVariants} className="max-w-2xl mx-auto text-center">
+              <motion.div
+                variants={itemVariants}
+                className="max-w-2xl mx-auto text-center"
+              >
                 <p className="text-gray-500 mb-4">
                   Need help deciding? Check out our{" "}
                   <a href="#" className="text-blue-600 hover:underline">
@@ -233,7 +272,26 @@ export default function SelectWebsite() {
         )}
       </div>
 
-      {isModalOpen && <CreateCustomModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />}
+      {isModalOpen && (
+        <CreateCustomModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
+
+      <WordPressTemplateModal
+        isOpen={isWordpressTemplateModalOpen}
+        onClose={() => setIsWordpressTemplateModalOpen(false)}
+        onTemplateSelect={() => setIsWordpressModalOpen(true)}
+        selectedTemplate={selectedTemplate}
+        setSelectedTemplate={setSelectedTemplate}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        categoryFilter={categoryFilter}
+        setCategoryFilter={setCategoryFilter}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+      />
 
       <WordPressSetupModal
         isOpen={isWordpressModalOpen}
@@ -244,5 +302,5 @@ export default function SelectWebsite() {
         formData={wordpressFormData}
       />
     </>
-  )
+  );
 }

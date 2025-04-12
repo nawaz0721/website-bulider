@@ -1,25 +1,44 @@
-"use client"
+"use client";
 
-import { ArrowRight, Check, Layers, Paintbrush, Code, Star, ArrowDown } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Link } from "react-router-dom"
-import { motion } from "framer-motion"
-import banner from "../assets/website-builder.jpeg"
-import portfolio from "../assets/portfolio.jpg"
-import commerce from "../assets/E-Commerce.jpg"
-import business from "../assets/Business Website.jpeg"
-import Header from "@/components/Header"
-import Cookies from "js-cookie"
+import {
+  ArrowRight,
+  Check,
+  Layers,
+  Paintbrush,
+  Code,
+  Star,
+  ArrowDown,
+  Twitter,
+  Facebook,
+  Instagram,
+  Github,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import banner from "../assets/website-builder.jpeg";
+import portfolio from "../assets/portfolio.jpg";
+import commerce from "../assets/E-Commerce.jpg";
+import business from "../assets/Business Website.jpeg";
+import Header from "@/components/Header";
+import Cookies from "js-cookie";
 
 export default function HomeComponent() {
-  const authToken = Cookies.get("authToken") // Check if user is authenticated
+  const authToken = Cookies.get("authToken"); // Check if user is authenticated
 
   // Animation variants
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
-  }
+  };
 
   const staggerContainer = {
     hidden: { opacity: 0 },
@@ -29,7 +48,7 @@ export default function HomeComponent() {
         staggerChildren: 0.2,
       },
     },
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
@@ -43,7 +62,12 @@ export default function HomeComponent() {
           <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-blue-100 opacity-50 blur-3xl"></div>
           <div className="absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-purple-100 opacity-40 blur-3xl"></div>
 
-          <motion.div initial="hidden" animate="visible" variants={fadeIn} className="container mx-auto">
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={fadeIn}
+            className="container mx-auto"
+          >
             <div className="grid gap-10 md:grid-cols-2 md:gap-16">
               <div className="flex flex-col justify-center space-y-6">
                 <div>
@@ -55,8 +79,9 @@ export default function HomeComponent() {
                   </h1>
                 </div>
                 <p className="max-w-[600px] text-gray-600 text-lg md:text-xl leading-relaxed">
-                  Create stunning, professional websites with our drag-and-drop builder. Choose from templates,
-                  customize to your needs, and publish in minutes.
+                  Create stunning, professional websites with our drag-and-drop
+                  builder. Choose from templates, customize to your needs, and
+                  publish in minutes.
                 </p>
                 <div className="flex flex-col gap-3 min-[400px]:flex-row pt-2">
                   {!authToken && (
@@ -94,11 +119,17 @@ export default function HomeComponent() {
                 <div className="flex items-center gap-3 pt-4">
                   <div className="flex -space-x-2">
                     {[1, 2, 3, 4].map((i) => (
-                      <div key={i} className={`h-8 w-8 rounded-full border-2 border-white bg-gray-${i * 100}`}></div>
+                      <div
+                        key={i}
+                        className={`h-8 w-8 rounded-full border-2 border-white bg-gray-${
+                          i * 100
+                        }`}
+                      ></div>
                     ))}
                   </div>
                   <p className="text-sm text-gray-600">
-                    <span className="font-medium">5,000+</span> websites created by our users
+                    <span className="font-medium">5,000+</span> websites created
+                    by our users
                   </p>
                 </div>
               </div>
@@ -139,7 +170,9 @@ export default function HomeComponent() {
             className="container mx-auto"
           >
             <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">Powerful Features</h2>
+              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
+                Powerful Features
+              </h2>
               <p className="mt-4 text-xl text-gray-600 max-w-2xl mx-auto">
                 Everything you need to build professional websites
               </p>
@@ -158,15 +191,18 @@ export default function HomeComponent() {
                     <div className="mb-4 w-14 h-14 rounded-2xl bg-blue-100 flex items-center justify-center">
                       <Paintbrush className="h-7 w-7 text-blue-600" />
                     </div>
-                    <CardTitle className="text-2xl">Drag & Drop Editor</CardTitle>
+                    <CardTitle className="text-2xl">
+                      Drag & Drop Editor
+                    </CardTitle>
                     <CardDescription className="text-base">
-                      Easily build your website with our intuitive drag and drop interface.
+                      Easily build your website with our intuitive drag and drop
+                      interface.
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <p className="text-gray-600">
-                      No coding required. Simply drag elements onto your page, customize them, and create beautiful
-                      layouts in minutes.
+                      No coding required. Simply drag elements onto your page,
+                      customize them, and create beautiful layouts in minutes.
                     </p>
                     <ul className="mt-4 space-y-2">
                       <li className="flex items-center text-gray-700">
@@ -188,14 +224,18 @@ export default function HomeComponent() {
                     <div className="mb-4 w-14 h-14 rounded-2xl bg-purple-100 flex items-center justify-center">
                       <Layers className="h-7 w-7 text-purple-600" />
                     </div>
-                    <CardTitle className="text-2xl">Professional Templates</CardTitle>
+                    <CardTitle className="text-2xl">
+                      Professional Templates
+                    </CardTitle>
                     <CardDescription className="text-base">
-                      Choose from a variety of professionally designed templates.
+                      Choose from a variety of professionally designed
+                      templates.
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <p className="text-gray-600">
-                      Start with a template and customize it to match your brand. Portfolio, e-commerce, blog, and more.
+                      Start with a template and customize it to match your
+                      brand. Portfolio, e-commerce, blog, and more.
                     </p>
                     <ul className="mt-4 space-y-2">
                       <li className="flex items-center text-gray-700">
@@ -224,8 +264,8 @@ export default function HomeComponent() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-gray-600">
-                      Premium users can export their website code to host anywhere or further customize with their own
-                      development.
+                      Premium users can export their website code to host
+                      anywhere or further customize with their own development.
                     </p>
                     <ul className="mt-4 space-y-2">
                       <li className="flex items-center text-gray-700">
@@ -254,9 +294,12 @@ export default function HomeComponent() {
             className="container mx-auto"
           >
             <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">Ready-to-Use Templates</h2>
+              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
+                Ready-to-Use Templates
+              </h2>
               <p className="mt-4 text-xl text-gray-600 max-w-2xl mx-auto">
-                Start with a professional template and customize it to your needs
+                Start with a professional template and customize it to your
+                needs
               </p>
             </div>
 
@@ -282,14 +325,17 @@ export default function HomeComponent() {
                   </div>
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-2xl">Personal Portfolio</CardTitle>
+                      <CardTitle className="text-2xl">
+                        Personal Portfolio
+                      </CardTitle>
                       <div className="flex items-center">
                         <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
                         <span className="ml-1 text-sm font-medium">4.9</span>
                       </div>
                     </div>
                     <CardDescription className="text-base">
-                      Showcase your work and skills with this modern portfolio template.
+                      Showcase your work and skills with this modern portfolio
+                      template.
                     </CardDescription>
                   </CardHeader>
                   <CardFooter className="flex flex-col gap-3">
@@ -328,14 +374,17 @@ export default function HomeComponent() {
                   </div>
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-2xl">E-commerce Store</CardTitle>
+                      <CardTitle className="text-2xl">
+                        E-commerce Store
+                      </CardTitle>
                       <div className="flex items-center">
                         <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
                         <span className="ml-1 text-sm font-medium">4.8</span>
                       </div>
                     </div>
                     <CardDescription className="text-base">
-                      Sell products online with this complete e-commerce template.
+                      Sell products online with this complete e-commerce
+                      template.
                     </CardDescription>
                   </CardHeader>
                   <CardFooter className="flex flex-col gap-3">
@@ -343,7 +392,9 @@ export default function HomeComponent() {
                       <span className="px-2 py-1 bg-gray-100 rounded-full text-xs font-medium text-gray-700">
                         E-commerce
                       </span>
-                      <span className="px-2 py-1 bg-gray-100 rounded-full text-xs font-medium text-gray-700">Shop</span>
+                      <span className="px-2 py-1 bg-gray-100 rounded-full text-xs font-medium text-gray-700">
+                        Shop
+                      </span>
                       <span className="px-2 py-1 bg-gray-100 rounded-full text-xs font-medium text-gray-700">
                         Products
                       </span>
@@ -369,14 +420,17 @@ export default function HomeComponent() {
                   </div>
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-2xl">Business Website</CardTitle>
+                      <CardTitle className="text-2xl">
+                        Business Website
+                      </CardTitle>
                       <div className="flex items-center">
                         <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
                         <span className="ml-1 text-sm font-medium">4.7</span>
                       </div>
                     </div>
                     <CardDescription className="text-base">
-                      Present your business professionally with this corporate template.
+                      Present your business professionally with this corporate
+                      template.
                     </CardDescription>
                   </CardHeader>
                   <CardFooter className="flex flex-col gap-3">
@@ -416,7 +470,10 @@ export default function HomeComponent() {
         </section>
 
         {/* Pricing Section */}
-        <section id="pricing" className="p-5 py-20 md:py-28 bg-white relative overflow-hidden">
+        <section
+          id="pricing"
+          className="p-5 py-20 md:py-28 bg-white relative overflow-hidden"
+        >
           {/* Background elements */}
           <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-blue-50 opacity-70 blur-3xl"></div>
           <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-purple-50 opacity-70 blur-3xl"></div>
@@ -429,8 +486,12 @@ export default function HomeComponent() {
             className="container mx-auto relative z-10"
           >
             <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">Simple, Transparent Pricing</h2>
-              <p className="mt-4 text-xl text-gray-600 max-w-2xl mx-auto">Choose the plan that's right for you</p>
+              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
+                Simple, Transparent Pricing
+              </h2>
+              <p className="mt-4 text-xl text-gray-600 max-w-2xl mx-auto">
+                Choose the plan that's right for you
+              </p>
             </div>
 
             <motion.div
@@ -464,7 +525,9 @@ export default function HomeComponent() {
                       </li>
                       <li className="flex items-center">
                         <Check className="mr-3 h-5 w-5 text-green-500" />
-                        <span className="text-gray-700">Drag & drop editor</span>
+                        <span className="text-gray-700">
+                          Drag & drop editor
+                        </span>
                       </li>
                       <li className="flex items-center text-gray-400">
                         <div className="mr-3 h-5 w-5"></div>
@@ -515,7 +578,9 @@ export default function HomeComponent() {
                       </li>
                       <li className="flex items-center">
                         <Check className="mr-3 h-5 w-5 text-green-500" />
-                        <span className="text-gray-700">Advanced editor features</span>
+                        <span className="text-gray-700">
+                          Advanced editor features
+                        </span>
                       </li>
                       <li className="flex items-center">
                         <Check className="mr-3 h-5 w-5 text-green-500" />
@@ -545,13 +610,17 @@ export default function HomeComponent() {
                       <span className="text-5xl font-bold">$49</span>
                       <span className="ml-1 text-xl text-gray-500">/month</span>
                     </div>
-                    <CardDescription className="text-base mt-4">For agencies and advanced developers</CardDescription>
+                    <CardDescription className="text-base mt-4">
+                      For agencies and advanced developers
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="pb-6">
                     <ul className="space-y-4">
                       <li className="flex items-center">
                         <Check className="mr-3 h-5 w-5 text-green-500" />
-                        <span className="text-gray-700">Unlimited websites</span>
+                        <span className="text-gray-700">
+                          Unlimited websites
+                        </span>
                       </li>
                       <li className="flex items-center">
                         <Check className="mr-3 h-5 w-5 text-green-500" />
@@ -567,7 +636,9 @@ export default function HomeComponent() {
                       </li>
                       <li className="flex items-center">
                         <Check className="mr-3 h-5 w-5 text-green-500" />
-                        <span className="text-gray-700">Export code (HTML/CSS/JS)</span>
+                        <span className="text-gray-700">
+                          Export code (HTML/CSS/JS)
+                        </span>
                       </li>
                     </ul>
                   </CardContent>
@@ -584,7 +655,9 @@ export default function HomeComponent() {
 
             {/* FAQ teaser */}
             <div className="mt-16 text-center">
-              <p className="text-gray-600 mb-4">Have questions about our pricing?</p>
+              <p className="text-gray-600 mb-4">
+                Have questions about our pricing?
+              </p>
               <Link to="/faq">
                 <Button
                   variant="outline"
@@ -608,7 +681,9 @@ export default function HomeComponent() {
             className="container mx-auto"
           >
             <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">Loved by Creators Worldwide</h2>
+              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
+                Loved by Creators Worldwide
+              </h2>
               <p className="mt-4 text-xl text-gray-600 max-w-2xl mx-auto">
                 See what our users are saying about WebCraft
               </p>
@@ -639,17 +714,24 @@ export default function HomeComponent() {
                   <CardContent className="pt-6">
                     <div className="mb-4 flex">
                       {[1, 2, 3, 4, 5].map((star) => (
-                        <Star key={star} className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+                        <Star
+                          key={star}
+                          className="h-5 w-5 text-yellow-400 fill-yellow-400"
+                        />
                       ))}
                     </div>
-                    <p className="text-gray-700 italic mb-6">"{testimonial.quote}"</p>
+                    <p className="text-gray-700 italic mb-6">
+                      "{testimonial.quote}"
+                    </p>
                     <div className="flex items-center">
                       <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
                         {testimonial.author.charAt(0)}
                       </div>
                       <div className="ml-3">
                         <p className="font-medium">{testimonial.author}</p>
-                        <p className="text-sm text-gray-500">{testimonial.role}</p>
+                        <p className="text-sm text-gray-500">
+                          {testimonial.role}
+                        </p>
                       </div>
                     </div>
                   </CardContent>
@@ -667,7 +749,8 @@ export default function HomeComponent() {
                 Ready to build your website?
               </h2>
               <p className="text-xl text-white/80 mb-8">
-                Join thousands of creators and businesses building their online presence with WebCraft.
+                Join thousands of creators and businesses building their online
+                presence with WebCraft.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link to={authToken ? "/select-website" : "/register"}>
@@ -702,16 +785,27 @@ export default function HomeComponent() {
                 <Layers className="h-6 w-6 text-blue-600" />
                 <span className="text-xl font-bold">WebCraft</span>
               </div>
-              <p className="text-gray-600">Build beautiful websites without code. Start your free trial today.</p>
+              <p className="text-gray-600">
+                Build beautiful websites without code. Start your free trial
+                today.
+              </p>
               <div className="mt-6 flex gap-4">
-                {["twitter", "facebook", "instagram", "github"].map((social) => (
+                {[
+                  { name: "twitter", icon: <Twitter className="h-5 w-5" /> },
+                  { name: "facebook", icon: <Facebook className="h-5 w-5" /> },
+                  {
+                    name: "instagram",
+                    icon: <Instagram className="h-5 w-5" />,
+                  },
+                  { name: "github", icon: <Github className="h-5 w-5" /> },
+                ].map((social) => (
                   <a
-                    key={social}
-                    href={`#${social}`}
+                    key={social.name}
+                    href={`#${social.name}`}
                     className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors"
+                    aria-label={social.name}
                   >
-                    <span className="sr-only">{social}</span>
-                    <div className="h-5 w-5" />
+                    {social.icon}
                   </a>
                 ))}
               </div>
@@ -720,17 +814,26 @@ export default function HomeComponent() {
               <h3 className="font-semibold text-lg mb-4">Product</h3>
               <ul className="space-y-3">
                 <li>
-                  <Link to="#features" className="text-gray-600 hover:text-blue-600 transition-colors">
+                  <Link
+                    to="#features"
+                    className="text-gray-600 hover:text-blue-600 transition-colors"
+                  >
                     Features
                   </Link>
                 </li>
                 <li>
-                  <Link to="#templates" className="text-gray-600 hover:text-blue-600 transition-colors">
+                  <Link
+                    to="#templates"
+                    className="text-gray-600 hover:text-blue-600 transition-colors"
+                  >
                     Templates
                   </Link>
                 </li>
                 <li>
-                  <Link to="#pricing" className="text-gray-600 hover:text-blue-600 transition-colors">
+                  <Link
+                    to="#pricing"
+                    className="text-gray-600 hover:text-blue-600 transition-colors"
+                  >
                     Pricing
                   </Link>
                 </li>
@@ -740,17 +843,26 @@ export default function HomeComponent() {
               <h3 className="font-semibold text-lg mb-4">Resources</h3>
               <ul className="space-y-3">
                 <li>
-                  <Link to="#" className="text-gray-600 hover:text-blue-600 transition-colors">
+                  <Link
+                    to="#"
+                    className="text-gray-600 hover:text-blue-600 transition-colors"
+                  >
                     Documentation
                   </Link>
                 </li>
                 <li>
-                  <Link to="#" className="text-gray-600 hover:text-blue-600 transition-colors">
+                  <Link
+                    to="#"
+                    className="text-gray-600 hover:text-blue-600 transition-colors"
+                  >
                     Tutorials
                   </Link>
                 </li>
                 <li>
-                  <Link to="#" className="text-gray-600 hover:text-blue-600 transition-colors">
+                  <Link
+                    to="#"
+                    className="text-gray-600 hover:text-blue-600 transition-colors"
+                  >
                     Blog
                   </Link>
                 </li>
@@ -760,17 +872,26 @@ export default function HomeComponent() {
               <h3 className="font-semibold text-lg mb-4">Company</h3>
               <ul className="space-y-3">
                 <li>
-                  <Link to="#" className="text-gray-600 hover:text-blue-600 transition-colors">
+                  <Link
+                    to="#"
+                    className="text-gray-600 hover:text-blue-600 transition-colors"
+                  >
                     About
                   </Link>
                 </li>
                 <li>
-                  <Link to="#" className="text-gray-600 hover:text-blue-600 transition-colors">
+                  <Link
+                    to="#"
+                    className="text-gray-600 hover:text-blue-600 transition-colors"
+                  >
                     Contact
                   </Link>
                 </li>
                 <li>
-                  <Link to="#" className="text-gray-600 hover:text-blue-600 transition-colors">
+                  <Link
+                    to="#"
+                    className="text-gray-600 hover:text-blue-600 transition-colors"
+                  >
                     Privacy Policy
                   </Link>
                 </li>
@@ -778,10 +899,12 @@ export default function HomeComponent() {
             </div>
           </div>
           <div className="mt-12 pt-8 border-t text-center text-gray-500">
-            <p>&copy; {new Date().getFullYear()} WebCraft. All rights reserved.</p>
+            <p>
+              &copy; {new Date().getFullYear()} WebCraft. All rights reserved.
+            </p>
           </div>
         </div>
       </footer>
     </div>
-  )
+  );
 }
