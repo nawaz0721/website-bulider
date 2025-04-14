@@ -17,6 +17,11 @@ import {
   Power,
   PowerOff,
   Package,
+  CreditCard,
+  Tag,
+  TruckIcon,
+  RotateCcw,
+  FileText,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -84,6 +89,18 @@ export default function WordpressTemplateDetails() {
   const [showAllItemsModal, setShowAllItemsModal] = useState(false);
   const [allMenuItems, setAllMenuItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [products, setProducts] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [coupons, setCoupons] = useState([]);
+  const [shippingClasses, setShippingClasses] = useState([]);
+  const [orderNotes, setOrderNotes] = useState([]);
+  const [orderRefunds, setOrderRefunds] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedCoupon, setSelectedCoupon] = useState(null);
+  const [selectedShippingClass, setSelectedShippingClass] = useState(null);
+  const [productsLoading, setProductsLoading] = useState(false)
+  const [showProductModal, setShowProductModal] = useState(false)
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -239,7 +256,86 @@ export default function WordpressTemplateDetails() {
     { display: "Pages", value: "pages" },
     { display: "Plugin", value: "plugin" },
     { display: "Menu", value: "menu" },
-    { display: "Custom html & css", value: "custom-html-css" } // URL-friendly format
+    { display: "Custom html & css", value: "custom-html-css" }, // URL-friendly format
+    { display: "Shop", value: "shop" },
+  ];
+
+  // Sample products data
+  const productsItems = [
+    {
+      id: "1",
+      name: "Premium T-Shirt",
+      price: "$29.99",
+      stock_status: "instock",
+      stock_quantity: 45,
+      sku: "TS-001",
+    },
+    {
+      id: "2",
+      name: "Denim Jeans",
+      price: "$59.99",
+      stock_status: "instock",
+      stock_quantity: 23,
+      sku: "DJ-002",
+    },
+    {
+      id: "3",
+      name: "Leather Wallet",
+      price: "$39.99",
+      stock_status: "outofstock",
+      stock_quantity: 0,
+      sku: "LW-003",
+    },
+  ];
+
+  // Sample orders data
+  const Itemsorders = [
+    {
+      id: "1001",
+      customer: "Ahmed Nawaz",
+      date: "2023-04-12",
+      status: "processing",
+      total: "$129.97",
+    },
+    {
+      id: "1002",
+      customer: "Abdullah",
+      date: "2023-04-11",
+      status: "completed",
+      total: "$59.99",
+    },
+    {
+      id: "1003",
+      customer: "Jawwad",
+      date: "2023-04-10",
+      status: "on-hold",
+      total: "$89.98",
+    },
+  ];
+
+  // Sample coupons data
+  const Itemscoupons = [
+    {
+      id: "SUMMER20",
+      description: "Summer Sale 20% Off",
+      discount_type: "percent",
+      amount: "20%",
+      expiry_date: "2023-08-31",
+    },
+    {
+      id: "WELCOME10",
+      description: "New Customer Discount",
+      discount_type: "percent",
+      amount: "10%",
+      expiry_date: "2023-12-31",
+    },
+    {
+      id: "FREESHIP",
+      description: "Free Shipping",
+      discount_type: "fixed_cart",
+      amount: "Shipping Cost",
+      expiry_date: "2023-06-30",
+    },
   ];
 
   const [formData, setFormData] = useState({
@@ -844,7 +940,7 @@ export default function WordpressTemplateDetails() {
     const lastSegment = pathParts[pathParts.length - 1];
 
     // Check if the last segment matches any of our tabs
-    const validTabs = ["pages", "plugin", "menu", "custom-html-css"];
+    const validTabs = ["pages", "plugin", "menu", "custom-html-css", "shop"];
     if (validTabs.includes(lastSegment)) {
       setActiveTab(lastSegment);
 
@@ -959,7 +1055,6 @@ export default function WordpressTemplateDetails() {
       </CardFooter>
     </Card>
   );
-  
 
   return (
     <SidebarProvider>
@@ -1495,8 +1590,7 @@ export default function WordpressTemplateDetails() {
                         <span className="text-sm">{menu.name}</span>
                         <Trash2 className="h-4 w-4 mr-2 text-red-500 ml-auto" />
                       </button>
-                    )
-                    )
+                    ))
                   ) : (
                     <div className="text-sm text-gray-500 p-2">
                       No menus created
@@ -1513,6 +1607,58 @@ export default function WordpressTemplateDetails() {
                   No custom HTML/CSS added
                 </div>
               </>
+            )}
+
+            {activeTab === "shop" && (
+              <Tabs
+                value={activeSubTab}
+                onValueChange={setActiveSubTab}
+                className="flex flex-col"
+              >
+                <h3 className="font-medium mb-2 px-2">Shop Components</h3>
+                <TabsList className="flex flex-col items-start h-auto p-0 bg-transparent">
+                  {[
+                    {
+                      id: "products",
+                      label: "Products",
+                      icon: <Package className="h-4 w-4 mr-2" />,
+                    },
+                    {
+                      id: "orders",
+                      label: "Orders",
+                      icon: <CreditCard className="h-4 w-4 mr-2" />,
+                    },
+                    {
+                      id: "coupons",
+                      label: "Coupons",
+                      icon: <Tag className="h-4 w-4 mr-2" />,
+                    },
+                    {
+                      id: "shipping",
+                      label: "Shipping",
+                      icon: <TruckIcon className="h-4 w-4 mr-2" />,
+                    },
+                    {
+                      id: "refunds",
+                      label: "Refunds",
+                      icon: <RotateCcw className="h-4 w-4 mr-2" />,
+                    },
+                  ].map((tab) => (
+                    <TabsTrigger
+                      key={tab.id}
+                      value={tab.id}
+                      className={`w-full justify-start px-2 py-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-600 flex items-center ${
+                        activeSubTab === tab.id
+                          ? "border-l-2 border-blue-500"
+                          : ""
+                      }`}
+                    >
+                      {tab.icon}
+                      {tab.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
             )}
           </div>
 
@@ -1818,8 +1964,357 @@ export default function WordpressTemplateDetails() {
                 </div>
               </div>
             )}
+
+{activeTab === "shop" && (
+          <div className="flex-1 p-6 overflow-auto">
+            {/* Products Tab */}
+            {activeSubTab === "products" && (
+              <>
+                <div className="flex justify-between items-center mb-6">
+                  <div className="relative w-96">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input placeholder="Search products..." className="pl-10" />
+                  </div>
+                  <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => setShowProductModal(true)}>
+                    <Plus className="h-4 w-4 mr-2" /> Add New Product
+                  </Button>
+                </div>
+
+                {productsLoading ? (
+                  <div className="flex justify-center items-center h-64">
+                    <div className="flex flex-col items-center gap-2">
+                      <RefreshCw className="h-8 w-8 text-blue-500 animate-spin" />
+                      <p className="text-gray-500">Loading products...</p>
+                    </div>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>ID</TableHead>
+                        <TableHead>Product</TableHead>
+                        <TableHead>SKU</TableHead>
+                        <TableHead>Price</TableHead>
+                        <TableHead>Stock</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {productsItems.length > 0 ? (
+                        productsItems.map((product) => (
+                          <TableRow key={product.id}>
+                            <TableCell>{product.id}</TableCell>
+                            <TableCell className="font-medium">{product.name}</TableCell>
+                            <TableCell>{product.sku}</TableCell>
+                            <TableCell>{product.price}</TableCell>
+                            <TableCell>
+                              <Badge variant={product.stock_status === "instock" ? "default" : "outline"}>
+                                {product.stock_status === "instock"
+                                  ? `In Stock (${product.stock_quantity})`
+                                  : "Out of Stock"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex gap-2">
+                                <Button variant="ghost" size="sm" className="h-8 px-2">
+                                  <Edit className="h-4 w-4 text-green-600" />
+                                </Button>
+                                <Button variant="ghost" size="sm" className="h-8 px-2">
+                                  <Trash2 className="h-4 w-4 text-red-500" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center text-gray-500 py-4">
+                            No products found. Create your first product.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                )}
+              </>
+            )}
+
+            {/* Shop Tab */}
+            {activeSubTab === "orders" && (
+              <>
+                <div className="flex justify-between items-center mb-6">
+                  <div className="relative w-96">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input placeholder="Search orders..." className="pl-10" />
+                  </div>
+                  <Button className="bg-blue-600 hover:bg-blue-700">
+                    <Plus className="h-4 w-4 mr-2" /> Create Order
+                  </Button>
+                </div>
+
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Order</TableHead>
+                      <TableHead>Customer</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Total</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {Itemsorders.map((order) => (
+                      <TableRow key={order.id}>
+                        <TableCell>#{order.id}</TableCell>
+                        <TableCell className="font-medium">
+                          {order.customer}
+                        </TableCell>
+                        <TableCell>{order.date}</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              order.status === "completed"
+                                ? "default"
+                                : order.status === "processing"
+                                ? "secondary"
+                                : "outline"
+                            }
+                          >
+                            {order.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{order.total}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 px-2"
+                            >
+                              <Edit className="h-4 w-4 text-green-600" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 px-2"
+                            >
+                              <FileText className="h-4 w-4 text-blue-600" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </>
+            )}
+
+            {/* Coupons Tab */}
+            {activeSubTab === "coupons" && (
+              <>
+                <div className="flex justify-between items-center mb-6">
+                  <div className="relative w-96">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input placeholder="Search coupons..." className="pl-10" />
+                  </div>
+                  <Button className="bg-blue-600 hover:bg-blue-700">
+                    <Plus className="h-4 w-4 mr-2" /> Add New Coupon
+                  </Button>
+                </div>
+
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Code</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Discount Type</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Expiry Date</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {Itemscoupons.map((coupon) => (
+                      <TableRow key={coupon.id}>
+                        <TableCell className="font-medium">
+                          {coupon.id}
+                        </TableCell>
+                        <TableCell>{coupon.description}</TableCell>
+                        <TableCell>{coupon.discount_type}</TableCell>
+                        <TableCell>{coupon.amount}</TableCell>
+                        <TableCell>{coupon.expiry_date}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 px-2"
+                            >
+                              <Edit className="h-4 w-4 text-green-600" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 px-2"
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </>
+            )}
+
+            {/* Shipping Tab */}
+            {activeSubTab === "shipping" && (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl font-semibold">Shipping Classes</h2>
+                  <Button className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2">
+                    <Plus className="h-4 w-4" />
+                    Add Shipping Class
+                  </Button>
+                </div>
+                <Card className="p-6">
+                  <CardTitle>Shipping Zones</CardTitle>
+                  <CardDescription className="mb-4">
+                    Configure shipping zones and methods for your store
+                  </CardDescription>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Region</TableHead>
+                        <TableHead>Methods</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell className="font-medium">Domestic</TableCell>
+                        <TableCell>United States</TableCell>
+                        <TableCell>Free shipping, Flat rate</TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 px-2"
+                            >
+                              <Edit className="h-4 w-4 text-green-600" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 px-2"
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium">
+                          International
+                        </TableCell>
+                        <TableCell>Rest of World</TableCell>
+                        <TableCell>Flat rate</TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 px-2"
+                            >
+                              <Edit className="h-4 w-4 text-green-600" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 px-2"
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </Card>
+              </div>
+            )}
+
+            {/* Refunds Tab */}
+            {activeSubTab === "refunds" && (
+              <>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-semibold">Order Refunds</h2>
+                  <div className="relative w-96">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input placeholder="Search refunds..." className="pl-10" />
+                  </div>
+                </div>
+
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Refund ID</TableHead>
+                      <TableHead>Order</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Reason</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell className="font-medium">RF1001</TableCell>
+                      <TableCell>#1002</TableCell>
+                      <TableCell>2023-04-15</TableCell>
+                      <TableCell>$59.99</TableCell>
+                      <TableCell>Customer request</TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-2"
+                          >
+                            <FileText className="h-4 w-4 text-blue-600" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">RF1002</TableCell>
+                      <TableCell>#1001</TableCell>
+                      <TableCell>2023-04-14</TableCell>
+                      <TableCell>$29.99</TableCell>
+                      <TableCell>Damaged product</TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-2"
+                          >
+                            <FileText className="h-4 w-4 text-blue-600" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </>
+            )}
           </div>
+)}
         </div>
+      </div>
       </div>
     </SidebarProvider>
   );
