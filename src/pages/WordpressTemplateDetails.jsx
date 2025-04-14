@@ -89,18 +89,46 @@ export default function WordpressTemplateDetails() {
   const [showAllItemsModal, setShowAllItemsModal] = useState(false);
   const [allMenuItems, setAllMenuItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [products, setProducts] = useState([]);
-  const [orders, setOrders] = useState([]);
-  const [coupons, setCoupons] = useState([]);
-  const [shippingClasses, setShippingClasses] = useState([]);
-  const [orderNotes, setOrderNotes] = useState([]);
-  const [orderRefunds, setOrderRefunds] = useState([]);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [selectedOrder, setSelectedOrder] = useState(null);
-  const [selectedCoupon, setSelectedCoupon] = useState(null);
-  const [selectedShippingClass, setSelectedShippingClass] = useState(null);
-  const [productsLoading, setProductsLoading] = useState(false)
-  const [showProductModal, setShowProductModal] = useState(false)
+  const [productsLoading, setProductsLoading] = useState(false);
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [showOrderModal, setShowOrderModal] = useState(false);
+  const [showCouponModal, setShowCouponModal] = useState(false);
+
+  const [productFormData, setProductFormData] = useState({
+    name: "",
+    description: "",
+    regular_price: "",
+    sale_price: "",
+    sku: "",
+    stock_quantity: "",
+    categories: [],
+    images: [],
+  });
+
+  const [orderFormData, setOrderFormData] = useState({
+    customer_id: "",
+    payment_method: "bacs",
+    payment_method_title: "Direct Bank Transfer",
+    status: "pending",
+    line_items: [],
+    shipping: {
+      first_name: "",
+      last_name: "",
+      address_1: "",
+      city: "",
+      state: "",
+      postcode: "",
+      country: "",
+    },
+  });
+
+  const [couponFormData, setCouponFormData] = useState({
+    code: "",
+    discount_type: "percent",
+    amount: "",
+    description: "",
+    expiry_date: "",
+  });
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -1056,6 +1084,96 @@ export default function WordpressTemplateDetails() {
     </Card>
   );
 
+  const handleAddProduct = async () => {
+    setIsLoading(true);
+    try {
+      const result = await apiCall("wc_product_create", productFormData);
+      if (!result.error) {
+        toast.success("Product added successfully");
+        setShowProductModal(false);
+        setProductFormData({
+          name: "",
+          description: "",
+          regular_price: "",
+          sale_price: "",
+          sku: "",
+          stock_quantity: "",
+          categories: [],
+          images: [],
+        });
+        fetchProducts(); // Refresh product list
+      } else {
+        toast.error("Failed to add product");
+      }
+    } catch (error) {
+      console.error("Error adding product:", error);
+      toast.error("Failed to add product");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCreateOrder = async () => {
+    setIsLoading(true);
+    try {
+      const result = await apiCall("wc_order_create", orderFormData);
+      if (!result.error) {
+        toast.success("Order created successfully");
+        setShowOrderModal(false);
+        setOrderFormData({
+          customer_id: "",
+          payment_method: "bacs",
+          payment_method_title: "Direct Bank Transfer",
+          status: "pending",
+          line_items: [],
+          shipping: {
+            first_name: "",
+            last_name: "",
+            address_1: "",
+            city: "",
+            state: "",
+            postcode: "",
+            country: "",
+          },
+        });
+        fetchOrders(); // Refresh order list
+      } else {
+        toast.error("Failed to create order");
+      }
+    } catch (error) {
+      console.error("Error creating order:", error);
+      toast.error("Failed to create order");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAddCoupon = async () => {
+    setIsLoading(true);
+    try {
+      const result = await apiCall("wc_coupon_create", couponFormData);
+      if (!result.error) {
+        toast.success("Coupon added successfully");
+        setShowCouponModal(false);
+        setCouponFormData({
+          code: "",
+          discount_type: "percent",
+          amount: "",
+          description: "",
+          expiry_date: "",
+        });
+        fetchCoupons(); // Refresh coupon list
+      } else {
+        toast.error("Failed to add coupon");
+      }
+    } catch (error) {
+      console.error("Error adding coupon:", error);
+      toast.error("Failed to add coupon");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <SidebarProvider>
       <Navbar />
@@ -1488,6 +1606,468 @@ export default function WordpressTemplateDetails() {
                       ? "Already Installed"
                       : "Install Plugin"}
                   </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* show product Modal */}
+        <Dialog open={showProductModal} onOpenChange={setShowProductModal}>
+          <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-auto bg-white">
+            <DialogHeader>
+              <DialogTitle>Add New Product</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Product Name*
+                  </label>
+                  <Input
+                    value={productFormData.name}
+                    onChange={(e) =>
+                      setProductFormData({
+                        ...productFormData,
+                        name: e.target.value,
+                      })
+                    }
+                    placeholder="Enter product name"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">SKU</label>
+                  <Input
+                    value={productFormData.sku}
+                    onChange={(e) =>
+                      setProductFormData({
+                        ...productFormData,
+                        sku: e.target.value,
+                      })
+                    }
+                    placeholder="Enter SKU"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Description
+                </label>
+                <textarea
+                  className="w-full border rounded p-2 min-h-32"
+                  value={productFormData.description}
+                  onChange={(e) =>
+                    setProductFormData({
+                      ...productFormData,
+                      description: e.target.value,
+                    })
+                  }
+                  placeholder="Enter product description"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Regular Price*
+                  </label>
+                  <Input
+                    type="number"
+                    value={productFormData.regular_price}
+                    onChange={(e) =>
+                      setProductFormData({
+                        ...productFormData,
+                        regular_price: e.target.value,
+                      })
+                    }
+                    placeholder="Enter price"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Sale Price
+                  </label>
+                  <Input
+                    type="number"
+                    value={productFormData.sale_price}
+                    onChange={(e) =>
+                      setProductFormData({
+                        ...productFormData,
+                        sale_price: e.target.value,
+                      })
+                    }
+                    placeholder="Enter sale price"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Stock Quantity
+                </label>
+                <Input
+                  type="number"
+                  value={productFormData.stock_quantity}
+                  onChange={(e) =>
+                    setProductFormData({
+                      ...productFormData,
+                      stock_quantity: e.target.value,
+                    })
+                  }
+                  placeholder="Enter quantity"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Product Images
+                </label>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Upload Image
+                  </Button>
+                  <span className="text-sm text-gray-500">Max 5 images</span>
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setShowProductModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleAddProduct}
+                disabled={
+                  !productFormData.name ||
+                  !productFormData.regular_price ||
+                  isLoading
+                }
+              >
+                {isLoading ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  "Add Product"
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* show order modal */}
+        <Dialog open={showOrderModal} onOpenChange={setShowOrderModal}>
+          <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-auto bg-white">
+            <DialogHeader>
+              <DialogTitle>Create New Order</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Customer
+                  </label>
+                  <Select
+                    value={orderFormData.customer_id}
+                    onValueChange={(value) =>
+                      setOrderFormData({ ...orderFormData, customer_id: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select customer" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white">
+                      <SelectItem value="guest">Guest Customer</SelectItem>
+                      {/* You would map through customers here */}
+                      <SelectItem value="1">
+                        John Doe (john@example.com)
+                      </SelectItem>
+                      <SelectItem value="2">
+                        Jane Smith (jane@example.com)
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Order Status
+                  </label>
+                  <Select
+                    value={orderFormData.status}
+                    onValueChange={(value) =>
+                      setOrderFormData({ ...orderFormData, status: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white">
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="processing">Processing</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                      <SelectItem value="refunded">Refunded</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Payment Method
+                </label>
+                <Select
+                  value={orderFormData.payment_method}
+                  onValueChange={(value) =>
+                    setOrderFormData({
+                      ...orderFormData,
+                      payment_method: value,
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select payment method" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white">
+                    <SelectItem value="bacs">Direct Bank Transfer</SelectItem>
+                    <SelectItem value="cheque">Check Payments</SelectItem>
+                    <SelectItem value="cod">Cash on Delivery</SelectItem>
+                    <SelectItem value="paypal">PayPal</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="border rounded-lg p-4">
+                <h3 className="font-medium mb-3">Products</h3>
+                <div className="space-y-3">
+                  {/* You would map through selected products here */}
+                  <div className="flex items-center justify-between border-b pb-2">
+                    <div>
+                      <p className="font-medium">Sample Product</p>
+                      <p className="text-sm text-gray-500">$19.99 × 1</p>
+                    </div>
+                    <Button variant="ghost" size="sm" className="text-red-500">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  <Button variant="outline" size="sm" className="mt-2">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Product
+                  </Button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="border rounded-lg p-4">
+                  <h3 className="font-medium mb-3">Billing Address</h3>
+                  <div className="space-y-2">
+                    <Input placeholder="First Name" />
+                    <Input placeholder="Last Name" />
+                    <Input placeholder="Company (optional)" />
+                    <Input placeholder="Address Line 1" />
+                    <Input placeholder="Address Line 2 (optional)" />
+                    <Input placeholder="City" />
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input placeholder="State" />
+                      <Input placeholder="Postcode" />
+                    </div>
+                    <Input placeholder="Country" />
+                    <Input placeholder="Email" />
+                    <Input placeholder="Phone" />
+                  </div>
+                </div>
+                <div className="border rounded-lg p-4">
+                  <h3 className="font-medium mb-3">Shipping Address</h3>
+                  <div className="space-y-2">
+                    <Input placeholder="First Name" />
+                    <Input placeholder="Last Name" />
+                    <Input placeholder="Company (optional)" />
+                    <Input placeholder="Address Line 1" />
+                    <Input placeholder="Address Line 2 (optional)" />
+                    <Input placeholder="City" />
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input placeholder="State" />
+                      <Input placeholder="Postcode" />
+                    </div>
+                    <Input placeholder="Country" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setShowOrderModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleCreateOrder}
+                disabled={!orderFormData.customer_id || isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  "Create Order"
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Show coupon modal */}
+        <Dialog open={showCouponModal} onOpenChange={setShowCouponModal}>
+          <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-auto bg-white">
+            <DialogHeader>
+              <DialogTitle>Add New Coupon</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Coupon Code*
+                </label>
+                <Input
+                  value={couponFormData.code}
+                  onChange={(e) =>
+                    setCouponFormData({
+                      ...couponFormData,
+                      code: e.target.value,
+                    })
+                  }
+                  placeholder="Enter coupon code"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Discount Type*
+                  </label>
+                  <Select
+                    value={couponFormData.discount_type}
+                    onValueChange={(value) =>
+                      setCouponFormData({
+                        ...couponFormData,
+                        discount_type: value,
+                      })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white">
+                      <SelectItem value="percent">
+                        Percentage Discount
+                      </SelectItem>
+                      <SelectItem value="fixed_cart">
+                        Fixed Cart Discount
+                      </SelectItem>
+                      <SelectItem value="fixed_product">
+                        Fixed Product Discount
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Coupon Amount*
+                  </label>
+                  <Input
+                    type="number"
+                    value={couponFormData.amount}
+                    onChange={(e) =>
+                      setCouponFormData({
+                        ...couponFormData,
+                        amount: e.target.value,
+                      })
+                    }
+                    placeholder="Enter amount"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Description
+                </label>
+                <Input
+                  value={couponFormData.description}
+                  onChange={(e) =>
+                    setCouponFormData({
+                      ...couponFormData,
+                      description: e.target.value,
+                    })
+                  }
+                  placeholder="Enter description (optional)"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Expiry Date
+                </label>
+                <Input
+                  type="date"
+                  value={couponFormData.expiry_date}
+                  onChange={(e) =>
+                    setCouponFormData({
+                      ...couponFormData,
+                      expiry_date: e.target.value,
+                    })
+                  }
+                />
+              </div>
+
+              <div className="border rounded-lg p-4">
+                <h3 className="font-medium mb-2">Usage Restrictions</h3>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Minimum Spend
+                    </label>
+                    <Input type="number" placeholder="No minimum" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Maximum Spend
+                    </label>
+                    <Input type="number" placeholder="No maximum" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setShowCouponModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleAddCoupon}
+                disabled={
+                  !couponFormData.code || !couponFormData.amount || isLoading
+                }
+              >
+                {isLoading ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  "Add Coupon"
                 )}
               </Button>
             </DialogFooter>
@@ -1965,356 +2545,406 @@ export default function WordpressTemplateDetails() {
               </div>
             )}
 
-{activeTab === "shop" && (
-          <div className="flex-1 p-6 overflow-auto">
-            {/* Products Tab */}
-            {activeSubTab === "products" && (
-              <>
-                <div className="flex justify-between items-center mb-6">
-                  <div className="relative w-96">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input placeholder="Search products..." className="pl-10" />
-                  </div>
-                  <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => setShowProductModal(true)}>
-                    <Plus className="h-4 w-4 mr-2" /> Add New Product
-                  </Button>
-                </div>
-
-                {productsLoading ? (
-                  <div className="flex justify-center items-center h-64">
-                    <div className="flex flex-col items-center gap-2">
-                      <RefreshCw className="h-8 w-8 text-blue-500 animate-spin" />
-                      <p className="text-gray-500">Loading products...</p>
+            {activeTab === "shop" && (
+              <div className="flex-1 p-6 overflow-auto">
+                {/* Products Tab */}
+                {(activeSubTab === "products" || activeSubTab === "") && (
+                  <>
+                    <div className="flex justify-between items-center mb-6">
+                      <div className="relative w-96">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          placeholder="Search products..."
+                          className="pl-10"
+                        />
+                      </div>
+                      {activeSubTab.startsWith("product") && (
+                        <Button
+                          className="bg-blue-600 hover:bg-blue-700"
+                          onClick={() => setShowProductModal(true)}
+                        >
+                          <Plus className="h-4 w-4 mr-2" /> Add New Product
+                        </Button>
+                      )}
                     </div>
-                  </div>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>ID</TableHead>
-                        <TableHead>Product</TableHead>
-                        <TableHead>SKU</TableHead>
-                        <TableHead>Price</TableHead>
-                        <TableHead>Stock</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {productsItems.length > 0 ? (
-                        productsItems.map((product) => (
-                          <TableRow key={product.id}>
-                            <TableCell>{product.id}</TableCell>
-                            <TableCell className="font-medium">{product.name}</TableCell>
-                            <TableCell>{product.sku}</TableCell>
-                            <TableCell>{product.price}</TableCell>
+
+                    {productsLoading ? (
+                      <div className="flex justify-center items-center h-64">
+                        <div className="flex flex-col items-center gap-2">
+                          <RefreshCw className="h-8 w-8 text-blue-500 animate-spin" />
+                          <p className="text-gray-500">Loading products...</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>ID</TableHead>
+                            <TableHead>Product</TableHead>
+                            <TableHead>SKU</TableHead>
+                            <TableHead>Price</TableHead>
+                            <TableHead>Stock</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {productsItems.length > 0 ? (
+                            productsItems.map((product) => (
+                              <TableRow key={product.id}>
+                                <TableCell>{product.id}</TableCell>
+                                <TableCell className="font-medium">
+                                  {product.name}
+                                </TableCell>
+                                <TableCell>{product.sku}</TableCell>
+                                <TableCell>{product.price}</TableCell>
+                                <TableCell>
+                                  <Badge
+                                    variant={
+                                      product.stock_status === "instock"
+                                        ? "default"
+                                        : "outline"
+                                    }
+                                  >
+                                    {product.stock_status === "instock"
+                                      ? `In Stock (${product.stock_quantity})`
+                                      : "Out of Stock"}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-8 px-2"
+                                    >
+                                      <Edit className="h-4 w-4 text-green-600" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-8 px-2"
+                                    >
+                                      <Trash2 className="h-4 w-4 text-red-500" />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          ) : (
+                            <TableRow>
+                              <TableCell
+                                colSpan={6}
+                                className="text-center text-gray-500 py-4"
+                              >
+                                No products found. Create your first product.
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                    )}
+                  </>
+                )}
+
+                {/* Shop Tab */}
+                {activeSubTab === "orders" && (
+                  <>
+                    <div className="flex justify-between items-center mb-6">
+                      <div className="relative w-96">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          placeholder="Search orders..."
+                          className="pl-10"
+                        />
+                      </div>
+                      {activeSubTab.startsWith("order") && (
+                        <Button
+                          className="bg-blue-600 hover:bg-blue-700"
+                          onClick={() => setShowOrderModal(true)}
+                        >
+                          <Plus className="h-4 w-4 mr-2" /> Create Order
+                        </Button>
+                      )}
+                    </div>
+
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Order</TableHead>
+                          <TableHead>Customer</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Total</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {Itemsorders.map((order) => (
+                          <TableRow key={order.id}>
+                            <TableCell>#{order.id}</TableCell>
+                            <TableCell className="font-medium">
+                              {order.customer}
+                            </TableCell>
+                            <TableCell>{order.date}</TableCell>
                             <TableCell>
-                              <Badge variant={product.stock_status === "instock" ? "default" : "outline"}>
-                                {product.stock_status === "instock"
-                                  ? `In Stock (${product.stock_quantity})`
-                                  : "Out of Stock"}
+                              <Badge
+                                variant={
+                                  order.status === "completed"
+                                    ? "default"
+                                    : order.status === "processing"
+                                    ? "secondary"
+                                    : "outline"
+                                }
+                              >
+                                {order.status}
                               </Badge>
                             </TableCell>
+                            <TableCell>{order.total}</TableCell>
                             <TableCell>
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="h-8 px-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 px-2"
+                                >
                                   <Edit className="h-4 w-4 text-green-600" />
                                 </Button>
-                                <Button variant="ghost" size="sm" className="h-8 px-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 px-2"
+                                >
+                                  <FileText className="h-4 w-4 text-blue-600" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </>
+                )}
+
+                {/* Coupons Tab */}
+                {activeSubTab === "coupons" && (
+                  <>
+                    <div className="flex justify-between items-center mb-6">
+                      <div className="relative w-96">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          placeholder="Search coupons..."
+                          className="pl-10"
+                        />
+                      </div>
+                      {activeSubTab.startsWith("coupon") && (
+                        <Button
+                          className="bg-blue-600 hover:bg-blue-700"
+                          onClick={() => setShowCouponModal(true)}
+                        >
+                          <Plus className="h-4 w-4 mr-2" /> Add New Coupon
+                        </Button>
+                      )}
+                    </div>
+
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Code</TableHead>
+                          <TableHead>Description</TableHead>
+                          <TableHead>Discount Type</TableHead>
+                          <TableHead>Amount</TableHead>
+                          <TableHead>Expiry Date</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {Itemscoupons.map((coupon) => (
+                          <TableRow key={coupon.id}>
+                            <TableCell className="font-medium">
+                              {coupon.id}
+                            </TableCell>
+                            <TableCell>{coupon.description}</TableCell>
+                            <TableCell>{coupon.discount_type}</TableCell>
+                            <TableCell>{coupon.amount}</TableCell>
+                            <TableCell>{coupon.expiry_date}</TableCell>
+                            <TableCell>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 px-2"
+                                >
+                                  <Edit className="h-4 w-4 text-green-600" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 px-2"
+                                >
                                   <Trash2 className="h-4 w-4 text-red-500" />
                                 </Button>
                               </div>
                             </TableCell>
                           </TableRow>
-                        ))
-                      ) : (
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </>
+                )}
+
+                {/* Shipping Tab */}
+                {activeSubTab === "shipping" && (
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                      <h2 className="text-xl font-semibold">
+                        Shipping Classes
+                      </h2>
+                      <Button className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2">
+                        <Plus className="h-4 w-4" />
+                        Add Shipping Class
+                      </Button>
+                    </div>
+                    <Card className="p-6">
+                      <CardTitle>Shipping Zones</CardTitle>
+                      <CardDescription className="mb-4">
+                        Configure shipping zones and methods for your store
+                      </CardDescription>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Region</TableHead>
+                            <TableHead>Methods</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          <TableRow>
+                            <TableCell className="font-medium">
+                              Domestic
+                            </TableCell>
+                            <TableCell>United States</TableCell>
+                            <TableCell>Free shipping, Flat rate</TableCell>
+                            <TableCell>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 px-2"
+                                >
+                                  <Edit className="h-4 w-4 text-green-600" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 px-2"
+                                >
+                                  <Trash2 className="h-4 w-4 text-red-500" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                          <TableRow>
+                            <TableCell className="font-medium">
+                              International
+                            </TableCell>
+                            <TableCell>Rest of World</TableCell>
+                            <TableCell>Flat rate</TableCell>
+                            <TableCell>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 px-2"
+                                >
+                                  <Edit className="h-4 w-4 text-green-600" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 px-2"
+                                >
+                                  <Trash2 className="h-4 w-4 text-red-500" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </Card>
+                  </div>
+                )}
+
+                {/* Refunds Tab */}
+                {activeSubTab === "refunds" && (
+                  <>
+                    <div className="flex justify-between items-center mb-6">
+                      <h2 className="text-xl font-semibold">Order Refunds</h2>
+                      <div className="relative w-96">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          placeholder="Search refunds..."
+                          className="pl-10"
+                        />
+                      </div>
+                    </div>
+
+                    <Table>
+                      <TableHeader>
                         <TableRow>
-                          <TableCell colSpan={6} className="text-center text-gray-500 py-4">
-                            No products found. Create your first product.
+                          <TableHead>Refund ID</TableHead>
+                          <TableHead>Order</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Amount</TableHead>
+                          <TableHead>Reason</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell className="font-medium">RF1001</TableCell>
+                          <TableCell>#1002</TableCell>
+                          <TableCell>2023-04-15</TableCell>
+                          <TableCell>$59.99</TableCell>
+                          <TableCell>Customer request</TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 px-2"
+                              >
+                                <FileText className="h-4 w-4 text-blue-600" />
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
+                        <TableRow>
+                          <TableCell className="font-medium">RF1002</TableCell>
+                          <TableCell>#1001</TableCell>
+                          <TableCell>2023-04-14</TableCell>
+                          <TableCell>$29.99</TableCell>
+                          <TableCell>Damaged product</TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 px-2"
+                              >
+                                <FileText className="h-4 w-4 text-blue-600" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </>
                 )}
-              </>
-            )}
-
-            {/* Shop Tab */}
-            {activeSubTab === "orders" && (
-              <>
-                <div className="flex justify-between items-center mb-6">
-                  <div className="relative w-96">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input placeholder="Search orders..." className="pl-10" />
-                  </div>
-                  <Button className="bg-blue-600 hover:bg-blue-700">
-                    <Plus className="h-4 w-4 mr-2" /> Create Order
-                  </Button>
-                </div>
-
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Order</TableHead>
-                      <TableHead>Customer</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Total</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {Itemsorders.map((order) => (
-                      <TableRow key={order.id}>
-                        <TableCell>#{order.id}</TableCell>
-                        <TableCell className="font-medium">
-                          {order.customer}
-                        </TableCell>
-                        <TableCell>{order.date}</TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              order.status === "completed"
-                                ? "default"
-                                : order.status === "processing"
-                                ? "secondary"
-                                : "outline"
-                            }
-                          >
-                            {order.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{order.total}</TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 px-2"
-                            >
-                              <Edit className="h-4 w-4 text-green-600" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 px-2"
-                            >
-                              <FileText className="h-4 w-4 text-blue-600" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </>
-            )}
-
-            {/* Coupons Tab */}
-            {activeSubTab === "coupons" && (
-              <>
-                <div className="flex justify-between items-center mb-6">
-                  <div className="relative w-96">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input placeholder="Search coupons..." className="pl-10" />
-                  </div>
-                  <Button className="bg-blue-600 hover:bg-blue-700">
-                    <Plus className="h-4 w-4 mr-2" /> Add New Coupon
-                  </Button>
-                </div>
-
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Code</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead>Discount Type</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Expiry Date</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {Itemscoupons.map((coupon) => (
-                      <TableRow key={coupon.id}>
-                        <TableCell className="font-medium">
-                          {coupon.id}
-                        </TableCell>
-                        <TableCell>{coupon.description}</TableCell>
-                        <TableCell>{coupon.discount_type}</TableCell>
-                        <TableCell>{coupon.amount}</TableCell>
-                        <TableCell>{coupon.expiry_date}</TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 px-2"
-                            >
-                              <Edit className="h-4 w-4 text-green-600" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 px-2"
-                            >
-                              <Trash2 className="h-4 w-4 text-red-500" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </>
-            )}
-
-            {/* Shipping Tab */}
-            {activeSubTab === "shipping" && (
-              <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-semibold">Shipping Classes</h2>
-                  <Button className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2">
-                    <Plus className="h-4 w-4" />
-                    Add Shipping Class
-                  </Button>
-                </div>
-                <Card className="p-6">
-                  <CardTitle>Shipping Zones</CardTitle>
-                  <CardDescription className="mb-4">
-                    Configure shipping zones and methods for your store
-                  </CardDescription>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Region</TableHead>
-                        <TableHead>Methods</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      <TableRow>
-                        <TableCell className="font-medium">Domestic</TableCell>
-                        <TableCell>United States</TableCell>
-                        <TableCell>Free shipping, Flat rate</TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 px-2"
-                            >
-                              <Edit className="h-4 w-4 text-green-600" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 px-2"
-                            >
-                              <Trash2 className="h-4 w-4 text-red-500" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="font-medium">
-                          International
-                        </TableCell>
-                        <TableCell>Rest of World</TableCell>
-                        <TableCell>Flat rate</TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 px-2"
-                            >
-                              <Edit className="h-4 w-4 text-green-600" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 px-2"
-                            >
-                              <Trash2 className="h-4 w-4 text-red-500" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </Card>
               </div>
             )}
-
-            {/* Refunds Tab */}
-            {activeSubTab === "refunds" && (
-              <>
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-semibold">Order Refunds</h2>
-                  <div className="relative w-96">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input placeholder="Search refunds..." className="pl-10" />
-                  </div>
-                </div>
-
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Refund ID</TableHead>
-                      <TableHead>Order</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Reason</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell className="font-medium">RF1001</TableCell>
-                      <TableCell>#1002</TableCell>
-                      <TableCell>2023-04-15</TableCell>
-                      <TableCell>$59.99</TableCell>
-                      <TableCell>Customer request</TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 px-2"
-                          >
-                            <FileText className="h-4 w-4 text-blue-600" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-medium">RF1002</TableCell>
-                      <TableCell>#1001</TableCell>
-                      <TableCell>2023-04-14</TableCell>
-                      <TableCell>$29.99</TableCell>
-                      <TableCell>Damaged product</TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 px-2"
-                          >
-                            <FileText className="h-4 w-4 text-blue-600" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </>
-            )}
           </div>
-)}
         </div>
-      </div>
       </div>
     </SidebarProvider>
   );
