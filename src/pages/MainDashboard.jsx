@@ -27,6 +27,11 @@ import Sidebar from "@/components/Sidebar";
 import TemplateCard from "@/components/TemplateCard.jsx";
 import WordPressSetupModal from "@/components/WordPressSetupForm";
 import CreateCustomModal from "@/components/CreateCustomModal";
+import BuyNowButton from "@/components/BuyNowButton";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { StripePaymentModal } from "@/components/StripePaymentModal";
+import { SubscriptionPlansModal } from "@/components/SubscriptionPlansModal";
+
 
 export default function MainDashboard() {
   const [templates, setTemplates] = useState([]);
@@ -46,6 +51,14 @@ export default function MainDashboard() {
   const [isWordpressProgressModalOpen, setIsWordpressProgressModalOpen] =
     useState(false);
   const [wordpressFormData, setWordpressFormData] = useState(null);
+
+  // State additions
+const [isPlansModalOpen, setIsPlansModalOpen] = useState(false);
+const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+const [selectedTemplateForPayment, setSelectedTemplateForPayment] = useState(null);
+const [selectedPlan, setSelectedPlan] = useState(null);
+
+
 
   const handleWordPressInstall = async (formData) => {
     setIsWordpressModalOpen(false);
@@ -195,6 +208,24 @@ export default function MainDashboard() {
   const handleClick = () => {
     navigate("/select-website");
   };
+
+// Updated handlers
+const handlePayNow = (template) => {
+  setSelectedTemplateForPayment(template);
+  setIsPlansModalOpen(true);
+};
+
+const handlePlanSelected = (planId) => {
+  setSelectedPlan(planId);
+  setIsPlansModalOpen(false);
+  setIsPaymentModalOpen(true);
+};
+
+const handlePaymentSuccess = () => {
+  setIsPaymentModalOpen(false);
+  fetchWordpressTemplates(); // Refresh templates list
+};
+
 
   return (
     <SidebarProvider>
@@ -478,6 +509,8 @@ export default function MainDashboard() {
                     onDelete={handleDeleteTemplate}
                     onPreview={handlePreview}
                     onManage={handleUseTemplate}
+                    handlePayNow={handlePayNow}
+                    
                   />
                 ))
               ) : (
@@ -600,6 +633,7 @@ export default function MainDashboard() {
                       <Button className="bg-green-600 hover:bg-green-700"  onClick={() => navigate(`/wordprestemplatedetails/${template.paths}/pages`)}>
                         Manage
                       </Button>
+                  
                     </div>
                   </div>
                 </Card>
@@ -645,6 +679,27 @@ export default function MainDashboard() {
         setIsProgressModalOpen={setIsWordpressProgressModalOpen}
         formData={wordpressFormData}
       />
+
+
+{/* // Updated modal rendering */}
+{isPlansModalOpen && (
+  <SubscriptionPlansModal
+    isOpen={isPlansModalOpen}
+    onClose={() => setIsPlansModalOpen(false)}
+    onPlanSelected={handlePlanSelected} // Changed prop name
+    template={selectedTemplateForPayment}
+  />
+)}
+
+{isPaymentModalOpen && (
+  <StripePaymentModal
+    isOpen={isPaymentModalOpen}
+    onClose={handlePaymentSuccess}
+    template={selectedTemplateForPayment}
+    planId={selectedPlan} // Pass the selected plan
+  />
+)}
+
     </SidebarProvider>
   );
 }

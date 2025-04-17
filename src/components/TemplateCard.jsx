@@ -6,7 +6,10 @@ import { Badge } from "@/components/ui/badge"
 import { formatDistanceToNow } from "date-fns"
 
 // This would be a separate component you can import in your MainDashboard.tsx
-const TemplateCard = ({ template, onDelete, onPreview, onManage }) => {
+const TemplateCard = ({ template, onDelete, onPreview, onManage, handlePayNow }) => {
+
+  console.log("template=>",template);
+  
   // Format the date (assuming template has a createdAt field)
   const formattedDate = template.createdAt
     ? formatDistanceToNow(new Date(template.createdAt), { addSuffix: true })
@@ -43,7 +46,18 @@ const TemplateCard = ({ template, onDelete, onPreview, onManage }) => {
           >
             Manage
           </Button>
+          {!template.stripeSubscriptionId && 
+        <Button
+        variant="secondary"
+        size="sm"
+        className="bg-white/90 hover:bg-white text-gray-800 shadow-md"
+        onClick={() => handlePayNow(template)}
+      >
+        Pay Now
+      </Button> 
+        }
         </div>
+          
 
         {/* Delete button - top right */}
         <button
