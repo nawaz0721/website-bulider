@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { wordpressTemplates } from "@/data"
 import { motion, AnimatePresence } from "framer-motion"
+import Cookies from "js-cookie"
 
 export default function WordPressTemplateModal({
   isOpen,
@@ -27,6 +28,13 @@ export default function WordPressTemplateModal({
     const matchesCategory = categoryFilter === "all" || template.category === categoryFilter
     return matchesSearch && matchesCategory
   })
+
+    // Handle template selection
+    const handleTemplateSelect = (template) => {
+      setSelectedTemplate(template)
+      // Store template ID in cookie with 30 days expiration
+      Cookies.set('selectedTemplateId', template.id, { expires: 30, path: '' })
+    }
 
   // Pagination
   const templatesPerPage = 9
@@ -152,7 +160,7 @@ export default function WordPressTemplateModal({
                       ? "ring-2 ring-blue-500 shadow-md transform scale-[1.02]"
                       : "hover:scale-[1.02]"
                   }`}
-                  onClick={() => setSelectedTemplate(template)}
+                  onClick={() => handleTemplateSelect(template)}
                   whileHover={{ y: -5 }}
                   whileTap={{ scale: 0.98 }}
                 >

@@ -28,6 +28,7 @@ export default function WordPressSetupModal({
     saveData: { completed: false, loading: false },
     installWP: { completed: false, loading: false },
     installPlugin: { completed: false, loading: false },
+    installTemplate: { completed: false, loading: false }, // Add this line
     createSite: { completed: false, loading: false },
   })
 
@@ -38,7 +39,7 @@ export default function WordPressSetupModal({
     Email: "",
   })
 
-  const router = useNavigate()
+  const navigate = useNavigate()
 
   let userDetails = null
   try {
@@ -155,7 +156,7 @@ export default function WordPressSetupModal({
       }))
       setCurrentStep(2)
 
-      // Step 3 & 4: Install Plugin and Create Site
+      // Step 3: Install Plugin
       setSteps((prev) => ({
         ...prev,
         installPlugin: { completed: false, loading: true },
@@ -171,14 +172,45 @@ export default function WordPressSetupModal({
         setSteps((prev) => ({
           ...prev,
           installPlugin: { completed: true, loading: false },
-          createSite: { completed: true, loading: false },
         }))
-        setCurrentStep(4)
+        setCurrentStep(3)
 
+        // Step 4: Install Template (only if template is selected)
+        const templateId = Cookies.get('selectedTemplateId')
+        if (templateId) {
+          setSteps((prev) => ({
+            ...prev,
+            installTemplate: { completed: false, loading: true },
+          }))
+          setCurrentStep(4)
+
+          try {
+            const path = Cookies.get('path')
+            await fetch(`${AppRoutes.createtemplate}?path=${path}&template=${templateId}`)
+            
+            setSteps((prev) => ({
+              ...prev,
+              installTemplate: { completed: true, loading: false },
+            }))
+            setCurrentStep(5)
+          } catch (e) {
+            console.log("Template installation error", e)
+            setSteps((prev) => ({
+              ...prev,
+              installTemplate: { completed: false, loading: false },
+            }))
+          }
+        } else {
+          // Skip to step 5 if no template selected
+          setCurrentStep(5)
+        }
+
+        // Step 5: Complete and Navigate
         setTimeout(() => {
           setIsProgressModalOpen(false)
-          router("/main-dashboard")
+          navigate("/main-dashboard")
         }, 2000)
+
       } catch (e) {
         console.log("Error", e)
         setSteps((prev) => ({
@@ -195,11 +227,13 @@ export default function WordPressSetupModal({
     }
   }
 
-  const totalProgress =
-    (steps.saveData.completed ? 25 : 0) +
-    (steps.installWP.completed ? 25 : 0) +
-    (steps.installPlugin.completed ? 25 : 0) +
-    (steps.createSite.completed ? 25 : 0)
+  const totalProgress = Math.floor(
+    (steps.saveData.completed ? 20 : 0) +
+    (steps.installWP.completed ? 20 : 0) +
+    (steps.installPlugin.completed ? 20 : 0) +
+    (steps.installTemplate.completed ? 20 : 0) +
+    (steps.createSite.completed ? 20 : 0)
+  )
 
   if (!isOpen && !isProgressModalOpen) return null
 
@@ -365,6 +399,7 @@ export default function WordPressSetupModal({
                       saveData: "Saving Data",
                       installWP: "Installing WordPress",
                       installPlugin: "Installing Plugins",
+                      installTemplate: "Installing Template",
                       createSite: "Creating WordPress Site",
                     }).map(([key, label], index) => (
                       <motion.div
@@ -410,6 +445,7 @@ export default function WordPressSetupModal({
                               {key === "saveData" && "Storing your configuration..."}
                               {key === "installWP" && "Setting up WordPress core files..."}
                               {key === "installPlugin" && "Adding essential WordPress plugins..."}
+                              {key === "installtemplate" && " Setting up WordPress template..."}
                               {key === "createSite" && "Finalizing your WordPress installation..."}
                             </p>
                           )}

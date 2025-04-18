@@ -25,6 +25,7 @@ export const AppRoutes = {
     install: phpUrl + "installword.php",
     plugin: phpUrl + "installwo.php",
     pages: phpUrl + "wppage.php",
+    createtemplate: phpUrl + "allmagtemp.php",
     payment: devUrl + "api/create-payment-intent",
     createSubscription: devUrl + "api/subscriptions/create"
 }

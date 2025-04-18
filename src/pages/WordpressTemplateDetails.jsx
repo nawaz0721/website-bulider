@@ -804,7 +804,21 @@ export default function WordpressTemplateDetails() {
               {item.title}
             </div>
           </TableCell>
-          <TableCell>{item.link || item.url}</TableCell>
+          <TableCell>
+            <span
+              onClick={() => {
+                const url = item.link || item.url;
+                window.open(
+                  url.startsWith("http") ? url : `https://${url}`,
+                  "_blank",
+                  "noopener,noreferrer"
+                );
+              }}
+              className="text-blue-500 hover:underline cursor-pointer"
+            >
+              {item.link || item.url}
+            </span>
+          </TableCell>
           <TableCell>
             <div className="flex gap-2">
               <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
@@ -1190,19 +1204,22 @@ export default function WordpressTemplateDetails() {
               <span className="h-2 w-2 rounded-full bg-green-500"></span>
               Live Environment
             </Badge>
-            <Button variant="ghost" size="icon">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                window.open(
+                  `https://wp.website4x.com/${path}`,
+                  "_blank",
+                  "noopener,noreferrer"
+                );
+              }}
+            >
               <ExternalLink className="h-4 w-4" />
             </Button>
           </div>
           <div>
-            <span className="text-sm text-yellow-500 flex items-center gap-2">
-              ⚠️ Frontpage is not set. Please publish a page to set it as
-              frontpage.
-            </span>
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold">Untitled Website</h2>
-            <p className="text-sm text-gray-600">No description available.</p>
+            <h2 className="text-lg font-semibold">{path}</h2>
           </div>
         </div>
 
@@ -2301,10 +2318,22 @@ export default function WordpressTemplateDetails() {
                                   </Badge>
                                 </TableCell>
                                 <TableCell className="text-blue-500 hover:underline cursor-pointer">
-                                  {page.post_name ||
-                                    page.post_title
-                                      .toLowerCase()
-                                      .replace(/\s+/g, "-")}
+                                  <span
+                                    onClick={() => {
+                                      window.open(
+                                        `https://wp.website4x.com/${path}/${page.post_title
+                                          .toLowerCase()
+                                          .replace(/\s+/g, "-")}`,
+                                        "_blank",
+                                        "noopener,noreferrer"
+                                      );
+                                    }}
+                                  >
+                                    {page.post_name ||
+                                      page.post_title
+                                        .toLowerCase()
+                                        .replace(/\s+/g, "-")}
+                                  </span>
                                 </TableCell>
                                 <TableCell>
                                   <div className="flex gap-2">

@@ -28,10 +28,14 @@ import TemplateCard from "@/components/TemplateCard.jsx";
 import WordPressSetupModal from "@/components/WordPressSetupForm";
 import CreateCustomModal from "@/components/CreateCustomModal";
 import BuyNowButton from "@/components/BuyNowButton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { StripePaymentModal } from "@/components/StripePaymentModal";
 import { SubscriptionPlansModal } from "@/components/SubscriptionPlansModal";
-
 
 export default function MainDashboard() {
   const [templates, setTemplates] = useState([]);
@@ -53,12 +57,11 @@ export default function MainDashboard() {
   const [wordpressFormData, setWordpressFormData] = useState(null);
 
   // State additions
-const [isPlansModalOpen, setIsPlansModalOpen] = useState(false);
-const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-const [selectedTemplateForPayment, setSelectedTemplateForPayment] = useState(null);
-const [selectedPlan, setSelectedPlan] = useState(null);
-
-
+  const [isPlansModalOpen, setIsPlansModalOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [selectedTemplateForPayment, setSelectedTemplateForPayment] =
+    useState(null);
+  const [selectedPlan, setSelectedPlan] = useState(null);
 
   const handleWordPressInstall = async (formData) => {
     setIsWordpressModalOpen(false);
@@ -75,7 +78,6 @@ const [selectedPlan, setSelectedPlan] = useState(null);
 
   const user = Cookies?.get("user");
   const userDetails = user ? JSON.parse(user) : null;
-  
 
   const fetchTemplates = async () => {
     try {
@@ -122,20 +124,20 @@ const [selectedPlan, setSelectedPlan] = useState(null);
   const fetchWordpressTemplates = async () => {
     try {
       setIsWordpressLoading(true);
-      const userid = userDetails._id
+      const userid = userDetails._id;
       // Make API call to get templates for this user
       const response = await axios.get(`${AppRoutes.wordpress}/${userid}`);
-      
+
       const data = await response.data;
-      
+
       setWordpressTemplates(data);
-      
+
       // Update stats with the count of templates
       setWebsiteStats((prev) => ({
         ...prev,
         wordpressCreated: data.length,
       }));
-      
+
       setIsWordpressLoading(false);
     } catch (error) {
       console.error("Error fetching WordPress templates:", error);
@@ -164,8 +166,8 @@ const [selectedPlan, setSelectedPlan] = useState(null);
     return (
       template.name?.toLowerCase().includes(query) ||
       template.description?.toLowerCase().includes(query)
-      );
-      });
+    );
+  });
 
   // Use template => navigate to Editor with template ID (/editor/:id)
   const handleUseTemplate = (template) => {
@@ -209,23 +211,22 @@ const [selectedPlan, setSelectedPlan] = useState(null);
     navigate("/select-website");
   };
 
-// Updated handlers
-const handlePayNow = (template) => {
-  setSelectedTemplateForPayment(template);
-  setIsPlansModalOpen(true);
-};
+  // Updated handlers
+  const handlePayNow = (template) => {
+    setSelectedTemplateForPayment(template);
+    setIsPlansModalOpen(true);
+  };
 
-const handlePlanSelected = (planId) => {
-  setSelectedPlan(planId);
-  setIsPlansModalOpen(false);
-  setIsPaymentModalOpen(true);
-};
+  const handlePlanSelected = (planId) => {
+    setSelectedPlan(planId);
+    setIsPlansModalOpen(false);
+    setIsPaymentModalOpen(true);
+  };
 
-const handlePaymentSuccess = () => {
-  setIsPaymentModalOpen(false);
-  fetchWordpressTemplates(); // Refresh templates list
-};
-
+  const handlePaymentSuccess = () => {
+    setIsPaymentModalOpen(false);
+    fetchWordpressTemplates(); // Refresh templates list
+  };
 
   return (
     <SidebarProvider>
@@ -240,7 +241,10 @@ const handlePaymentSuccess = () => {
             <div className="absolute right-0 top-0 h-24 w-24 translate-x-4 -translate-y-4 transform rounded-full bg-blue-400 opacity-20 group-hover:bg-blue-500 group-hover:opacity-30 transition-all duration-300"></div>
             <div className="absolute bottom-0 left-0 h-24 w-24 -translate-x-4 translate-y-4 transform rounded-full bg-blue-400 opacity-20 group-hover:bg-blue-500 group-hover:opacity-30 transition-all duration-300"></div>
 
-            <button className="flex h-full w-full flex-col items-start p-6 text-left" onClick={handleCustomWebsiteClick}>
+            <button
+              className="flex h-full w-full flex-col items-start p-6 text-left"
+              onClick={handleCustomWebsiteClick}
+            >
               <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-md">
                 <Brain className="h-7 w-7" />
               </div>
@@ -510,7 +514,6 @@ const handlePaymentSuccess = () => {
                     onPreview={handlePreview}
                     onManage={handleUseTemplate}
                     handlePayNow={handlePayNow}
-                    
                   />
                 ))
               ) : (
@@ -526,7 +529,12 @@ const handlePaymentSuccess = () => {
                   </p>
                   <div className="flex justify-center gap-4">
                     <Link to="/editor">
-                      <Button variant="outline" onClick={handleCustomWebsiteClick}>Create Website</Button>
+                      <Button
+                        variant="outline"
+                        onClick={handleCustomWebsiteClick}
+                      >
+                        Create Website
+                      </Button>
                     </Link>
                     <Link to="/templates">
                       <Button className="bg-[#B5132C] hover:bg-[#9e1126]">
@@ -574,91 +582,109 @@ const handlePaymentSuccess = () => {
 
             {/* WordPress Template Cards (Placeholder for now) */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-6">
-            {
-              isLoading ? (
-                 // Show loading skeleton
-                 [1, 2, 3].map((i) => (
+              {isLoading ? (
+                // Show loading skeleton
+                [1, 2, 3].map((i) => (
                   <div key={i} className="rounded-lg border p-4 animate-pulse">
                     <div className="h-40 bg-gray-200 rounded-lg"></div>
                     <div className="mt-4 h-6 bg-gray-200 rounded w-3/4"></div>
                     <div className="mt-2 h-4 bg-gray-200 rounded w-full"></div>
                   </div>
                 ))
-              ) :  filteredWordpressTemplates.length > 0 ?(
+              ) : filteredWordpressTemplates.length > 0 ? (
                 // Show templates
                 filteredWordpressTemplates.map((template) => (
-                  <Card key={template._id} className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow">
-                  {/* Preview section */}
-                  <div className="aspect-video bg-muted/30 relative group">
-                    {/* Edit & Delete Buttons - Always Visible */}
-                    <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-50">
-                      {/* Delete Button */}
-                      <button
-                        onClick={() => handleDeleteWordpressTemplate(template._id)}
-                        className="p-2 bg-red-500 rounded-full text-white shadow-md hover:bg-red-600 transition"
-                      >
-                        <Trash className="h-5 w-5" />
-                      </button>
+                  <Card
+                    key={template._id}
+                    className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow"
+                  >
+                    {/* Preview section */}
+                    <div className="aspect-video bg-muted/30 relative group">
+                      {/* Edit & Delete Buttons - Always Visible */}
+                      <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-50">
+                        {/* Delete Button */}
+                        <button
+                          onClick={() =>
+                            handleDeleteWordpressTemplate(template._id)
+                          }
+                          className="p-2 bg-red-500 rounded-full text-white shadow-md hover:bg-red-600 transition"
+                        >
+                          <Trash className="h-5 w-5" />
+                        </button>
+                      </div>
+
+                      {/* Template Image */}
+                      <img
+                        src={
+                          template.image ||
+                          "/placeholder.svg?height=200&width=400" ||
+                          "/placeholder.svg" ||
+                          "/placeholder.svg"
+                        }
+                        alt={template.name || template.title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
                     </div>
-      
-                    {/* Template Image */}
-                    <img
-                      src={
-                        template.image || "/placeholder.svg?height=200&width=400" || "/placeholder.svg" || "/placeholder.svg"
-                      }
-                      alt={template.name || template.title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                  </div>
-      
-                  {/* Footer section */}
-                  <div className="bg-white p-4 flex flex-col">
-                    <div>
-                      <CardTitle className="text-xl">{template.name || template.title}</CardTitle>
-                      <CardDescription className="mt-2 line-clamp-2">
-                        {template.description || "No description available"}
-                      </CardDescription>
+
+                    {/* Footer section */}
+                    <div className="bg-white p-4 flex flex-col">
+                      <div>
+                        <CardTitle className="text-xl">
+                          {template.name || template.title}
+                        </CardTitle>
+                        <CardDescription className="mt-2 line-clamp-2">
+                          {template.description || "No description available"}
+                        </CardDescription>
+                      </div>
+                      <div className="flex justify-end gap-3 mt-4">
+                        <Button
+                          variant="outline"
+                          className="hover:bg-gray-100"
+                          onClick={() => {
+                            window.open(
+                              `https://wp.website4x.com/${template.paths}`
+                            );
+                          }}
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          Preview
+                        </Button>
+                        <Button
+                          className="bg-green-600 hover:bg-green-700"
+                          onClick={() =>
+                            navigate(
+                              `/wordprestemplatedetails/${template.paths}/pages`
+                            )
+                          }
+                        >
+                          Manage
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex justify-end gap-3 mt-4">
-                      <Button
-                        variant="outline"
-                        className="hover:bg-gray-100"
-                        onClick={() => {
-                          window.open(`https://wp.website4x.com/${template.paths}`)
-                        }}
-                      >
-                        <Eye className="h-4 w-4 mr-2" />
-                        Preview
-                      </Button>
-                      <Button className="bg-green-600 hover:bg-green-700"  onClick={() => navigate(`/wordprestemplatedetails/${template.paths}/pages`)}>
-                        Manage
-                      </Button>
-                  
-                    </div>
-                  </div>
-                </Card>
+                  </Card>
                 ))
               ) : (
-                <>
-                 <FaWordpress className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-700 mb-2">
-                No WordPress websites yet
-              </h3>
-              <p className="text-gray-500 max-w-md mx-auto mb-6">
-                Create your first WordPress website to manage your content
-                easily with the world's most popular CMS.
-              </p>
-              <Button
-                className="bg-[#B5132C] hover:bg-[#9e1126]"
-                onClick={() => setIsWordpressModalOpen(true)}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Create WordPress Website
-              </Button>
-                </>
-              )
-            }
-             
+                // Show message if no templates are found
+                <div className="col-span-full text-center py-12 bg-gray-50 rounded-lg border border-dashed">
+                  <FaWordpress className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-700 mb-2">
+                    No WordPress websites yet
+                  </h3>
+                  <p className="text-gray-500 max-w-md mx-auto mb-6">
+                    Create your first WordPress website to manage your content
+                    easily with the world's most popular CMS.
+                  </p>
+                  <div className="flex justify-center gap-4">
+                    <Button
+                      className="bg-[#B5132C] hover:bg-[#9e1126]"
+                      onClick={() => setIsWordpressModalOpen(true)}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create WordPress Website
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </TabsContent>
         </Tabs>
@@ -680,26 +706,24 @@ const handlePaymentSuccess = () => {
         formData={wordpressFormData}
       />
 
+      {/* // Updated modal rendering */}
+      {isPlansModalOpen && (
+        <SubscriptionPlansModal
+          isOpen={isPlansModalOpen}
+          onClose={() => setIsPlansModalOpen(false)}
+          onPlanSelected={handlePlanSelected} // Changed prop name
+          template={selectedTemplateForPayment}
+        />
+      )}
 
-{/* // Updated modal rendering */}
-{isPlansModalOpen && (
-  <SubscriptionPlansModal
-    isOpen={isPlansModalOpen}
-    onClose={() => setIsPlansModalOpen(false)}
-    onPlanSelected={handlePlanSelected} // Changed prop name
-    template={selectedTemplateForPayment}
-  />
-)}
-
-{isPaymentModalOpen && (
-  <StripePaymentModal
-    isOpen={isPaymentModalOpen}
-    onClose={handlePaymentSuccess}
-    template={selectedTemplateForPayment}
-    planId={selectedPlan} // Pass the selected plan
-  />
-)}
-
+      {isPaymentModalOpen && (
+        <StripePaymentModal
+          isOpen={isPaymentModalOpen}
+          onClose={handlePaymentSuccess}
+          template={selectedTemplateForPayment}
+          planId={selectedPlan} // Pass the selected plan
+        />
+      )}
     </SidebarProvider>
   );
 }

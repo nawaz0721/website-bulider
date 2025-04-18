@@ -7,8 +7,6 @@ import { formatDistanceToNow } from "date-fns"
 
 // This would be a separate component you can import in your MainDashboard.tsx
 const TemplateCard = ({ template, onDelete, onPreview, onManage, handlePayNow }) => {
-
-  console.log("template=>",template);
   
   // Format the date (assuming template has a createdAt field)
   const formattedDate = template.createdAt
