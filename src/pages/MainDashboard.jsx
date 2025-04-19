@@ -36,14 +36,19 @@ import {
 } from "@/components/ui/dialog";
 import { StripePaymentModal } from "@/components/StripePaymentModal";
 import { SubscriptionPlansModal } from "@/components/SubscriptionPlansModal";
+import WordPressTemplateModal from "@/components/WordpressTemplateModal";
+import { wordpressTemplate } from "@/data";
 
 export default function MainDashboard() {
   const [templates, setTemplates] = useState([]);
   const [wordpressTemplates, setWordpressTemplates] = useState([]);
+  const [isWordpressTemplateModalOpen, setIsWordpressTemplateModalOpen] =
+    useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isWordpressLoading, setIsWordpressLoading] = useState(true);
-  const [showPreview, setShowPreview] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [categoryFilter, setCategoryFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("custom");
   const [websiteStats, setWebsiteStats] = useState({
@@ -276,7 +281,7 @@ export default function MainDashboard() {
           {/* Create WordPress Website Card */}
           <div
             className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-green-50 to-green-100 border border-green-200 shadow-md transition-all duration-300 hover:shadow-lg hover:translate-y-[-2px]"
-            onClick={() => setIsWordpressModalOpen(true)}
+            onClick={() => setIsWordpressTemplateModalOpen(true)}
           >
             <div className="absolute right-0 top-0 h-24 w-24 translate-x-4 -translate-y-4 transform rounded-full bg-green-400 opacity-20 group-hover:bg-green-500 group-hover:opacity-30 transition-all duration-300"></div>
             <div className="absolute bottom-0 left-0 h-24 w-24 -translate-x-4 translate-y-4 transform rounded-full bg-green-400 opacity-20 group-hover:bg-green-500 group-hover:opacity-30 transition-all duration-300"></div>
@@ -420,7 +425,7 @@ export default function MainDashboard() {
               <Button
                 variant="outline"
                 className="text-green-600 border-green-600 hover:bg-green-50"
-                onClick={() => setIsWordpressModalOpen(true)}
+                onClick={() => setIsWordpressTemplateModalOpen(true)}
               >
                 Purchase More
               </Button>
@@ -566,7 +571,7 @@ export default function MainDashboard() {
               <div className="flex-1"></div>
               <Button
                 className="bg-[#B5132C] hover:bg-[#9e1126]"
-                onClick={() => setIsWordpressModalOpen(true)}
+                onClick={() => setIsWordpressTemplateModalOpen(true)}
               >
                 <Plus className="h-4 w-4 mr-2" />
                 New WordPress Site
@@ -677,7 +682,7 @@ export default function MainDashboard() {
                   <div className="flex justify-center gap-4">
                     <Button
                       className="bg-[#B5132C] hover:bg-[#9e1126]"
-                      onClick={() => setIsWordpressModalOpen(true)}
+                      onClick={() => setIsWordpressTemplateModalOpen(true)}
                     >
                       <Plus className="h-4 w-4 mr-2" />
                       Create WordPress Website
@@ -696,6 +701,20 @@ export default function MainDashboard() {
           onClose={() => setIsModalOpen(false)}
         />
       )}
+
+      <WordPressTemplateModal
+        isOpen={isWordpressTemplateModalOpen}
+        onClose={() => setIsWordpressTemplateModalOpen(false)}
+        onTemplateSelect={() => setIsWordpressModalOpen(true)}
+        selectedTemplate={selectedTemplate}
+        setSelectedTemplate={setSelectedTemplate}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        categoryFilter={categoryFilter}
+        setCategoryFilter={setCategoryFilter}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+      />
 
       <WordPressSetupModal
         isOpen={isWordpressModalOpen}

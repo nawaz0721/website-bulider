@@ -187,7 +187,7 @@ export default function WordPressSetupModal({
           try {
             const path = Cookies.get('path')
             await fetch(`${AppRoutes.createtemplate}?path=${path}&template=${templateId}`)
-            
+            await fetch(`${AppRoutes.createtemplate}?path=${path}&template=${templateId}`)
             setSteps((prev) => ({
               ...prev,
               installTemplate: { completed: true, loading: false },

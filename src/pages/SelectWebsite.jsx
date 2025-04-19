@@ -13,7 +13,7 @@ import Cookies from "js-cookie";
 import CreateCustomModal from "@/components/CreateCustomModal";
 import WordPressSetupModal from "@/components/WordPressSetupForm";
 import { motion } from "framer-motion";
-import { wordpressTemplates } from "@/data"; // Import mock data
+import { wordpressTemplate } from "@/data"; // Import mock data
 import WordPressTemplateModal from "@/components/WordpressTemplateModal";
 
 const websites = []; // Empty array means no websites exist
@@ -49,7 +49,7 @@ export default function SelectWebsite() {
   };
 
   // Filter templates based on search and category
-  const filteredTemplates = wordpressTemplates.filter(template => {
+  const filteredTemplates = wordpressTemplate.filter(template => {
     const matchesSearch = template.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                          template.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = categoryFilter === "all" || template.category === categoryFilter;
@@ -65,7 +65,7 @@ export default function SelectWebsite() {
   );
 
   // Get unique categories
-  const categories = ["all", ...new Set(wordpressTemplates.map(t => t.category))];
+  const categories = ["all", ...new Set(wordpressTemplate.map(t => t.category))];
 
   // Animation variants
   const containerVariants = {

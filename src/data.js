@@ -1,4 +1,4 @@
-export const wordpressTemplates = [
+export const wordpressTemplate = [
     {
       id: 1,
       name: "Business Pro",
@@ -27,49 +27,49 @@ export const wordpressTemplates = [
       image: "https://img.freepik.com/free-psd/medical-care-poster-flyer-template-design_23-2148951765.jpg",
       description: "Clean design for medical practices and clinics"
     },
-    {
-      id: 5,
-      name: "E-Shop",
-      category: "Ecommerce",
-      image: "https://img.freepik.com/free-vector/ecommerce-email-templates-with-photo_23-2148714843.jpg",
-      description: "WooCommerce ready online store template"
-    },
-    {
-      id: 6,
-      name: "Travel Explorer",
-      category: "Travel",
-      image: "https://img.freepik.com/premium-psd/travel-explorer-instagram-post-social-media-template_660886-399.jpg",
-      description: "Beautiful template for travel blogs and agencies"
-    },
-    {
-      id: 7,
-      name: "Fitness Gym",
-      category: "Fitness",
-      image: "https://img.freepik.com/free-psd/gym-template-design_23-2151626756.jpg",
-      description: "Energetic design for fitness centers and trainers"
-    },
-    {
-      id: 8,
-      name: "Education Hub",
-      category: "Education",
-      image: "https://img.freepik.com/free-psd/children-education-landing-page-template_23-2149919252.jpg?semt=ais_hybrid&w=740",
-      description: "Template for schools, courses and online learning"
-    },
-    {
-      id: 9,
-      name: "Tech Startup",
-      category: "Technology",
-      image: "https://img.freepik.com/free-vector/pitch-deck-presentation-template_742173-15429.jpg",
-      description: "Sleek template for tech companies and startups"
-    },
-    {
-      id: 10,
-      name: "Fashion Trend",
-      category: "Fashion",
-      image: "https://img.freepik.com/premium-vector/fashion-trend-instagram-story-template_17005-242.jpg",
-      description: "Stylish template for fashion blogs and stores"
-    },
   ];
+  // {
+  //   id: 5,
+  //   name: "E-Shop",
+  //   category: "Ecommerce",
+  //   image: "https://img.freepik.com/free-vector/ecommerce-email-templates-with-photo_23-2148714843.jpg",
+  //   description: "WooCommerce ready online store template"
+  // },
+  // {
+  //   id: 6,
+  //   name: "Travel Explorer",
+  //   category: "Travel",
+  //   image: "https://img.freepik.com/premium-psd/travel-explorer-instagram-post-social-media-template_660886-399.jpg",
+  //   description: "Beautiful template for travel blogs and agencies"
+  // },
+  // {
+  //   id: 7,
+  //   name: "Fitness Gym",
+  //   category: "Fitness",
+  //   image: "https://img.freepik.com/free-psd/gym-template-design_23-2151626756.jpg",
+  //   description: "Energetic design for fitness centers and trainers"
+  // },
+  // {
+  //   id: 8,
+  //   name: "Education Hub",
+  //   category: "Education",
+  //   image: "https://img.freepik.com/free-psd/children-education-landing-page-template_23-2149919252.jpg?semt=ais_hybrid&w=740",
+  //   description: "Template for schools, courses and online learning"
+  // },
+  // {
+  //   id: 9,
+  //   name: "Tech Startup",
+  //   category: "Technology",
+  //   image: "https://img.freepik.com/free-vector/pitch-deck-presentation-template_742173-15429.jpg",
+  //   description: "Sleek template for tech companies and startups"
+  // },
+  // {
+  //   id: 10,
+  //   name: "Fashion Trend",
+  //   category: "Fashion",
+  //   image: "https://img.freepik.com/premium-vector/fashion-trend-instagram-story-template_17005-242.jpg",
+  //   description: "Stylish template for fashion blogs and stores"
+  // },
   // {
   //   id: 11,
   //   name: "Real Estate Pro",

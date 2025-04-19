@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { wordpressTemplates } from "@/data"
+import { wordpressTemplate } from "@/data"
 import { motion, AnimatePresence } from "framer-motion"
 import Cookies from "js-cookie"
 
@@ -23,7 +23,7 @@ export default function WordPressTemplateModal({
   setCurrentPage,
 }) {
   // Filter templates based on search and category
-  const filteredTemplates = wordpressTemplates.filter((template) => {
+  const filteredTemplates = wordpressTemplate.filter((template) => {
     const matchesSearch = template.name.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesCategory = categoryFilter === "all" || template.category === categoryFilter
     return matchesSearch && matchesCategory
@@ -42,7 +42,7 @@ export default function WordPressTemplateModal({
   const currentTemplates = filteredTemplates.slice((currentPage - 1) * templatesPerPage, currentPage * templatesPerPage)
 
   // Get unique categories
-  const categories = ["all", ...new Set(wordpressTemplates.map((t) => t.category))]
+  const categories = ["all", ...new Set(wordpressTemplate.map((t) => t.category))]
 
   if (!isOpen) return null
 
@@ -138,7 +138,7 @@ export default function WordPressTemplateModal({
                 <SelectTrigger className="w-[180px] h-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500 transition-all duration-200">
                   <SelectValue placeholder="Filter by category" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white">
                   {categories.map((category) => (
                     <SelectItem key={category} value={category}>
                       {category === "all" ? "All Categories" : category.charAt(0).toUpperCase() + category.slice(1)}
